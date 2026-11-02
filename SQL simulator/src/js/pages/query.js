@@ -51,7 +51,9 @@
       return;
     }
     const info = ns.state.info();
+    const views = Array.from(db.views.values()).map((v) => v.name);
     ui.dbInfo.textContent = 'Datenbank: „' + info.name + '“ – Tabellen: ' + db.tableList().map((t) => t.name).join(', ') +
+      (views.length ? '; Sichten: ' + views.join(', ') : '') +
       (info.dirty ? ' (mit Änderungen)' : '') + '.';
     ui.reset.disabled = !info.dirty;
   }
@@ -63,6 +65,9 @@
    * @returns {string} Text.
    */
   function changeText(r) {
+    if (r.kind === 'ddl') {
+      return r.message;
+    }
     const verb = r.kind === 'insert' ? 'eingefügt' : (r.kind === 'update' ? 'geändert' : 'gelöscht');
     return dom.plural(r.count, 'Datensatz', 'Datensätze') + ' in „' + r.table + '“ ' + verb + '.';
   }
@@ -75,7 +80,7 @@
    */
   function warningBox(text) {
     return dom.el('p', { class: 'status notice result-warning', role: 'note' }, [
-      dom.el('strong', null, 'Hinweis: '), ns.text.cleanCellText(text)
+      dom.el('strong', { class: 'note-title' }, 'Hinweis:'), ns.text.cleanCellText(text)
     ]);
   }
 

@@ -7,6 +7,8 @@
  * Datensätze sichtbar sind; weitere erreicht man durch Scrollen.
  * Unter jeder Tabelle lässt sich der CREATE-TABLE-Befehl aufklappen, der aus
  * dem aktuellen Aufbau erzeugt wird (standardmäßig zugeklappt).
+ * Sichten (Views) folgen in einem eigenen Abschnitt mit ihrem aktuellen Ergebnis
+ * und dem aufklappbaren CREATE-VIEW-Befehl.
  *
  * Abhängigkeiten:
  *   dom-utils.js, state.js, pages/common.js
@@ -80,26 +82,79 @@
   }
 
   /**
-   * Erzeugt den aufklappbaren CREATE-TABLE-Befehl einer Tabelle.
+   * Erzeugt einen aufklappbaren SQL-Befehl (CREATE TABLE bzw. CREATE VIEW).
    *
-   * @param {Object} table - Tabelle.
+   * @param {string} key - Schlüssel für den gemerkten Auf-/Zuklapp-Zustand.
+   * @param {string} summary - Beschriftung.
+   * @param {string} label - Zugängliche Bezeichnung des Befehls.
+   * @param {string} sql - Befehl (mehrzeilig).
    * @returns {HTMLElement} <details>-Element (zugeklappt, außer es war zuvor offen).
    */
-  function createBlock(table) {
-    const sql = ns.sql.createTableSql(table).split('\n').map((line) => ns.text.cleanSourceLine(line)).join('\n');
+  function sqlBlock(key, summary, label, sql) {
+    const text = sql.split('\n').map((line) => ns.text.cleanSourceLine(line)).join('\n');
     const details = dom.el('details', { class: 'create-sql' }, [
-      dom.el('summary', null, 'CREATE-TABLE-Befehl anzeigen'),
-      dom.el('pre', { class: 'sql-example', 'aria-label': 'CREATE-TABLE-Befehl der Tabelle ' + table.name }, sql)
+      dom.el('summary', null, summary),
+      dom.el('pre', { class: 'sql-example', 'aria-label': label }, text)
     ]);
-    details.open = openCreate.has(table.key);
+    details.open = openCreate.has(key);
     details.addEventListener('toggle', () => {
       if (details.open) {
-        openCreate.add(table.key);
+        openCreate.add(key);
       } else {
-        openCreate.delete(table.key);
+        openCreate.delete(key);
       }
     });
     return details;
+  }
+
+  /**
+   * Erzeugt die Karte einer Sicht: Spalten, aktuelles Ergebnis und CREATE VIEW.
+   *
+   * @param {Object} db - Datenbank.
+   * @param {Object} view - Sicht {name, columns, text}.
+   * @param {number} i - Laufende Nummer (für die Überschrift-ID).
+   * @returns {{card:HTMLElement, heading:HTMLElement}} Karte und Überschrift.
+   */
+  function viewCard(db, view, i) {
+    let result = null;
+    let error = null;
+    try {
+      result = ns.sql.runQueries(db, 'SELECT * FROM ' + ns.sql.quoteName(view.name)).results[0];
+    } catch (e) {
+      error = e;
+    }
+    const headingId = 'view-heading-' + i;
+    const heading = dom.el('h3', { id: headingId, tabindex: '-1' }, [
+      ns.text.cleanCellText(view.name), ' ',
+      dom.el('span', { class: 'count' }, '(Sicht' + (result ? ', ' + dom.plural(result.rows.length, 'Zeile', 'Zeilen') : '') + ')')
+    ]);
+    const content = [heading];
+    if (result) {
+      content.push(dom.el('ul', { class: 'schema-list', 'aria-label': 'Spalten der Sicht ' + view.name },
+        result.columns.map((c) => dom.el('li', null, dom.el('code', { class: 'col-name' }, ns.text.cleanCellText(c))))));
+      if (result.rows.length === 0) {
+        content.push(dom.el('p', { class: 'hint' }, 'Die Sicht liefert derzeit keine Zeilen.'));
+      } else {
+        content.push(ns.ui.dataTable({
+          columns: result.columns, types: result.types, rows: result.rows,
+          label: 'Ergebnis der Sicht ' + view.name, scrollClass: 'scroll-5'
+        }));
+      }
+    } else {
+      content.push(ns.ui.errorBox(error, null));
+    }
+    content.push(sqlBlock('view:' + view.name.toLowerCase(), 'CREATE-VIEW-Befehl anzeigen', 'CREATE-VIEW-Befehl der Sicht ' + view.name, ns.sql.createViewSql(view)));
+    return { card: dom.el('section', { class: 'card view-card', 'aria-labelledby': headingId }, content), heading };
+  }
+
+  /** Fügt oben einen Sprungknopf zu einer Überschrift hinzu. */
+  function addJump(text, heading) {
+    const jump = dom.el('button', { type: 'button', class: 'btn btn-small' }, text);
+    jump.addEventListener('click', () => {
+      heading.scrollIntoView({ block: 'start' });
+      heading.focus({ preventScroll: true });
+    });
+    ui.toc.appendChild(jump);
   }
 
   /** Baut die Seite neu auf. */
@@ -119,6 +174,7 @@
     ui.notice.hidden = true;
     const info = ns.state.info();
     ui.info.textContent = 'Datenbank „' + info.name + '“: ' + dom.plural(db.tables.size, 'Tabelle', 'Tabellen') + ', ' +
+      (db.views.size ? dom.plural(db.views.size, 'Sicht', 'Sichten') + ', ' : '') +
       dom.plural(db.rowCount(), 'Datensatz', 'Datensätze') + (info.dirty ? ' (mit Änderungen von Seite 3)' : '') + '.';
 
     db.tableList().forEach((table, i) => {
@@ -127,12 +183,7 @@
         ns.text.cleanCellText(table.name), ' ',
         dom.el('span', { class: 'count' }, '(' + dom.plural(table.rows.length, 'Datensatz', 'Datensätze') + ')')
       ]);
-      const jump = dom.el('button', { type: 'button', class: 'btn btn-small' }, ns.text.cleanCellText(table.name));
-      jump.addEventListener('click', () => {
-        heading.scrollIntoView({ block: 'start' });
-        heading.focus({ preventScroll: true });
-      });
-      ui.toc.appendChild(jump);
+      addJump(ns.text.cleanCellText(table.name), heading);
 
       const content = [heading, schemaList(table)];
       const checks = checkList(table);
@@ -150,9 +201,20 @@
           scrollClass: 'scroll-5'
         }));
       }
-      content.push(createBlock(table));
+      content.push(sqlBlock('table:' + table.key, 'CREATE-TABLE-Befehl anzeigen', 'CREATE-TABLE-Befehl der Tabelle ' + table.name, ns.sql.createTableSql(table)));
       ui.list.appendChild(dom.el('section', { class: 'card table-card', 'aria-labelledby': headingId }, content));
     });
+
+    const views = Array.from(db.views.values());
+    if (views.length) {
+      ui.list.appendChild(dom.el('h3', { class: 'section-heading' }, 'Sichten (Views)'));
+      ui.list.appendChild(dom.el('p', { class: 'hint' }, 'Eine Sicht ist eine gespeicherte Abfrage. Ihr Inhalt wird bei jedem Aufruf aus den aktuellen Tabellen berechnet.'));
+      views.forEach((view, i) => {
+        const v = viewCard(db, view, i);
+        addJump(ns.text.cleanCellText(view.name) + ' (Sicht)', v.heading);
+        ui.list.appendChild(v.card);
+      });
+    }
   }
 
   ns.pages.tables = {

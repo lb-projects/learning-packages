@@ -151,7 +151,6 @@ main {
 }
 
 .intro {
-  max-width: 80ch;
   color: var(--muted);
 }
 
@@ -403,6 +402,10 @@ body > .status {
   margin: 0.4rem 0;
 }
 
+.result-warning .note-title {
+  display: block;
+}
+
 .result-count {
   font-weight: 600;
   margin: 0.4rem 0;
@@ -459,6 +462,11 @@ body > .status {
   white-space: pre;
 }
 
+.section-heading {
+  margin: 1.6rem 0 0.4rem;
+}
+
+.view-card h3,
 .table-card h3 {
   margin-top: 0;
 }

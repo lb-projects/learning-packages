@@ -40,7 +40,8 @@
   /** Ein-Zeichen-Operatoren. */
   const OPERATORS_1 = new Set(['=', '<', '>', '+', '-', '*', '/', '%']);
   /** Satzzeichen. */
-  const PUNCTUATION = new Set(['(', ')', ',', '.', ';']);
+  /** Satzzeichen; "@" nur für DEFINER=`user`@`host` in Exporten. */
+  const PUNCTUATION = new Set(['(', ')', ',', '.', ';', '@']);
 
   /**
    * Beschreibt ein einzelnes Zeichen für Fehlermeldungen (unsichtbare

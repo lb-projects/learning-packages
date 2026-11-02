@@ -45,7 +45,8 @@
    * @returns {string} Beschreibung.
    */
   function describeDb(db) {
-    return dom.plural(db.tables.size, 'Tabelle', 'Tabellen') + ', ' + dom.plural(db.rowCount(), 'Datensatz', 'Datensätze');
+    return dom.plural(db.tables.size, 'Tabelle', 'Tabellen') + (db.views.size ? ', ' + dom.plural(db.views.size, 'Sicht', 'Sichten') : '') +
+      ', ' + dom.plural(db.rowCount(), 'Datensatz', 'Datensätze');
   }
 
   /** Aktualisiert die Anzeige der geladenen Datenbank. */

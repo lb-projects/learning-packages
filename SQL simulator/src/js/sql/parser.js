@@ -3,7 +3,8 @@
  * @description Wandelt Tokens in einen Syntaxbaum (AST) um – rekursiver Abstieg.
  *
  * Unterstützte Anweisungen:
- *   SELECT, INSERT, UPDATE, DELETE,
+ *   [WITH …] SELECT, INSERT (VALUES oder Abfrage), UPDATE, DELETE,
+ *   CREATE [OR REPLACE] VIEW, DROP VIEW,
  *   CREATE TABLE, CREATE [UNIQUE] INDEX, DROP TABLE, ALTER TABLE (Teilmenge),
  *   sowie Anweisungen aus Datenbank-Exporten, die übersprungen werden
  *   (SET, START TRANSACTION, BEGIN, COMMIT, LOCK/UNLOCK TABLES, USE, CREATE DATABASE).
@@ -301,15 +302,15 @@
         this.fail('Erwartet wird ein SQL-Befehl (z. B. SELECT)');
       }
       switch (tok.upper) {
-        case 'SELECT': return this.parseSelect();
+        case 'SELECT':
+        case 'WITH':
+          return this.parseQuery();
         case 'INSERT': return this.parseInsert();
         case 'UPDATE': return this.parseUpdate();
         case 'DELETE': return this.parseDelete();
         case 'CREATE': return this.parseCreate();
         case 'DROP': return this.parseDrop();
         case 'ALTER': return this.parseAlter();
-        case 'WITH':
-          throw new SqlError('WITH (Common Table Expressions) wird in diesem Simulator nicht unterstützt.', tok.pos);
         default:
           if (IGNORED_START.has(tok.upper)) {
             this.next();
@@ -321,6 +322,63 @@
     }
 
     // ----- SELECT -----
+
+    /** @returns {boolean} true, wenn an Position k eine Abfrage beginnt (SELECT oder WITH). */
+    isQueryStart(k) {
+      return this.isKw('SELECT', k) || this.isKw('WITH', k);
+    }
+
+    /**
+     * Liest eine Abfrage: optional "WITH name [(spalten)] AS (abfrage), …", dann SELECT.
+     * Rekursive WITH-Abfragen werden nicht unterstützt.
+     *
+     * @returns {Object} SELECT-Knoten (mit Eigenschaft "with", falls vorhanden).
+     */
+    parseQuery() {
+      if (!this.isKw('WITH')) {
+        return this.parseSelect();
+      }
+      this.next();
+      this.enter();
+      if (this.isKw('RECURSIVE')) {
+        throw new SqlError('WITH RECURSIVE (rekursive Abfragen) wird in diesem Simulator nicht unterstützt.', this.peek().pos);
+      }
+      const ctes = [];
+      do {
+        const name = this.parseName('ein Name für die WITH-Abfrage');
+        if (ctes.some((c) => c.name.toLowerCase() === name.name.toLowerCase())) {
+          throw new SqlError('Der Name „' + name.name + '“ wird in WITH mehrfach vergeben.', name.pos);
+        }
+        let columns = null;
+        if (this.isSym('(')) {
+          this.next();
+          columns = [];
+          do {
+            columns.push(this.parseName('ein Spaltenname'));
+          } while (this.acceptSym(','));
+          this.expectSym(')', 'Die Spaltenliste wird nicht mit „)“ geschlossen');
+        }
+        this.expectKw('AS', 'Nach dem Namen der WITH-Abfrage wird „AS (SELECT …)“ erwartet');
+        this.expectSym('(', 'Nach AS wird „(“ mit einer Abfrage erwartet');
+        if (!this.isQueryStart()) {
+          this.fail('Erwartet wird eine Abfrage (SELECT …)', ['SELECT']);
+        }
+        const query = this.parseQuery();
+        this.expectSym(')', 'Die WITH-Abfrage wird nicht mit „)“ geschlossen');
+        ctes.push({ name: name.name, pos: name.pos, columns, query });
+      } while (this.acceptSym(','));
+      if (!this.isKw('SELECT')) {
+        if (this.isKw('UPDATE') || this.isKw('DELETE') || this.isKw('INSERT')) {
+          throw new SqlError('WITH ist in diesem Simulator nur vor SELECT erlaubt.', this.peek().pos,
+            'Zum Einfügen schreiben Sie: INSERT INTO tabelle (Spalten) WITH … SELECT …');
+        }
+        this.fail('Nach den WITH-Abfragen wird „SELECT …“ erwartet', ['SELECT']);
+      }
+      const node = this.parseSelect();
+      node.with = ctes;
+      this.leave();
+      return node;
+    }
 
     parseSelect() {
       this.enter();
@@ -503,11 +561,11 @@
     parseTableRef() {
       const tok = this.peek();
       if (this.isSym('(')) {
-        if (!this.isKw('SELECT', 1)) {
+        if (!this.isQueryStart(1)) {
           this.fail('Nach „(“ in FROM wird eine Unterabfrage (SELECT …) erwartet', null);
         }
         this.next();
-        const query = this.parseSelect();
+        const query = this.parseQuery();
         this.expectSym(')', 'Die Unterabfrage wird nicht mit „)“ geschlossen');
         let alias = null;
         if (this.acceptKw('AS') || this.canStartAlias()) {
@@ -517,7 +575,12 @@
         }
         return { type: 'subquery', query, alias, pos: tok.pos };
       }
-      const name = this.parseName('ein Tabellenname');
+      let name = this.parseName('ein Tabellenname');
+      if (this.isSym('.')) {
+        // Datenbankpräfix wie in Exporten (`db`.`tabelle`) – es gibt nur eine Datenbank.
+        this.next();
+        name = this.parseName('ein Tabellenname nach dem Datenbanknamen', true);
+      }
       let alias = null;
       if (this.acceptKw('AS')) {
         alias = this.parseName('ein Alias (Name)').name;
@@ -606,8 +669,8 @@
           this.next();
           this.expectSym('(', 'Nach IN wird „(“ mit einer Werteliste oder Unterabfrage erwartet');
           this.enter();
-          if (this.isKw('SELECT')) {
-            const query = this.parseSelect();
+          if (this.isQueryStart()) {
+            const query = this.parseQuery();
             this.expectSym(')', 'Die Unterabfrage wird nicht mit „)“ geschlossen');
             left = { type: 'in', expr: left, list: null, query, not, pos: tok.pos };
           } else {
@@ -681,8 +744,8 @@
         this.next();
         this.enter();
         let node;
-        if (this.isKw('SELECT')) {
-          node = { type: 'subquery', query: this.parseSelect(), pos: tok.pos };
+        if (this.isQueryStart()) {
+          node = { type: 'subquery', query: this.parseQuery(), pos: tok.pos };
           this.expectSym(')', 'Die Unterabfrage wird nicht mit „)“ geschlossen');
         } else {
           node = this.parseExpr();
@@ -704,7 +767,10 @@
             this.next();
             this.expectSym('(', 'Nach EXISTS wird „(SELECT …)“ erwartet');
             this.enter();
-            const query = this.parseSelect();
+            if (!this.isQueryStart()) {
+              this.fail('Nach EXISTS ( wird eine Abfrage (SELECT …) erwartet', ['SELECT']);
+            }
+            const query = this.parseQuery();
             this.expectSym(')', 'Die Unterabfrage wird nicht mit „)“ geschlossen');
             this.leave();
             return { type: 'exists', query, pos: tok.pos };
@@ -731,12 +797,21 @@
             throw new SqlError(tok.value + '.* ist nur direkt in der SELECT-Liste erlaubt.', tok.pos);
           }
           const column = this.parseName('ein Spaltenname nach „' + tok.value + '.“', true);
+          if (this.isSym('.')) {
+            // Datenbankpräfix wie in Exporten (`db`.`tabelle`.`spalte`) – wird ignoriert.
+            this.next();
+            const inner = this.parseName('ein Spaltenname nach „' + tok.value + '.' + column.name + '.“', true);
+            return { type: 'column', table: column.name, name: inner.name, pos: tok.pos };
+          }
           return { type: 'column', table: tok.value, name: column.name, pos: tok.pos };
         }
         return { type: 'column', table: null, name: tok.value, pos: tok.pos };
       }
       if (this.isSym('*')) {
         this.fail('„*“ ist hier nicht erlaubt', null, '„*“ steht nur direkt nach SELECT oder in COUNT(*).');
+      }
+      if (this.isSym('@')) {
+        this.fail('Erwartet wird ein Ausdruck (z. B. ein Spaltenname, eine Zahl oder ein Text)', null, 'Variablen wie @name werden in diesem Simulator nicht unterstützt.');
       }
       return this.fail('Erwartet wird ein Ausdruck (z. B. ein Spaltenname, eine Zahl oder ein Text)', EXPRESSION_WORDS);
     }
@@ -772,7 +847,7 @@
       this.expectKw('INTO', 'Nach INSERT wird „INTO“ erwartet');
       const table = this.parseName('ein Tabellenname');
       let columns = null;
-      if (this.isSym('(')) {
+      if (this.isSym('(') && !this.isQueryStart(1)) {
         this.next();
         columns = [];
         do {
@@ -780,8 +855,19 @@
         } while (this.acceptSym(','));
         this.expectSym(')', 'Die Spaltenliste wird nicht mit „)“ geschlossen');
       }
-      if (this.isKw('SELECT')) {
-        throw new SqlError('INSERT … SELECT wird nicht unterstützt. Verwenden Sie INSERT … VALUES (…).', this.peek().pos);
+      let query = null;
+      if (this.isQueryStart()) {
+        query = this.parseQuery();
+      } else if (this.isSym('(') && this.isQueryStart(1)) {
+        this.next();
+        query = this.parseQuery();
+        this.expectSym(')', 'Die Abfrage wird nicht mit „)“ geschlossen');
+      }
+      if (query) {
+        if (this.isKw('ON')) {
+          throw new SqlError('ON DUPLICATE KEY UPDATE wird nicht unterstützt.', this.peek().pos);
+        }
+        return { type: 'insert', table: table.name, tablePos: table.pos, columns, rows: null, query, pos: start.pos };
       }
       if (this.isKw('SET')) {
         throw new SqlError('INSERT … SET wird nicht unterstützt. Verwenden Sie INSERT INTO t (Spalten) VALUES (…).', this.peek().pos);
@@ -860,6 +946,19 @@
 
     parseCreate() {
       const start = this.next();
+      let orReplace = false;
+      if (this.isKw('OR')) {
+        this.next();
+        this.expectKw('REPLACE', 'Erwartet wird „OR REPLACE“');
+        orReplace = true;
+      }
+      const viewOptions = this.skipViewOptions();
+      if (this.isKw('VIEW')) {
+        return this.parseCreateView(start, orReplace);
+      }
+      if (orReplace || viewOptions) {
+        this.fail('Erwartet wird „VIEW“', ['VIEW']);
+      }
       if (this.isKw('DATABASE') || this.isKw('SCHEMA')) {
         this.next();
         this.skipStatement();
@@ -877,7 +976,7 @@
         const columns = this.parseKeyColumns();
         return { type: 'createIndex', unique, table: table.name, tablePos: table.pos, columns, pos: start.pos };
       }
-      this.expectKw('TABLE', 'Nach CREATE wird „TABLE“ erwartet');
+      this.expectKw('TABLE', 'Nach CREATE wird „TABLE“ oder „VIEW“ erwartet');
       let ifNotExists = false;
       if (this.isKw('IF')) {
         this.next();
@@ -903,6 +1002,92 @@
       this.expectSym(')', 'Die Spaltenliste wird nicht mit „)“ geschlossen – fehlt ein Komma?');
       this.skipTableOptions();
       return { type: 'createTable', name: name.name, namePos: name.pos, ifNotExists, columns, constraints, pos: start.pos };
+    }
+
+    /**
+     * Überspringt View-Optionen aus Exporten:
+     * ALGORITHM=…, DEFINER=`user`@`host` bzw. CURRENT_USER, SQL SECURITY DEFINER|INVOKER.
+     *
+     * @returns {boolean} true, wenn mindestens eine Option gelesen wurde.
+     */
+    skipViewOptions() {
+      let found = false;
+      const value = (what) => {
+        const t = this.peek();
+        if (t.type !== 'word' && t.type !== 'ident' && t.type !== 'string') {
+          this.fail('Erwartet wird ' + what);
+        }
+        this.next();
+      };
+      for (;;) {
+        if (this.isKw('ALGORITHM')) {
+          this.next();
+          this.expectSym('=', 'Nach ALGORITHM wird „=“ erwartet');
+          value('ein Algorithmus (z. B. UNDEFINED)');
+        } else if (this.isKw('DEFINER')) {
+          this.next();
+          this.expectSym('=', 'Nach DEFINER wird „=“ erwartet');
+          value('ein Benutzername');
+          if (this.acceptSym('@')) {
+            value('ein Rechnername');
+          } else if (this.acceptSym('(')) {
+            this.expectSym(')', 'Erwartet wird „)“');
+          }
+        } else if (this.isKw('SQL') && this.isKw('SECURITY', 1)) {
+          this.next();
+          this.next();
+          if (!this.acceptKw('DEFINER') && !this.acceptKw('INVOKER')) {
+            this.fail('Nach SQL SECURITY wird DEFINER oder INVOKER erwartet');
+          }
+        } else {
+          return found;
+        }
+        found = true;
+      }
+    }
+
+    /**
+     * Liest CREATE [OR REPLACE] VIEW name [(spalten)] AS abfrage [WITH [CASCADED|LOCAL] CHECK OPTION].
+     *
+     * @param {Object} start - Token "CREATE".
+     * @param {boolean} orReplace - OR REPLACE angegeben.
+     * @returns {Object} Anweisung {type:'createView', …}.
+     */
+    parseCreateView(start, orReplace) {
+      this.next(); // VIEW
+      let ifNotExists = false;
+      if (this.isKw('IF')) {
+        this.next();
+        this.expectKw('NOT', 'Erwartet wird „IF NOT EXISTS“');
+        this.expectKw('EXISTS', 'Erwartet wird „IF NOT EXISTS“');
+        ifNotExists = true;
+      }
+      const name = this.parseName('ein Name für die Sicht');
+      let columns = null;
+      if (this.isSym('(')) {
+        this.next();
+        columns = [];
+        do {
+          columns.push(this.parseName('ein Spaltenname'));
+        } while (this.acceptSym(','));
+        this.expectSym(')', 'Die Spaltenliste wird nicht mit „)“ geschlossen');
+      }
+      this.expectKw('AS', 'Nach dem Namen der Sicht wird „AS SELECT …“ erwartet');
+      if (!this.isQueryStart()) {
+        this.fail('Nach AS wird eine Abfrage (SELECT …) erwartet', ['SELECT']);
+      }
+      const first = this.i;
+      const query = this.parseQuery();
+      const text = this.sourceText(first, this.i);
+      if (this.isKw('WITH')) {
+        this.next();
+        if (!this.acceptKw('CASCADED')) {
+          this.acceptKw('LOCAL');
+        }
+        this.expectKw('CHECK', 'Erwartet wird „WITH CHECK OPTION“');
+        this.expectKw('OPTION', 'Erwartet wird „WITH CHECK OPTION“');
+      }
+      return { type: 'createView', name: name.name, namePos: name.pos, columns, orReplace, ifNotExists, query, queryText: text, pos: start.pos };
     }
 
     /** Überspringt Tabellenoptionen wie ENGINE=InnoDB DEFAULT CHARSET=utf8mb4. */
@@ -1245,7 +1430,23 @@
       if (this.isKw('INDEX')) {
         throw new SqlError('DROP INDEX wird nicht unterstützt.', this.peek().pos);
       }
-      this.expectKw('TABLE', 'Nach DROP wird „TABLE“ erwartet');
+      if (this.acceptKw('VIEW')) {
+        let ifExists = false;
+        if (this.isKw('IF')) {
+          this.next();
+          this.expectKw('EXISTS', 'Erwartet wird „IF EXISTS“');
+          ifExists = true;
+        }
+        const names = [];
+        do {
+          names.push(this.parseName('ein Name einer Sicht'));
+        } while (this.acceptSym(','));
+        if (!this.acceptKw('CASCADE')) {
+          this.acceptKw('RESTRICT');
+        }
+        return { type: 'dropView', names, ifExists, pos: start.pos };
+      }
+      this.expectKw('TABLE', 'Nach DROP wird „TABLE“ oder „VIEW“ erwartet');
       let ifExists = false;
       if (this.isKw('IF')) {
         this.next();

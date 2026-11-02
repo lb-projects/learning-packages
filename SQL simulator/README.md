@@ -7,9 +7,9 @@ Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausfüh
 
 | Seite | Inhalt |
 |---|---|
-| 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO`) |
-| 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL, CHECK-Bedingungen) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen. Unter jeder Tabelle lässt sich der `CREATE TABLE`-Befehl aufklappen (anfangs zugeklappt) |
-| 3 SQL-Befehle | Eingabemaske mit „Ausführen“ (auch Strg + Enter); Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
+| 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO` auch mit `SELECT`/`WITH`, `CREATE VIEW`) |
+| 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL, CHECK-Bedingungen) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen. Unter jeder Tabelle lässt sich der `CREATE TABLE`-Befehl aufklappen (anfangs zugeklappt). Sichten (Views) stehen in einem eigenen Abschnitt mit ihrem aktuellen Ergebnis und dem aufklappbaren `CREATE VIEW`-Befehl |
+| 3 SQL-Befehle | Eingabemaske (anfangs leer) mit „Ausführen“ (auch Strg + Enter) für Abfragen, Datenänderungen und `CREATE/DROP VIEW`; Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten.
 Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her.
@@ -22,13 +22,15 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und d
 - **Bedingungen:** `= <> != < <= > >=`, `AND`, `OR`, `NOT`, `BETWEEN … AND …`, `LIKE` mit `%` und `_` (Maskierung mit `\`), `IN (Liste)`, `IS [NOT] NULL`, `[NOT] EXISTS`.
 - **Aggregatfunktionen:** `COUNT(*)`, `COUNT(Spalte)`, `COUNT(DISTINCT …)`, `SUM`, `AVG`, `MIN`, `MAX`; dazu `ROUND(Zahl [, Stellen])`.
 - **Unterabfragen:** als Wert (`WHERE Preis > (SELECT AVG(Preis) …)`), mit `IN`/`EXISTS`, korreliert und als Tabelle in `FROM (SELECT …) AS t`.
+- **WITH (Common Table Expressions):** `WITH teuer AS (SELECT …), billig (name, preis) AS (SELECT …) SELECT … FROM teuer …`. Mehrere WITH-Abfragen sind möglich, jede kann die vorher definierten verwenden; optional mit Spaltenliste. WITH funktioniert auch in Unterabfragen, in `FROM (…)`, in Sichten und in `INSERT … SELECT`. Eine WITH-Abfrage verdeckt eine gleichnamige Tabelle. Nicht rekursiv.
 - **Rechnen:** `+ - * / %`, Klammern, Vorzeichen.
-- **Daten ändern (Seite 3):** `INSERT INTO … [(Spalten)] VALUES (…), (…)`, `UPDATE … SET … [WHERE …]`, `DELETE FROM … [WHERE …]`. Mehrere Befehle (getrennt durch `;`) werden **gemeinsam** ausgeführt: Enthält einer einen Fehler, bleibt die Datenbank unverändert.
+- **Daten ändern (Seite 3):** `INSERT INTO … [(Spalten)] VALUES (…), (…)` oder `INSERT INTO … [(Spalten)] [WITH …] SELECT …` (das Abfrageergebnis wird vollständig berechnet, bevor eingefügt wird), `UPDATE … SET … [WHERE …]`, `DELETE FROM … [WHERE …]`. Mehrere Befehle (getrennt durch `;`) werden **gemeinsam** ausgeführt: Enthält einer einen Fehler, bleibt die Datenbank unverändert.
+- **Sichten (Views, Seite 3 und Dateien):** `CREATE [OR REPLACE] VIEW name [(Spalten)] AS SELECT …` (auch mit `WITH`), `DROP VIEW [IF EXISTS] name`. Eine Sicht speichert nur ihre Abfrage; bei jeder Verwendung wird sie neu ausgewertet und zeigt so immer den aktuellen Stand der Tabellen. In Sichten kann nicht geschrieben werden (`INSERT`/`UPDATE`/`DELETE` ergeben eine Meldung). Wird eine benötigte Tabelle gelöscht, meldet die Sicht beim Abfragen „ungültig“. Sichten, die über andere Sichten auf sich selbst verweisen, werden abgelehnt.
 - **Hinweise zum Ergebnis** (die Abfrage wird trotzdem ausgeführt):
   - Stehen mehrere Tabellen in `FROM`, ohne dass alle über eine Bedingung (in `ON` oder `WHERE`) verbunden sind, entsteht ein kartesisches Produkt. Der Hinweis nennt die nicht verknüpften Tabellen und schlägt, wenn möglich, eine Bedingung aus den Fremdschlüsseln vor, z. B. `bp.bestellung_id = b.id`. Ein ausdrückliches `CROSS JOIN` gilt als beabsichtigt und ergibt keinen Hinweis.
   - Vergleicht `=`, `IN` oder `LIKE` eine Spalte mit einem Text, der nur in anderer Groß-/Kleinschreibung vorkommt (`'berlin'` statt `'Berlin'`), kommt der Vorschlag „Meinten Sie 'Berlin'?“.
   - Nicht großgeschriebene Schlüsselwörter werden mit der üblichen Schreibweise genannt (`select → SELECT`).
-- **Nicht unterstützt** (mit eigener, verständlicher Meldung): `UNION`, `CASE`, `WITH`, `FULL OUTER JOIN`, `NATURAL JOIN`, `USING`, `ANY/ALL`, weitere Funktionen (z. B. `UPPER`, `CONCAT`, Datumsfunktionen).
+- **Nicht unterstützt** (mit eigener, verständlicher Meldung): `UNION`, `CASE`, `WITH RECURSIVE`, `FULL OUTER JOIN`, `NATURAL JOIN`, `USING`, `ANY/ALL`, weitere Funktionen (z. B. `UPPER`, `CONCAT`, Datumsfunktionen).
 
 ### Festlegungen (an MySQL/MariaDB angelehnt)
 
@@ -57,9 +59,10 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält 
 ### Dateiformat für den Upload (Seite 1)
 
 - **Dateien:** `.sql` oder `.txt`, höchstens 1 MB, Zeichensatz UTF-8 (sonst wird Windows-1252 angenommen, mit Hinweis).
-- **Erlaubte Anweisungen:** `DROP TABLE [IF EXISTS]`, `CREATE TABLE [IF NOT EXISTS]` (auch mit `CHECK`) und `INSERT INTO`; aus Exporten zusätzlich `ALTER TABLE … ADD PRIMARY KEY / ADD [UNIQUE] KEY / ADD CONSTRAINT … FOREIGN KEY / ADD [CONSTRAINT …] CHECK / ADD COLUMN / MODIFY` und `CREATE [UNIQUE] INDEX`.
+- **Erlaubte Anweisungen:** `DROP TABLE [IF EXISTS]`, `CREATE TABLE [IF NOT EXISTS]` (auch mit `CHECK`), `INSERT INTO` (auch `INSERT INTO … [WITH …] SELECT …`), `CREATE [OR REPLACE] VIEW` und `DROP VIEW`; aus Exporten zusätzlich `ALTER TABLE … ADD PRIMARY KEY / ADD [UNIQUE] KEY / ADD CONSTRAINT … FOREIGN KEY / ADD [CONSTRAINT …] CHECK / ADD COLUMN / MODIFY` und `CREATE [UNIQUE] INDEX`.
 - **Namen** müssen auch in der Datei überall gleich geschrieben sein (z. B. in `PRIMARY KEY (id)` und `INSERT INTO kurs (…)`).
 - **Übersprungen** (ohne Wirkung, mit Hinweis): `SET`, `START TRANSACTION`, `BEGIN`, `COMMIT`, `LOCK/UNLOCK TABLES`, `USE`, `CREATE DATABASE` sowie Sonderkommentare `/*! … */`. Tabellenoptionen wie `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4` werden ignoriert.
+- **Sichten aus Exporten:** Zusätze wie ``ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER`` und `WITH CASCADED CHECK OPTION` werden überlesen. Ein Datenbankpräfix wie in `` `schule`.`t`.`a` `` wird ignoriert (es gibt nur eine Datenbank). Die in Exporten übliche Ersatztabelle mit dem Namen der Sicht, die anschließend per `DROP TABLE` entfernt wird, funktioniert ebenfalls.
 - **Grenzen:** 50 Tabellen, 50 Spalten je Tabelle, 20.000 Datensätze insgesamt, Texte bis 1.000 Zeichen, Namen bis 64 Zeichen.
 - Eine Datei wird **ganz oder gar nicht** übernommen. Bei einem Fehler erscheint die Meldung mit Zeile, Spalte und Ausschnitt; die bisherige Datenbank bleibt unverändert.
 
@@ -184,11 +187,12 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (über 120) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (über 140) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
 - jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;
 - `INSERT`/`UPDATE`/`DELETE` mit Typ-, Schlüssel- und `CHECK`-Prüfungen sowie Atomarität;
+- `WITH`-Abfragen, `INSERT … SELECT` und Sichten (Anlegen, Ersetzen, Löschen, ungültige und zirkuläre Sichten, Import im Export-Stil);
 - erzeugter `CREATE TABLE`-Befehl: Er lässt sich für alle Beispieltabellen wieder einlesen und ergibt denselben Aufbau;
 - Import der Beispieldateien, eines Exports im phpMyAdmin-Stil und fehlerhafter Dateien; Grenzwerte;
 - präparierte Angriffe: HTML-/Skript-Einschleusung in Werten und Namen, `__proto__` als Name, Richtungszeichen, kartesisches Produkt, tiefe Verschachtelung, langsame `LIKE`-Muster, getarnte Binärdateien, übergroße Dateien, schneller Doppel-Upload;

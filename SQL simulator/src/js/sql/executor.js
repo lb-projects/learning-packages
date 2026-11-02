@@ -49,15 +49,15 @@
   const COMPARISON_OPS = new Set(['=', '<>', '<', '<=', '>', '>=']);
 
   /** Anweisungen, die auf Seite 3 erlaubt sind. */
-  const QUERY_TYPES = new Set(['select', 'insert', 'update', 'delete']);
+  const QUERY_TYPES = new Set(['select', 'insert', 'update', 'delete', 'createView', 'dropView']);
   /** Anweisungen, die beim Laden einer SQL-Datei erlaubt sind. */
-  const IMPORT_TYPES = new Set(['dropTable', 'createTable', 'createIndex', 'alterTable', 'insert', 'ignored']);
+  const IMPORT_TYPES = new Set(['dropTable', 'createTable', 'createIndex', 'alterTable', 'insert', 'createView', 'dropView', 'ignored']);
 
   /** Anzeigenamen der Anweisungsarten. */
   const TYPE_NAMES = new Map([
     ['select', 'SELECT'], ['insert', 'INSERT'], ['update', 'UPDATE'], ['delete', 'DELETE'],
     ['createTable', 'CREATE TABLE'], ['createIndex', 'CREATE INDEX'], ['dropTable', 'DROP TABLE'],
-    ['alterTable', 'ALTER TABLE']
+    ['alterTable', 'ALTER TABLE'], ['createView', 'CREATE VIEW'], ['dropView', 'DROP VIEW']
   ]);
 
   /** Laufzeitzustand der aktuellen Anweisung (die Ausführung ist synchron). */
@@ -544,23 +544,26 @@
    */
   function bindFrom(item, scope, flags) {
     if (item.type === 'table') {
+      const cte = findCte(scope.cteEnv, item.name, item.pos);
+      if (cte) {
+        const srcIndex = addSource(scope, derivedSource(cte.name, item.alias, cte.out), item.pos);
+        return { type: 'derived', query: cte.query, cte, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
+      }
+      const view = rt.db.views.get(item.name.toLowerCase());
+      if (view) {
+        ns.sql.requireExactName(item.name, view.name, 'Die Tabelle bzw. Sicht „' + item.name + '“ gibt es nicht.', item.pos);
+        const bound = bindView(view, item.pos);
+        const srcIndex = addSource(scope, derivedSource(view.name, item.alias, bound.out), item.pos);
+        return { type: 'derived', query: bound.query, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
+      }
       const table = rt.db.requireTable(item.name, item.pos);
       const srcIndex = addSource(scope, tableSource(table, item.alias), item.pos);
       return { type: 'table', table, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
     }
     if (item.type === 'subquery') {
-      bindSelect(item.query, null);
-      const columns = item.query.outputs.map((o) => ({ name: o.name, type: o.type }));
-      const colIndex = new Map();
-      columns.forEach((c, i) => {
-        const key = c.name.toLowerCase();
-        if (colIndex.has(key)) {
-          throw new SqlError('In der Unterabfrage „' + item.alias + '“ kommt die Spalte „' + c.name + '“ mehrfach vor.', item.pos,
-            'Vergeben Sie in der Unterabfrage eindeutige Namen mit AS.');
-        }
-        colIndex.set(key, i);
-      });
-      const source = { key: item.alias.toLowerCase(), label: item.alias, tableKey: null, tableName: null, aliasGiven: false, columns, colIndex, pk: null };
+      bindSelect(item.query, null, scope.cteEnv);
+      const out = derivedColumns(item.alias, null, item.query, item.pos, { dat: 'der Unterabfrage', acc: 'die Unterabfrage' });
+      const source = { key: item.alias.toLowerCase(), label: item.alias, tableKey: null, tableName: null, aliasGiven: false, columns: out.columns, colIndex: out.colIndex, pk: null };
       const srcIndex = addSource(scope, source, item.pos);
       return { type: 'derived', query: item.query, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
     }
@@ -580,6 +583,105 @@
       plan.hash = findHashCondition(conjuncts(on, []), range, scope);
     }
     return plan;
+  }
+
+  /** Größte Verschachtelung von Sichten (Schutz vor Sichten, die auf sich selbst verweisen). */
+  const MAX_VIEW_DEPTH = 16;
+
+  /**
+   * Spalten einer abgeleiteten Quelle (Unterabfrage in FROM, WITH-Abfrage, Sicht).
+   *
+   * @param {string} label - Name für Meldungen.
+   * @param {Array<{name:string}>|null} names - Ausdrückliche Spaltennamen oder null.
+   * @param {Object} query - Gebundene Abfrage.
+   * @param {Object|null} pos - Position.
+   * @param {{dat:string, acc:string}} what - Bezeichnung, z. B. {dat:'der Sicht', acc:'die Sicht'}.
+   * @returns {{columns:Array<{name:string, type:Object|null}>, colIndex:Map<string, number>}} Spalten.
+   */
+  function derivedColumns(label, names, query, pos, what) {
+    let columns = query.outputs.map((o) => ({ name: o.name, type: o.type }));
+    if (names) {
+      if (names.length !== columns.length) {
+        throw new SqlError('Für ' + what.acc + ' „' + label + '“ sind ' + names.length + ' Spaltennamen angegeben, die Abfrage liefert aber ' + columns.length + ' Spalte(n).', pos);
+      }
+      columns = columns.map((c, i) => ({ name: names[i].name, type: c.type }));
+    }
+    const colIndex = new Map();
+    columns.forEach((c, i) => {
+      const key = c.name.toLowerCase();
+      if (colIndex.has(key)) {
+        throw new SqlError('In ' + what.dat + ' „' + label + '“ kommt die Spalte „' + c.name + '“ mehrfach vor.', pos,
+          'Vergeben Sie eindeutige Namen mit AS.');
+      }
+      colIndex.set(key, i);
+    });
+    return { columns, colIndex };
+  }
+
+  /** @returns {Object} Quelle für eine WITH-Abfrage oder Sicht (mit optionalem Alias). */
+  function derivedSource(name, alias, out) {
+    return {
+      key: (alias || name).toLowerCase(), label: alias || name, tableKey: null, tableName: alias ? name : null,
+      aliasGiven: !!alias, columns: out.columns, colIndex: out.colIndex, pk: null
+    };
+  }
+
+  /**
+   * Sucht eine WITH-Abfrage in der Umgebung (innere zuerst).
+   *
+   * @param {Object|null} env - Umgebung {map, parent}.
+   * @param {string} name - Name aus FROM.
+   * @param {Object} pos - Position.
+   * @returns {Object|null} WITH-Abfrage oder null.
+   */
+  function findCte(env, name, pos) {
+    const key = name.toLowerCase();
+    for (let e = env; e; e = e.parent) {
+      const cte = e.map.get(key);
+      if (cte) {
+        ns.sql.requireExactName(name, cte.name, 'Die Tabelle bzw. WITH-Abfrage „' + name + '“ gibt es nicht.', pos);
+        return cte;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Bindet die Abfrage einer Sicht (frisch aus dem gespeicherten Text, damit sie
+   * immer den aktuellen Stand der Tabellen zeigt). Hinweise aus der Definition
+   * der Sicht werden nicht gemeldet.
+   *
+   * @param {Object} view - Sicht {name, columns, text}.
+   * @param {Object} pos - Position des Verweises.
+   * @returns {{query:Object, out:Object}} Gebundene Abfrage und Spalten.
+   */
+  function bindView(view, pos) {
+    if (rt.viewDepth >= MAX_VIEW_DEPTH) {
+      const err = new SqlError('Die Sicht „' + view.name + '“ verweist (über andere Sichten) auf sich selbst.', pos);
+      err.fromView = true;
+      throw err;
+    }
+    const saved = { warnings: rt.warnings, literalChecks: rt.literalChecks };
+    rt.viewDepth++;
+    rt.warnings = [];
+    rt.literalChecks = null;
+    try {
+      const query = ns.sql.parse(view.text)[0];
+      bindSelect(query, null, null);
+      const out = derivedColumns(view.name, view.columns ? view.columns.map((n) => ({ name: n })) : null, query, pos, { dat: 'der Sicht', acc: 'die Sicht' });
+      return { query, out };
+    } catch (error) {
+      if (error instanceof SqlError && !error.fromView) {
+        const err = new SqlError('Die Sicht „' + view.name + '“ ist ungültig: ' + error.message, pos, error.hint);
+        err.fromView = true;
+        throw err;
+      }
+      throw error;
+    } finally {
+      rt.viewDepth--;
+      rt.warnings = saved.warnings;
+      rt.literalChecks = saved.literalChecks;
+    }
   }
 
   /** Ergänzt Hash-Bedingungen aus WHERE für innere Verknüpfungen ohne eigene. */
@@ -610,11 +712,22 @@
    *
    * @param {Object} q - SELECT-Knoten.
    * @param {Object|null} parentScope - Scope der umgebenden Abfrage.
+   * @param {Object|null} [cteEnv] - Sichtbare WITH-Abfragen (ohne Angabe: die des umgebenden Scopes).
    */
-  function bindSelect(q, parentScope) {
+  function bindSelect(q, parentScope, cteEnv) {
     const scope = makeScope(parentScope, q);
     q.correlated = false;
     q.scope = scope;
+    let env = cteEnv !== undefined ? cteEnv : (parentScope ? parentScope.cteEnv : null);
+    if (q.with) {
+      // WITH-Abfragen der Reihe nach: jede sieht nur die vorher definierten.
+      for (const cte of q.with) {
+        bindSelect(cte.query, null, env);
+        cte.out = derivedColumns(cte.name, cte.columns, cte.query, cte.pos, { dat: 'der WITH-Abfrage', acc: 'die WITH-Abfrage' });
+        env = { map: new Map([[cte.name.toLowerCase(), cte]]), parent: env };
+      }
+    }
+    scope.cteEnv = env;
     const aliasNames = new Set(q.columns.filter((c) => c.kind === 'expr' && c.alias).map((c) => c.alias.toLowerCase()));
     const baseFlags = { aliasNames };
 
@@ -1017,7 +1130,7 @@
     if (!table) {
       return;
     }
-    rt.literalChecks.push({ table, rows: table.rows, col: column.ref.col, values, kind });
+    rt.literalChecks.push({ table, rows: table.rows.slice(), col: column.ref.col, values, kind });
   }
 
   /**
@@ -1494,7 +1607,13 @@
       return plan.table.rows.map((r) => [r]);
     }
     if (plan.type === 'derived') {
-      return runSelect(plan.query, null, false).rows.map((r) => [r]);
+      // Abgeleitete Quellen sind nie korreliert: einmal je Anweisung berechnen (WITH-Abfragen
+      // werden so auch bei mehrfacher Verwendung und in korrelierten Unterabfragen nur einmal ausgewertet).
+      const holder = plan.cte || plan;
+      if (!holder.cachedFrames) {
+        holder.cachedFrames = runSelect(plan.query, null, false).rows.map((r) => [r]);
+      }
+      return holder.cachedFrames;
     }
     const L = runFrom(plan.left, outerCtx);
     const R = runFrom(plan.right, outerCtx);
@@ -1833,46 +1952,161 @@
       targets = table.columns.map((c, i) => i);
     }
     const names = targets.map((i) => table.columns[i].name).join(', ');
-    const scope = makeScope(null, null);
-    const ctx = { frame: [], parent: null, offset: 0 };
+    // Quellzeilen: Werte je Zielspalte (Map Spaltenindex → {value, pos}).
+    const sources = [];
+    if (stmt.query) {
+      // INSERT … SELECT: erst vollständig auswerten, dann einfügen (Schnappschuss).
+      rt.topQuery = stmt.query;
+      bindSelect(stmt.query, null);
+      if (stmt.query.outputs.length !== targets.length) {
+        throw new SqlError('Die Abfrage liefert ' + stmt.query.outputs.length + ' Spalte(n), erwartet werden ' + targets.length + ' (' + names + ').', stmt.query.pos,
+          stmt.columns ? null : 'Geben Sie die Zielspalten an: INSERT INTO ' + table.name + ' (Spalte1, Spalte2) SELECT …');
+      }
+      runSelect(stmt.query, null, true).rows.forEach((values, r) => {
+        const given = new Map();
+        values.forEach((v, k) => given.set(targets[k], { value: v, pos: stmt.query.pos }));
+        sources.push({ given, pos: stmt.query.pos, rowNo: r + 1 });
+      });
+    } else {
+      const scope = makeScope(null, null);
+      const ctx = { frame: [], parent: null, offset: 0 };
+      stmt.rows.forEach((row, r) => {
+        tick();
+        if (row.values.length !== targets.length) {
+          throw new SqlError('Die ' + (r + 1) + '. Werteliste enthält ' + row.values.length + ' Wert(e), erwartet werden ' + targets.length + ' (' + names + ').', row.pos,
+            stmt.columns ? null : 'Ohne Spaltenliste braucht jede Zeile Werte für alle Spalten. Tipp: INSERT INTO ' + table.name + ' (Spalte1, Spalte2) VALUES (…).');
+        }
+        const given = new Map();
+        row.values.forEach((e, k) => {
+          const bound = bindExpr(e, scope, { clause: 'VALUES', allowAgg: false });
+          given.set(targets[k], { value: evalExpr(bound, ctx), pos: e.pos });
+        });
+        sources.push({ given, pos: row.pos, rowNo: null });
+      });
+    }
     const rows = [];
     const positions = [];
-    stmt.rows.forEach((row, r) => {
+    for (const src of sources) {
       tick();
-      if (row.values.length !== targets.length) {
-        throw new SqlError('Die ' + (r + 1) + '. Werteliste enthält ' + row.values.length + ' Wert(e), erwartet werden ' + targets.length + ' (' + names + ').', row.pos,
-          stmt.columns ? null : 'Ohne Spaltenliste braucht jede Zeile Werte für alle Spalten. Tipp: INSERT INTO ' + table.name + ' (Spalte1, Spalte2) VALUES (…).');
+      try {
+        const out = buildInsertRow(table, src.given, src.pos);
+        checkRow(table, out, src.pos);
+        rows.push(out);
+        positions.push(src.pos);
+      } catch (error) {
+        if (error instanceof SqlError && src.rowNo !== null) {
+          error.message = error.message.replace(/\.$/, '') + ' (Zeile ' + src.rowNo + ' des Abfrageergebnisses).';
+        }
+        throw error;
       }
-      const given = new Map();
-      row.values.forEach((e, k) => {
-        const bound = bindExpr(e, scope, { clause: 'VALUES', allowAgg: false });
-        given.set(targets[k], { value: evalExpr(bound, ctx), pos: e.pos });
-      });
-      const out = table.columns.map((column, i) => {
-        const g = given.get(i);
-        let value = g ? g.value : undefined;
-        const pos = g ? g.pos : row.pos;
-        if (column.autoIncrement && (value === undefined || value === null || value === 0)) {
-          value = table.autoIncrementNext;
-          table.autoIncrementNext++;
-        } else if (value === undefined) {
-          value = missingValue(column, pos);
-        }
-        value = ns.sql.coerceValue(value, column, pos);
-        if (value === null && column.notNull) {
-          throw new SqlError('Die Spalte „' + column.name + '“ darf nicht NULL sein.', pos);
-        }
-        if (column.autoIncrement && typeof value === 'number' && value >= table.autoIncrementNext) {
-          table.autoIncrementNext = value + 1;
-        }
-        return value;
-      });
-      checkRow(table, out, row.pos);
-      rows.push(out);
-      positions.push(row.pos);
-    });
+    }
     db.insertRows(table, rows, positions);
     return { kind: 'insert', count: rows.length, table: table.name };
+  }
+
+  /**
+   * Baut einen einzufügenden Datensatz (Standardwerte, AUTO_INCREMENT, Typprüfung, NOT NULL).
+   *
+   * @param {Object} table - Zieltabelle.
+   * @param {Map<number, {value:*, pos:Object}>} given - Angegebene Werte je Spaltenindex.
+   * @param {Object} rowPos - Position der Zeile.
+   * @returns {Array<*>} Datensatz.
+   */
+  function buildInsertRow(table, given, rowPos) {
+    const out = table.columns.map((column, i) => {
+      const g = given.get(i);
+      let value = g ? g.value : undefined;
+      const pos = g ? g.pos : rowPos;
+      if (column.autoIncrement && (value === undefined || value === null || value === 0)) {
+        value = table.autoIncrementNext;
+        table.autoIncrementNext++;
+      } else if (value === undefined) {
+        value = missingValue(column, pos);
+      }
+      value = ns.sql.coerceValue(value, column, pos);
+      if (value === null && column.notNull) {
+        throw new SqlError('Die Spalte „' + column.name + '“ darf nicht NULL sein.', pos);
+      }
+      if (column.autoIncrement && typeof value === 'number' && value >= table.autoIncrementNext) {
+        table.autoIncrementNext = value + 1;
+      }
+      return value;
+    });
+    return out;
+  }
+
+  // ---------------------------------------------------------------------------
+  // CREATE VIEW, DROP VIEW
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Legt eine Sicht an (bzw. ersetzt sie bei OR REPLACE). Die Abfrage wird zur
+   * Probe gebunden, damit Fehler sofort mit der richtigen Position erscheinen;
+   * gespeichert wird nur ihr Text.
+   */
+  function executeCreateView(db, stmt) {
+    const key = stmt.name.toLowerCase();
+    if (db.tables.has(key)) {
+      throw new SqlError('Es gibt bereits eine Tabelle namens „' + db.tables.get(key).name + '“.', stmt.namePos,
+        'Sichten und Tabellen brauchen unterschiedliche Namen.');
+    }
+    const previous = db.views.get(key);
+    if (previous && !stmt.orReplace) {
+      if (stmt.ifNotExists) {
+        return { kind: 'ddl', message: 'Die Sicht „' + previous.name + '“ existiert bereits und wurde nicht verändert.' };
+      }
+      throw new SqlError('Die Sicht „' + previous.name + '“ existiert bereits.', stmt.namePos,
+        'Mit CREATE OR REPLACE VIEW ' + previous.name + ' AS … wird sie ersetzt.');
+    }
+    if (!previous && db.tables.size + db.views.size >= ns.sql.LIMITS.maxTables) {
+      throw new SqlError('Es sind höchstens ' + ns.sql.LIMITS.maxTables + ' Tabellen und Sichten erlaubt.', stmt.namePos);
+    }
+    const view = { name: stmt.name, columns: stmt.columns ? stmt.columns.map((c) => c.name) : null, text: stmt.queryText };
+    // Die neue Sicht ist während der Probe schon eingetragen: So fallen Kreise über OR REPLACE auf.
+    db.views.set(key, view);
+    const saved = { warnings: rt.warnings, literalChecks: rt.literalChecks };
+    rt.warnings = [];
+    rt.literalChecks = null;
+    try {
+      bindSelect(stmt.query, null, null);
+      derivedColumns(stmt.name, stmt.columns, stmt.query, stmt.namePos, { dat: 'der Sicht', acc: 'die Sicht' });
+    } catch (error) {
+      if (previous) {
+        db.views.set(key, previous);
+      } else {
+        db.views.delete(key);
+      }
+      throw error;
+    } finally {
+      rt.warnings = saved.warnings;
+      rt.literalChecks = saved.literalChecks;
+    }
+    return { kind: 'ddl', message: 'Sicht „' + view.name + '“ ' + (previous ? 'ersetzt' : 'angelegt') + '.' };
+  }
+
+  /** Löscht Sichten (DROP VIEW [IF EXISTS] a, b). */
+  function executeDropView(db, stmt) {
+    const keys = [];
+    for (const n of stmt.names) {
+      const key = n.name.toLowerCase();
+      const view = db.views.get(key);
+      if (view) {
+        ns.sql.requireExactName(n.name, view.name, 'Die Sicht „' + n.name + '“ gibt es nicht.', n.pos);
+        keys.push(key);
+        continue;
+      }
+      if (db.tables.has(key)) {
+        throw new SqlError('„' + db.tables.get(key).name + '“ ist eine Tabelle, keine Sicht.', n.pos, 'Tabellen löschen Sie mit DROP TABLE.');
+      }
+      if (!stmt.ifExists) {
+        const names = Array.from(db.views.values()).map((v) => v.name);
+        throw new SqlError('Die Sicht „' + n.name + '“ gibt es nicht.', n.pos,
+          ns.sql.didYouMean(ns.sql.suggestions(n.name, names)) || (names.length ? 'Vorhandene Sichten: ' + names.join(', ') + '.' : 'Es gibt noch keine Sichten.'));
+      }
+    }
+    const removed = keys.map((k) => db.views.get(k).name);
+    keys.forEach((k) => db.views.delete(k));
+    return { kind: 'ddl', message: removed.length ? (removed.length === 1 ? 'Sicht „' + removed[0] + '“ gelöscht.' : 'Sichten ' + removed.map((r) => '„' + r + '“').join(', ') + ' gelöscht.') : 'Keine Sicht gelöscht.' };
   }
 
   /** Bindet WHERE für UPDATE/DELETE (eine Tabelle). */
@@ -1967,7 +2201,7 @@
   function executeStatement(db, stmt, options) {
     const opts = options || {};
     const timeMs = opts.timeMs || EXEC_LIMITS.timeMs;
-    rt = { db, deadline: performance.now() + timeMs, timeMs, steps: 0, warnings: [], literalChecks: [], topQuery: null };
+    rt = { db, deadline: performance.now() + timeMs, timeMs, steps: 0, warnings: [], literalChecks: [], topQuery: null, viewDepth: 0 };
     try {
       let result;
       switch (stmt.type) {
@@ -1998,6 +2232,12 @@
         case 'alterTable':
           result = { kind: 'ddl', message: ns.sql.ddl.alterTable(db, stmt) };
           prepareChecks(db.tables.get(stmt.table.toLowerCase()));
+          break;
+        case 'createView':
+          result = executeCreateView(db, stmt);
+          break;
+        case 'dropView':
+          result = executeDropView(db, stmt);
           break;
         case 'ignored':
           result = { kind: 'ignored', keyword: stmt.keyword };
@@ -2041,7 +2281,7 @@
       if (!QUERY_TYPES.has(s.type)) {
         const name = s.type === 'ignored' ? s.keyword : (TYPE_NAMES.get(s.type) || s.type);
         const err = new SqlError('„' + name + '“ ist auf dieser Seite nicht erlaubt.', s.pos,
-          'Hier können Sie Daten abfragen (SELECT) und ändern (INSERT, UPDATE, DELETE). Tabellen legen Sie über eine SQL-Datei auf Seite 1 an.');
+          'Hier können Sie Daten abfragen (SELECT, auch mit WITH), ändern (INSERT, UPDATE, DELETE) und Sichten anlegen (CREATE VIEW, DROP VIEW). Tabellen legen Sie über eine SQL-Datei auf Seite 1 an.');
         throw withIndex(err, s.statementIndex);
       }
     }
@@ -2077,7 +2317,7 @@
     const skipped = new Map();
     for (const s of statements) {
       if (!IMPORT_TYPES.has(s.type)) {
-        const err = new SqlError('In einer SQL-Datei zum Laden sind nur DROP TABLE, CREATE TABLE und INSERT INTO erlaubt (gefunden: ' + (TYPE_NAMES.get(s.type) || s.type) + ').', s.pos,
+        const err = new SqlError('In einer SQL-Datei zum Laden sind nur DROP TABLE, CREATE TABLE, INSERT INTO (auch INSERT INTO … SELECT bzw. WITH …) sowie CREATE VIEW und DROP VIEW erlaubt (gefunden: ' + (TYPE_NAMES.get(s.type) || s.type) + ').', s.pos,
           'Abfragen und Änderungen führen Sie auf Seite 3 aus.');
         throw withIndex(err, s.statementIndex);
       }

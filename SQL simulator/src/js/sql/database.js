@@ -3,7 +3,8 @@
  * @description Datenbank im Arbeitsspeicher: Tabellen, Datentypen, Constraints und DDL.
  *
  * Aufbau:
- *   Database  – Tabellen in einer Map (Schlüssel: Name in Kleinbuchstaben).
+ *   Database  – Tabellen und Sichten (Views) in Maps (Schlüssel: Name in Kleinbuchstaben);
+ *               eine Sicht speichert nur ihren Abfragetext (nicht materialisiert).
  *   Table     – Spalten, Datensätze (Arrays von Werten), Primärschlüssel,
  *               UNIQUE-Schlüssel, Fremdschlüssel (nur zur Anzeige), AUTO_INCREMENT.
  *
@@ -461,6 +462,8 @@
     constructor() {
       /** @type {Map<string, Table>} Tabellen in Reihenfolge des Anlegens. */
       this.tables = new Map();
+      /** @type {Map<string, {name:string, columns:Array<string>|null, text:string}>} Sichten (nur der Abfragetext, nicht materialisiert). */
+      this.views = new Map();
     }
 
     /** @returns {Database} Kopie für atomare Änderungen. */
@@ -469,6 +472,7 @@
       for (const [key, table] of this.tables) {
         db.tables.set(key, table.clone());
       }
+      db.views = new Map(this.views);
       return db;
     }
 
@@ -496,7 +500,13 @@
     requireTable(name, pos) {
       const table = this.tables.get(name.toLowerCase());
       if (!table) {
-        const names = this.tableList().map((t) => t.name);
+        const view = this.views.get(name.toLowerCase());
+        if (view) {
+          ns.sql.requireExactName(name, view.name, 'Die Tabelle „' + name + '“ gibt es nicht.', pos);
+          throw new SqlError('„' + view.name + '“ ist eine Sicht, keine Tabelle.', pos,
+            'Sichten lassen sich nur abfragen (SELECT …). Daten ändern Sie in der zugrunde liegenden Tabelle.');
+        }
+        const names = this.tableList().map((t) => t.name).concat(Array.from(this.views.values()).map((v) => v.name));
         const hint = ns.sql.didYouMean(ns.sql.suggestions(name, names));
         throw new SqlError('Die Tabelle „' + name + '“ gibt es nicht.', pos,
           hint || (names.length ? 'Vorhandene Tabellen: ' + names.join(', ') + '.' : 'Die Datenbank enthält noch keine Tabellen.'));
@@ -723,8 +733,11 @@
       throw new SqlError('Die Tabelle „' + stmt.name + '“ existiert bereits.', stmt.namePos,
         'Tipp: vorher „DROP TABLE IF EXISTS ' + stmt.name + ';“ ausführen.');
     }
-    if (db.tables.size >= LIMITS.maxTables) {
-      throw new SqlError('Es sind höchstens ' + LIMITS.maxTables + ' Tabellen erlaubt.', stmt.namePos);
+    if (db.views.has(key)) {
+      throw new SqlError('Es gibt bereits eine Sicht namens „' + db.views.get(key).name + '“.', stmt.namePos);
+    }
+    if (db.tables.size + db.views.size >= LIMITS.maxTables) {
+      throw new SqlError('Es sind höchstens ' + LIMITS.maxTables + ' Tabellen und Sichten erlaubt.', stmt.namePos);
     }
     if (stmt.columns.length === 0) {
       throw new SqlError('Die Tabelle „' + stmt.name + '“ braucht mindestens eine Spalte.', stmt.namePos);
@@ -777,6 +790,9 @@
    */
   function dropTable(db, stmt) {
     for (const n of stmt.names) {
+      if (db.views.has(n.name.toLowerCase())) {
+        throw new SqlError('„' + db.views.get(n.name.toLowerCase()).name + '“ ist eine Sicht.', n.pos, 'Sichten löschen Sie mit DROP VIEW ' + db.views.get(n.name.toLowerCase()).name + '.');
+      }
       if (db.tables.has(n.name.toLowerCase()) || !stmt.ifExists) {
         db.requireTable(n.name, n.pos);
       }
@@ -1031,7 +1047,19 @@
   }
 
   ns.sql.LIMITS = LIMITS;
+  /**
+   * Erzeugt den CREATE-VIEW-Befehl einer Sicht.
+   *
+   * @param {{name:string, columns:Array<string>|null, text:string}} view - Sicht.
+   * @returns {string} SQL-Befehl.
+   */
+  function createViewSql(view) {
+    return 'CREATE VIEW ' + quoteName(view.name) + (view.columns ? ' (' + view.columns.map(quoteName).join(', ') + ')' : '') + ' AS\n' + view.text + ';';
+  }
+
   ns.sql.createTableSql = createTableSql;
+  ns.sql.createViewSql = createViewSql;
+  ns.sql.quoteName = quoteName;
   ns.sql.Database = Database;
   ns.sql.Table = Table;
   ns.sql.coerceValue = coerceValue;
