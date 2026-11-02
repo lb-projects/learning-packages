@@ -1,6 +1,6 @@
-# moodle-learning-packages
+# learning-packages
 
-SCORM-1.2-Lernpakete für Lernplattformen wie Moodle.
+SCORM-1.2-Lernpakete für Lernplattformen.
 
 | Paket | Inhalt |
 |---|---|
