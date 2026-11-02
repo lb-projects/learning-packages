@@ -22,8 +22,10 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und d
 - **Bedingungen:** `= <> != < <= > >=`, `AND`, `OR`, `NOT`, `BETWEEN … AND …`, `LIKE` mit `%` und `_` (Maskierung mit `\`), `IN (Liste)`, `IS [NOT] NULL`, `[NOT] EXISTS`.
 - **Aggregatfunktionen:** `COUNT(*)`, `COUNT(Spalte)`, `COUNT(DISTINCT …)`, `SUM`, `AVG`, `MIN`, `MAX`; dazu `ROUND(Zahl [, Stellen])`.
 - **Unterabfragen:** als Wert (`WHERE Preis > (SELECT AVG(Preis) …)`), mit `IN`/`EXISTS`, korreliert und als Tabelle in `FROM (SELECT …) AS t`.
-- **WITH (Common Table Expressions):** `WITH teuer AS (SELECT …), billig (name, preis) AS (SELECT …) SELECT … FROM teuer …`. Mehrere WITH-Abfragen sind möglich, jede kann die vorher definierten verwenden; optional mit Spaltenliste. WITH funktioniert auch in Unterabfragen, in `FROM (…)`, in Sichten und in `INSERT … SELECT`. Eine WITH-Abfrage verdeckt eine gleichnamige Tabelle. Nicht rekursiv.
+- **WITH (Common Table Expressions):** `WITH teuer AS (SELECT …), billig (name, preis) AS (SELECT …) SELECT … FROM teuer …`. Mehrere WITH-Abfragen sind möglich, jede kann die vorher definierten verwenden; optional mit Spaltenliste. WITH funktioniert auch in Unterabfragen, in `FROM (…)`, in Sichten und in `INSERT … SELECT`. Zusätzlich ist `WITH … INSERT INTO t (…) SELECT …` möglich (wie in PostgreSQL; MySQL verlangt dafür `INSERT INTO t (…) WITH … SELECT …`, was ebenfalls funktioniert). Eine WITH-Abfrage verdeckt eine gleichnamige Tabelle. Nicht rekursiv.
 - **Rechnen:** `+ - * / %`, Klammern, Vorzeichen.
+- **Fallunterscheidung:** `CASE WHEN Bedingung THEN Wert … [ELSE Wert] END` und `CASE Ausdruck WHEN Wert THEN … END`; ohne passenden Zweig und ohne `ELSE` ergibt sich `NULL`. CASE ist überall erlaubt, wo ein Ausdruck stehen kann (auch in `WHERE`, `GROUP BY`, `ORDER BY` und `CHECK`).
+- **Fensterfunktionen:** `ROW_NUMBER()`, `RANK()`, `DENSE_RANK()`, `LAG(x [, n [, Standard]])`, `LEAD(…)` sowie `COUNT(*|x)`, `SUM`, `AVG`, `MIN`, `MAX` mit `OVER ([PARTITION BY …] [ORDER BY … [ASC|DESC]])`. Sie werden nach `WHERE`, `GROUP BY` und `HAVING` berechnet und stehen deshalb nur in der SELECT-Liste und in `ORDER BY`. Rahmen wie im SQL-Standard und in MySQL: ohne `ORDER BY` die ganze Partition, mit `ORDER BY` alle Zeilen bis einschließlich der gleichrangigen (laufende Summe). Bei `GROUP BY` sind Aggregate im Fenster möglich, z. B. `SUM(COUNT(*)) OVER ()`.
 - **Mengenoperationen:** `SELECT … UNION [ALL|DISTINCT] SELECT …`, `INTERSECT [ALL]` und `EXCEPT [ALL]` (INTERSECT bindet stärker; Klammern sind möglich). Beide Abfragen müssen gleich viele Spalten liefern; die Spaltennamen kommen aus der ersten. `ORDER BY`/`LIMIT` am Ende gelten für das Gesamtergebnis und verwenden Ergebnisspalten (Name oder Nummer); eine einzelne Abfrage mit eigenem `ORDER BY`/`LIMIT` steht in Klammern. Zeilen gelten als gleich wie bei `DISTINCT` (`NULL` = `NULL`, Groß-/Kleinschreibung zählt). Mengenoperationen funktionieren überall, wo eine Abfrage stehen kann – auch in Unterabfragen, WITH, Sichten und `INSERT … SELECT`.
 - **Daten ändern (Seite 3):** `INSERT INTO … [(Spalten)] VALUES (…), (…)` oder `INSERT INTO … [(Spalten)] [WITH …] SELECT …` (das Abfrageergebnis wird vollständig berechnet, bevor eingefügt wird), `UPDATE … SET … [WHERE …]`, `DELETE FROM … [WHERE …]`. Mehrere Befehle (getrennt durch `;`) werden **gemeinsam** ausgeführt: Enthält einer einen Fehler, bleibt die Datenbank unverändert.
 - **Sichten (Views, Seite 3 und Dateien):** `CREATE [OR REPLACE] VIEW name [(Spalten)] AS SELECT …` (auch mit `WITH`), `DROP VIEW [IF EXISTS] name`. Eine Sicht speichert nur ihre Abfrage; bei jeder Verwendung wird sie neu ausgewertet und zeigt so immer den aktuellen Stand der Tabellen. In Sichten kann nicht geschrieben werden (`INSERT`/`UPDATE`/`DELETE` ergeben eine Meldung). Wird eine benötigte Tabelle gelöscht, meldet die Sicht beim Abfragen „ungültig“. Sichten, die über andere Sichten auf sich selbst verweisen, werden abgelehnt.
@@ -31,7 +33,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und d
   - Stehen mehrere Tabellen in `FROM`, ohne dass alle über eine Bedingung (in `ON` oder `WHERE`) verbunden sind, entsteht ein kartesisches Produkt. Der Hinweis nennt die nicht verknüpften Tabellen und schlägt, wenn möglich, eine Bedingung aus den Fremdschlüsseln vor, z. B. `bp.bestellung_id = b.id`. Ein ausdrückliches `CROSS JOIN` gilt als beabsichtigt und ergibt keinen Hinweis.
   - Vergleicht `=`, `IN` oder `LIKE` eine Spalte mit einem Text, der nur in anderer Groß-/Kleinschreibung vorkommt (`'berlin'` statt `'Berlin'`), kommt der Vorschlag „Meinten Sie 'Berlin'?“.
   - Nicht großgeschriebene Schlüsselwörter werden mit der üblichen Schreibweise genannt (`select → SELECT`).
-- **Nicht unterstützt** (mit eigener, verständlicher Meldung): `CASE`, `WITH RECURSIVE`, `FULL OUTER JOIN`, `NATURAL JOIN`, `USING`, `ANY/ALL`, weitere Funktionen (z. B. `UPPER`, `CONCAT`, Datumsfunktionen).
+- **Nicht unterstützt** (mit eigener, verständlicher Meldung): `WITH RECURSIVE`, Rahmenangaben (`ROWS/RANGE BETWEEN …`) und benannte Fenster (`WINDOW w AS …`), `FULL OUTER JOIN`, `NATURAL JOIN`, `USING`, `ANY/ALL`, weitere Funktionen (z. B. `UPPER`, `CONCAT`, Datumsfunktionen).
 
 ### Festlegungen (an MySQL/MariaDB angelehnt)
 
@@ -188,11 +190,12 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (über 150) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (über 160) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
 - jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;
 - `INSERT`/`UPDATE`/`DELETE` mit Typ-, Schlüssel- und `CHECK`-Prüfungen sowie Atomarität;
+- `CASE` und Fensterfunktionen (Gleichstände, Partitionen, laufende Summen, `LAG`/`LEAD`, Fehlerfälle) sowie `WITH … INSERT`, darunter ein vollständiges Stundenplan-Beispiel als Datei-Import;
 - `UNION`, `INTERSECT` und `EXCEPT` (auch `ALL`, Rangfolge, `ORDER BY`/`LIMIT`, Klammern, in Unterabfragen, Sichten und Dateien);
 - `WITH`-Abfragen, `INSERT … SELECT` und Sichten (Anlegen, Ersetzen, Löschen, ungültige und zirkuläre Sichten, Import im Export-Stil);
 - erzeugter `CREATE TABLE`-Befehl: Er lässt sich für alle Beispieltabellen wieder einlesen und ergibt denselben Aufbau;

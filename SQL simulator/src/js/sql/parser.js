@@ -303,8 +303,9 @@
       }
       switch (tok.upper) {
         case 'SELECT':
-        case 'WITH':
           return this.parseQuery();
+        case 'WITH':
+          return this.parseQuery({ allowInsert: true });
         case 'INSERT': return this.parseInsert();
         case 'UPDATE': return this.parseUpdate();
         case 'DELETE': return this.parseDelete();
@@ -334,7 +335,7 @@
      *
      * @returns {Object} SELECT-Knoten (mit Eigenschaft "with", falls vorhanden).
      */
-    parseQuery() {
+    parseQuery(options) {
       if (!this.isKw('WITH')) {
         return this.parseSetExpr();
       }
@@ -367,10 +368,21 @@
         this.expectSym(')', 'Die WITH-Abfrage wird nicht mit „)“ geschlossen');
         ctes.push({ name: name.name, pos: name.pos, columns, query });
       } while (this.acceptSym(','));
+      if (this.isKw('INSERT') && options && options.allowInsert) {
+        // WITH … INSERT INTO t (…) SELECT … (wie in PostgreSQL; in MySQL: INSERT … WITH … SELECT)
+        const insertTok = this.peek();
+        const ins = this.parseInsert();
+        if (!ins.query) {
+          throw new SqlError('WITH vor INSERT ist nur mit INSERT … SELECT möglich, nicht mit VALUES.', insertTok.pos);
+        }
+        ins.query.with = ctes.concat(ins.query.with || []);
+        this.leave();
+        return ins;
+      }
       if (!this.isKw('SELECT') && !this.startsQuery()) {
         if (this.isKw('UPDATE') || this.isKw('DELETE') || this.isKw('INSERT')) {
-          throw new SqlError('WITH ist in diesem Simulator nur vor SELECT erlaubt.', this.peek().pos,
-            'Zum Einfügen schreiben Sie: INSERT INTO tabelle (Spalten) WITH … SELECT …');
+          throw new SqlError('WITH ist hier nur vor SELECT bzw. als WITH … INSERT INTO … SELECT … erlaubt.', this.peek().pos,
+            'Zum Einfügen schreiben Sie: WITH … INSERT INTO tabelle (Spalten) SELECT … oder INSERT INTO tabelle (Spalten) WITH … SELECT …');
         }
         this.fail('Nach den WITH-Abfragen wird „SELECT …“ erwartet', ['SELECT']);
       }
@@ -888,7 +900,7 @@
             return { type: 'exists', query, pos: tok.pos };
           }
           case 'CASE':
-            throw new SqlError('CASE wird in diesem Simulator nicht unterstützt.', tok.pos);
+            return this.parseCase();
           default:
             break;
         }
@@ -945,8 +957,81 @@
         } while (this.acceptSym(','));
       }
       this.expectSym(')', 'Die Klammer der Funktion ' + nameTok.upper + ' wird nicht mit „)“ geschlossen');
+      if (this.isKw('OVER')) {
+        node.over = this.parseOver(nameTok.upper);
+      }
       this.leave();
       return node;
+    }
+
+    /**
+     * Liest "OVER ( [PARTITION BY …] [ORDER BY …] )" einer Fensterfunktion.
+     *
+     * @param {string} fn - Name der Funktion (für Meldungen).
+     * @returns {{partition:Array<Object>, order:Array<{expr:Object, desc:boolean}>, pos:Object}} Fenster.
+     */
+    parseOver(fn) {
+      const over = this.next();
+      if (!this.isSym('(')) {
+        if (this.peek().type === 'word' || this.peek().type === 'ident') {
+          throw new SqlError('Benannte Fenster (OVER name / WINDOW …) werden nicht unterstützt.', this.peek().pos,
+            'Schreiben Sie das Fenster direkt: ' + fn + '(…) OVER (PARTITION BY … ORDER BY …).');
+        }
+        this.fail('Nach OVER wird „(“ erwartet');
+      }
+      this.next();
+      const win = { partition: [], order: [], pos: over.pos };
+      if (this.isKw('PARTITION')) {
+        this.next();
+        this.expectKw('BY', 'Nach PARTITION wird „BY“ erwartet');
+        do {
+          win.partition.push(this.parseExpr());
+        } while (this.acceptSym(','));
+      }
+      if (this.isKw('ORDER')) {
+        this.next();
+        this.expectKw('BY', 'Nach ORDER wird „BY“ erwartet');
+        do {
+          const expr = this.parseExpr();
+          let desc = false;
+          if (this.acceptKw('DESC')) {
+            desc = true;
+          } else {
+            this.acceptKw('ASC');
+          }
+          win.order.push({ expr, desc });
+        } while (this.acceptSym(','));
+      }
+      if (this.isKw('ROWS') || this.isKw('RANGE') || this.isKw('GROUPS')) {
+        throw new SqlError('Rahmenangaben (ROWS/RANGE …) in Fensterfunktionen werden nicht unterstützt.', this.peek().pos,
+          'Ohne Rahmenangabe gilt: ohne ORDER BY die ganze Partition, mit ORDER BY alle Zeilen bis einschließlich der aktuellen.');
+      }
+      this.expectSym(')', 'Das Fenster nach OVER wird nicht mit „)“ geschlossen');
+      return win;
+    }
+
+    /**
+     * Liest CASE [ausdruck] WHEN … THEN … [WHEN … THEN …] [ELSE …] END.
+     *
+     * @returns {Object} Knoten {type:'case', operand, whens, otherwise, pos}.
+     */
+    parseCase() {
+      const start = this.next();
+      this.enter();
+      const operand = this.isKw('WHEN') ? null : this.parseExpr();
+      const whens = [];
+      while (this.acceptKw('WHEN')) {
+        const when = this.parseExpr();
+        this.expectKw('THEN', 'Nach WHEN … wird „THEN“ erwartet');
+        whens.push({ when, then: this.parseExpr() });
+      }
+      if (whens.length === 0) {
+        this.fail('Nach CASE wird „WHEN“ erwartet', ['WHEN'], 'Form: CASE WHEN Bedingung THEN Wert … ELSE Wert END');
+      }
+      const otherwise = this.acceptKw('ELSE') ? this.parseExpr() : null;
+      this.expectKw('END', 'CASE wird mit „END“ abgeschlossen');
+      this.leave();
+      return { type: 'case', operand, whens, otherwise, pos: start.pos };
     }
 
     // ----- INSERT / UPDATE / DELETE -----

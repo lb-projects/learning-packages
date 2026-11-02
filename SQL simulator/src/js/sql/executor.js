@@ -45,7 +45,9 @@
   });
 
   const AGGREGATES = new Set(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']);
-  const FUNCTION_NAMES = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND'];
+  const FUNCTION_NAMES = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'ROW_NUMBER', 'RANK', 'DENSE_RANK', 'LAG', 'LEAD'];
+  /** Reine Fensterfunktionen (nur mit OVER). */
+  const WINDOW_ONLY = new Set(['ROW_NUMBER', 'RANK', 'DENSE_RANK', 'LAG', 'LEAD']);
   const COMPARISON_OPS = new Set(['=', '<>', '<', '<=', '>', '>=']);
 
   /** Anweisungen, die auf Seite 3 erlaubt sind. */
@@ -104,7 +106,7 @@
    * @returns {Object} Scope.
    */
   function makeScope(parent, select) {
-    return { sources: [], parent, select, hasAgg: false };
+    return { sources: [], parent, select, hasAgg: false, windows: [] };
   }
 
   /**
@@ -312,6 +314,18 @@
           throw new SqlError('Eine Unterabfrage als Wert muss genau eine Spalte liefern (sie liefert ' + node.query.outputs.length + ').', node.query.pos);
         }
         return node;
+      case 'case':
+        if (node.operand) {
+          node.operand = bindExpr(node.operand, scope, flags);
+        }
+        node.whens.forEach((w) => {
+          w.when = bindExpr(w.when, scope, flags);
+          w.then = bindExpr(w.then, scope, flags);
+        });
+        if (node.otherwise) {
+          node.otherwise = bindExpr(node.otherwise, scope, flags);
+        }
+        return node;
       case 'func':
         return bindFunction(node, scope, flags);
       default:
@@ -323,6 +337,13 @@
    * Bindet einen Funktionsaufruf (Aggregatfunktionen und ROUND).
    */
   function bindFunction(node, scope, flags) {
+    if (node.over) {
+      return bindWindow(node, scope, flags);
+    }
+    if (WINDOW_ONLY.has(node.name)) {
+      throw new SqlError(node.name + ' ist eine Fensterfunktion und braucht OVER (…).', node.pos,
+        'Beispiel: ' + node.name + '() OVER (ORDER BY Spalte) bzw. mit PARTITION BY für Gruppen.');
+    }
     if (AGGREGATES.has(node.name)) {
       if (flags.inAgg) {
         throw new SqlError('Aggregatfunktionen können nicht verschachtelt werden (' + node.name + ' innerhalb einer anderen Aggregatfunktion).', node.pos);
@@ -356,6 +377,70 @@
       (cand ? 'Meinten Sie „' + cand + '“? ' : '') + 'Unterstützt werden COUNT, SUM, AVG, MIN, MAX und ROUND.');
   }
 
+  /**
+   * Bindet eine Fensterfunktion (… OVER (PARTITION BY … ORDER BY …)).
+   * Sie wird nach WHERE, GROUP BY und HAVING berechnet und ist deshalb nur in
+   * der SELECT-Liste und in ORDER BY erlaubt.
+   */
+  function bindWindow(node, scope, flags) {
+    if (flags.clause !== 'SELECT' && flags.clause !== 'ORDER BY') {
+      throw new SqlError('Fensterfunktionen (' + node.name + ' … OVER …) sind nur in der SELECT-Liste und in ORDER BY erlaubt, nicht in ' + flags.clause + '.', node.pos,
+        flags.clause === 'WHERE' ? 'Berechnen Sie den Wert in einer Unterabfrage oder WITH-Abfrage und filtern Sie danach.' : null);
+    }
+    if (flags.inWindow) {
+      throw new SqlError('Fensterfunktionen können nicht verschachtelt werden.', node.pos);
+    }
+    if (flags.inAgg) {
+      throw new SqlError('Eine Fensterfunktion kann nicht innerhalb einer Aggregatfunktion stehen.', node.pos);
+    }
+    if (node.distinct) {
+      throw new SqlError('DISTINCT wird in Fensterfunktionen nicht unterstützt.', node.pos);
+    }
+    if (node.name === 'ROW_NUMBER' || node.name === 'RANK' || node.name === 'DENSE_RANK') {
+      if (node.args.length > 0 || node.star) {
+        throw new SqlError(node.name + '() hat keine Argumente.', node.pos);
+      }
+    } else if (node.name === 'LAG' || node.name === 'LEAD') {
+      if (node.star || node.args.length < 1 || node.args.length > 3) {
+        throw new SqlError(node.name + ' erwartet ein bis drei Argumente: ' + node.name + '(Spalte [, Abstand [, Standardwert]]).', node.pos);
+      }
+    } else if (AGGREGATES.has(node.name)) {
+      if (node.star ? node.name !== 'COUNT' : node.args.length !== 1) {
+        throw new SqlError(node.name + ' erwartet als Fensterfunktion genau ein Argument' + (node.name === 'COUNT' ? ' oder *' : '') + '.', node.pos);
+      }
+    } else {
+      const cand = suggest(node.name, FUNCTION_NAMES);
+      throw new SqlError('„' + node.name + '“ ist keine Fensterfunktion.', node.pos,
+        (cand ? 'Meinten Sie „' + cand + '“? ' : '') + 'Möglich sind ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, COUNT, SUM, AVG, MIN und MAX.');
+    }
+    const inner = Object.assign({}, flags, { inWindow: true });
+    node.args = node.args.map((a) => bindExpr(a, scope, inner));
+    node.over.partition = node.over.partition.map((e) => bindExpr(e, scope, inner));
+    node.over.order.forEach((o) => {
+      o.expr = bindExpr(o.expr, scope, inner);
+    });
+    node.window = true;
+    scope.windows.push(node);
+    return node;
+  }
+
+  /** @returns {Array<Object>} Alle Ausdrücke einer Fensterfunktion (Argumente, PARTITION, ORDER). */
+  function windowParts(node) {
+    return node.args.concat(node.over.partition, node.over.order.map((o) => o.expr));
+  }
+
+  /** @returns {Array<Object>} Alle Teilausdrücke eines CASE-Ausdrucks. */
+  function caseParts(node) {
+    const parts = node.operand ? [node.operand] : [];
+    for (const w of node.whens) {
+      parts.push(w.when, w.then);
+    }
+    if (node.otherwise) {
+      parts.push(node.otherwise);
+    }
+    return parts;
+  }
+
   /** @returns {boolean} true, wenn der Ausdruck eine Aggregatfunktion dieser Ebene enthält. */
   function containsAggregate(node) {
     if (!node || typeof node !== 'object') {
@@ -363,7 +448,9 @@
     }
     switch (node.type) {
       case 'func':
-        return node.agg === true || node.args.some(containsAggregate);
+        return node.agg === true || (node.window ? windowParts(node) : node.args).some(containsAggregate);
+      case 'case':
+        return caseParts(node).some(containsAggregate);
       case 'neg':
       case 'not':
         return containsAggregate(node.operand);
@@ -397,6 +484,10 @@
       case 'column':
         return 'C' + n.ref.depth + ':' + n.ref.src + ':' + n.ref.col;
       case 'func':
+        if (n.window) {
+          keyCounter++;
+          return 'X' + keyCounter;
+        }
         return 'F' + n.name + (n.distinct ? 'D' : '') + (n.star ? '*' : '') + '(' + n.args.map(exprKey).join(',') + ')';
       case 'binary':
         return '(' + exprKey(n.left) + n.op + exprKey(n.right) + ')';
@@ -410,6 +501,8 @@
         return 'K' + (n.not ? '!' : '') + '(' + exprKey(n.expr) + ',' + exprKey(n.pattern) + ')';
       case 'isnull':
         return 'I' + (n.not ? '!' : '') + '(' + exprKey(n.expr) + ')';
+      case 'case':
+        return 'S(' + (n.operand ? exprKey(n.operand) : '') + ';' + n.whens.map((w) => exprKey(w.when) + '>' + exprKey(w.then)).join(';') + ';' + (n.otherwise ? exprKey(n.otherwise) : '') + ')';
       default:
         keyCounter++;
         return 'X' + keyCounter;
@@ -434,7 +527,10 @@
         if (node.agg) {
           return;
         }
-        node.args.forEach((a) => checkGrouped(a, info));
+        (node.window ? windowParts(node) : node.args).forEach((a) => checkGrouped(a, info));
+        return;
+      case 'case':
+        caseParts(node).forEach((a) => checkGrouped(a, info));
         return;
       case 'column': {
         if (node.ref.depth > 0 || info.groupedCols.has(node.ref.src + ':' + node.ref.col) || info.determined.has(node.ref.src)) {
@@ -941,7 +1037,9 @@
       case 'in':
         return node.list ? [node.expr].concat(node.list) : [node.expr];
       case 'func':
-        return node.args;
+        return node.window ? windowParts(node) : node.args;
+      case 'case':
+        return caseParts(node);
       default:
         return [];
     }
@@ -1628,7 +1726,27 @@
         }
         return res.rows.length === 0 ? null : res.rows[0][0];
       }
+      case 'case': {
+        if (node.operand) {
+          const v = evalExpr(node.operand, ctx);
+          for (const w of node.whens) {
+            if (V.compareValues(v, evalExpr(w.when, ctx)) === 0) {
+              return evalExpr(w.then, ctx);
+            }
+          }
+        } else {
+          for (const w of node.whens) {
+            if (V.truth(evalExpr(w.when, ctx)) === true) {
+              return evalExpr(w.then, ctx);
+            }
+          }
+        }
+        return node.otherwise ? evalExpr(node.otherwise, ctx) : null;
+      }
       case 'func': {
+        if (node.window) {
+          return ctx.winValues ? ctx.winValues.get(node) : null;
+        }
         if (node.agg) {
           return evalAggregate(node, ctx);
         }
@@ -1767,6 +1885,158 @@
       }
     }
     return out;
+  }
+
+  /**
+   * Berechnet die Fensterfunktionen einer Abfrageebene für alle Ergebniszeilen
+   * (Kontexte nach WHERE, GROUP BY und HAVING). Ergebnis je Kontext in ctx.winValues.
+   * Rahmen wie im SQL-Standard: ohne ORDER BY die ganze Partition, mit ORDER BY
+   * alle Zeilen bis einschließlich der gleichrangigen (Peers) der aktuellen Zeile.
+   *
+   * @param {Array<Object>} windows - Gebundene Fensterfunktionen.
+   * @param {Array<Object>} ctxs - Kontexte der Ergebniszeilen.
+   */
+  function computeWindows(windows, ctxs) {
+    for (const c of ctxs) {
+      if (!c.winValues) {
+        c.winValues = new Map();
+      }
+    }
+    for (const w of windows) {
+      const partitions = new Map();
+      for (const c of ctxs) {
+        tick();
+        let key = '';
+        for (const p of w.over.partition) {
+          key += V.valueKey(evalExpr(p, c)) + '\u0001';
+        }
+        let list = partitions.get(key);
+        if (!list) {
+          list = [];
+          partitions.set(key, list);
+        }
+        list.push(c);
+      }
+      for (const list of partitions.values()) {
+        const keys = list.map((c) => w.over.order.map((o) => evalExpr(o.expr, c)));
+        const idx = list.map((c, i) => i);
+        if (w.over.order.length > 0) {
+          idx.sort((a, b) => {
+            for (let k = 0; k < w.over.order.length; k++) {
+              const cmp = V.orderValues(keys[a][k], keys[b][k]);
+              if (cmp !== 0) {
+                return w.over.order[k].desc ? -cmp : cmp;
+              }
+            }
+            return a - b;
+          });
+        }
+        const rows = idx.map((i) => list[i]);
+        const rowKeys = idx.map((i) => keys[i]);
+        const peers = (i, j) => w.over.order.every((o, k) => V.orderValues(rowKeys[i][k], rowKeys[j][k]) === 0);
+        windowValues(w, rows, peers);
+      }
+    }
+  }
+
+  /**
+   * Berechnet eine Fensterfunktion für die sortierten Zeilen einer Partition.
+   *
+   * @param {Object} w - Fensterfunktion.
+   * @param {Array<Object>} rows - Kontexte in Fensterreihenfolge.
+   * @param {function(number, number): boolean} peers - true, wenn zwei Zeilen gleichrangig sind.
+   */
+  function windowValues(w, rows, peers) {
+    const n = rows.length;
+    const set = (i, v) => rows[i].winValues.set(w, v);
+    switch (w.name) {
+      case 'ROW_NUMBER':
+        rows.forEach((c, i) => set(i, i + 1));
+        return;
+      case 'RANK':
+      case 'DENSE_RANK': {
+        let rank = 0;
+        let dense = 0;
+        for (let i = 0; i < n; i++) {
+          if (i === 0 || !peers(i, i - 1)) {
+            rank = i + 1;
+            dense++;
+          }
+          set(i, w.name === 'RANK' ? rank : dense);
+        }
+        return;
+      }
+      case 'LAG':
+      case 'LEAD': {
+        const values = rows.map((c) => evalExpr(w.args[0], c));
+        for (let i = 0; i < n; i++) {
+          tick();
+          let offset = 1;
+          if (w.args[1]) {
+            const o = evalExpr(w.args[1], rows[i]);
+            offset = o === null ? null : toNumber(o, w.args[1]);
+            if (offset === null || !Number.isInteger(offset) || offset < 0) {
+              throw new SqlError(w.name + ': Der Abstand muss eine ganze Zahl ≥ 0 sein.', w.args[1].pos);
+            }
+          }
+          const j = w.name === 'LAG' ? i - offset : i + offset;
+          set(i, j >= 0 && j < n ? values[j] : (w.args[2] ? evalExpr(w.args[2], rows[i]) : null));
+        }
+        return;
+      }
+      default: {
+        // Aggregat als Fensterfunktion
+        const values = rows.map((c) => (w.star ? 1 : evalExpr(w.args[0], c)));
+        const acc = { count: 0, sum: 0, best: null };
+        const add = (v) => {
+          if (v === null) {
+            return;
+          }
+          acc.count++;
+          if (w.name === 'SUM' || w.name === 'AVG') {
+            acc.sum += toNumber(v, w.args[0]);
+          } else if (w.name === 'MIN' || w.name === 'MAX') {
+            const cmp = acc.best === null ? null : V.compareValues(v, acc.best);
+            if (acc.best === null || (w.name === 'MIN' ? cmp < 0 : cmp > 0)) {
+              acc.best = v;
+            }
+          }
+        };
+        const result = () => {
+          switch (w.name) {
+            case 'COUNT': return acc.count;
+            case 'SUM': return acc.count ? checkFinite(acc.sum, w) : null;
+            case 'AVG': return acc.count ? checkFinite(acc.sum / acc.count, w) : null;
+            default: return acc.best;
+          }
+        };
+        if (w.over.order.length === 0) {
+          values.forEach((v) => {
+            tick();
+            add(v);
+          });
+          const r = result();
+          rows.forEach((c, i) => set(i, r));
+          return;
+        }
+        let i = 0;
+        while (i < n) {
+          let j = i;
+          while (j + 1 < n && peers(j + 1, i)) {
+            j++;
+          }
+          for (let k = i; k <= j; k++) {
+            tick();
+            add(values[k]);
+          }
+          const r = result();
+          for (let k = i; k <= j; k++) {
+            set(k, r);
+          }
+          i = j + 1;
+        }
+      }
+    }
   }
 
   /**
@@ -1910,6 +2180,10 @@
         tick();
         return V.truth(evalExpr(q.having, c)) === true;
       });
+    }
+
+    if (q.scope.windows.length > 0) {
+      computeWindows(q.scope.windows, ctxs);
     }
 
     const rows = ctxs.map((c) => {

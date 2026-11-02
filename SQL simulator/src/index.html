@@ -136,8 +136,10 @@ LIMIT Anzahl [OFFSET Start];</pre>
             <li><strong>Aliase:</strong> <code>FROM schule s</code> bzw. <code>FROM schule AS s</code>, danach <code>s.Adresse</code>; Spalten: <code>COUNT(*) AS Anzahl</code></li>
             <li><strong>Verknüpfungen:</strong> <code>JOIN … ON …</code>, <code>LEFT JOIN</code>, <code>RIGHT JOIN</code>, <code>CROSS JOIN</code> oder <code>FROM a, b WHERE a.id = b.a_id</code></li>
             <li><strong>Unterabfragen:</strong> <code>WHERE Preis &gt; (SELECT AVG(Preis) FROM artikel)</code>, <code>WHERE id IN (SELECT …)</code>, <code>FROM (SELECT …) AS t</code></li>
-            <li><strong>WITH:</strong> <code>WITH teuer AS (SELECT * FROM artikel WHERE Preis &gt; 50) SELECT Bezeichnung FROM teuer</code>; mehrere Abfragen durch Komma getrennt, auch mit Spaltenliste <code>WITH t (a, b) AS (…)</code></li>
+            <li><strong>WITH:</strong> <code>WITH teuer AS (SELECT * FROM artikel WHERE Preis &gt; 50) SELECT Bezeichnung FROM teuer</code>; WITH steht vor <code>SELECT</code> oder vor <code>INSERT INTO … SELECT</code>; mehrere Abfragen durch Komma getrennt, auch mit Spaltenliste <code>WITH t (a, b) AS (…)</code></li>
             <li><strong>Mengen:</strong> <code>SELECT … UNION [ALL] SELECT …</code>, <code>INTERSECT</code>, <code>EXCEPT</code> (beide Abfragen mit gleich vielen Spalten; die Spaltennamen kommen aus der ersten Abfrage; <code>ORDER BY</code> am Ende gilt für das Gesamtergebnis, z. B. <code>ORDER BY 1</code>)</li>
+            <li><strong>Fallunterscheidung:</strong> <code>CASE WHEN Preis &gt; 100 THEN 'teuer' WHEN Preis &gt; 20 THEN 'mittel' ELSE 'günstig' END</code> bzw. <code>CASE Status WHEN 'offen' THEN 1 ELSE 0 END</code></li>
+            <li><strong>Fensterfunktionen:</strong> <code>ROW_NUMBER()</code>, <code>RANK()</code>, <code>DENSE_RANK()</code>, <code>LAG(x)</code>, <code>LEAD(x)</code> sowie <code>COUNT/SUM/AVG/MIN/MAX</code> mit <code>OVER ([PARTITION BY …] [ORDER BY …])</code>, z. B. <code>RANK() OVER (ORDER BY Preis DESC) AS Platz</code>; nur in der SELECT-Liste und in ORDER BY</li>
             <li><strong>Texte</strong> stehen in einfachen Anführungszeichen: <code>'Müller'</code>; <strong>Datumswerte</strong> als Text: <code>'2024-03-15'</code>; <strong>Dezimalzahlen</strong> mit Punkt: <code>3.50</code></li>
           </ul>
           <h4>Daten ändern</h4>
