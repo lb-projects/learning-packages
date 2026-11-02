@@ -4,7 +4,7 @@
  *              Datenänderungen an alle Seiten und SCORM-Fortschritt.
  *
  * Navigation:
- *   Die sechs Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
+ *   Die sieben Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
  *   frei anwählbar. Beim Wechsel bleibt der Zustand jeder Seite erhalten.
  *   Bedienung per Maus, Tastatur (Pfeiltasten, Pos1/Ende auf der Tab-Leiste)
  *   sowie über "Zurück"/"Weiter" am Seitenende. ARIA-Rollen (tablist, tab,
@@ -14,14 +14,17 @@
  *   dataset.js meldet jede Änderung. app.js informiert ALLE Seiten (damit
  *   z. B. Auswahlen und Eintragungen angepasst werden) und zeichnet die
  *   gerade sichtbare Seite neu. Die anderen Seiten zeichnen sich beim
- *   nächsten Aufruf mit den aktuellen Daten neu.
+ *   nächsten Aufruf mit den aktuellen Daten neu. Änderungen der Testdaten
+ *   (Seite 7) laufen über einen eigenen Kanal und betreffen nur diese Seite.
  *
  * SCORM-Fortschritt (Datensparsamkeit):
  *   - Übertragen werden nur cmi.core.lesson_status ("incomplete"/"completed"),
  *     cmi.core.exit und in cmi.suspend_data die besuchten Seiten als
- *     Bitmaske (z. B. "v=110100"). Trainingsdaten und Eintragungen verlassen
- *     den Browser nicht.
- *   - "completed", sobald alle sechs Seiten besucht wurden.
+ *     Bitmaske (z. B. "v=1101001"). Trainings-, Testdaten und Eintragungen
+ *     verlassen den Browser nicht.
+ *   - "completed", sobald alle sieben Seiten besucht wurden.
+ *   - Gespeicherte Masken der früheren Fassung mit sechs Seiten werden
+ *     weiterhin gelesen (die siebte Seite gilt dann als nicht besucht).
  *
  * Abhängigkeiten:
  *   alle übrigen Module (werden in index.html vorher geladen).
@@ -39,7 +42,8 @@
     { id: 'k-effect', title: 'Auswirkungen des Parameters k' },
     { id: 'k-selection', title: 'Auswahl eines passenden Wertes für k' },
     { id: 'loo-manual', title: 'Leave One Out – Verfahren' },
-    { id: 'loo-auto', title: 'Leave One Out – automatisiert' }
+    { id: 'loo-auto', title: 'Leave One Out – automatisiert' },
+    { id: 'confusion', title: 'Test und Konfusionsmatrix' }
   ];
 
   /** ID der sichtbaren Seite. */
@@ -169,10 +173,11 @@
       scorm.setValue('cmi.core.lesson_status', 'incomplete');
     }
     // Besuchte Seiten aus dem letzten Versuch wiederherstellen (striktes Format).
-    const match = /^v=([01]{6})$/.exec(scorm.getValue('cmi.suspend_data'));
+    // Erlaubt sind genau so viele Stellen wie Seiten oder 6 (frühere Fassung ohne Seite 7).
+    const match = /^v=([01]{6,7})$/.exec(scorm.getValue('cmi.suspend_data'));
     if (match) {
       match[1].split('').forEach((bit, i) => {
-        if (bit === '1') {
+        if (bit === '1' && i < PAGES.length) {
           visited.add(i);
           tabOf(PAGES[i].id).classList.add('visited');
         }
@@ -210,6 +215,12 @@
         }
         if (activeId) {
           ns.pages[activeId].render();
+        }
+      });
+      ns.dataset.onTestChange((event) => {
+        ns.pages.confusion.onTestChange(event);
+        if (activeId === 'confusion') {
+          ns.pages.confusion.render();
         }
       });
       initScorm();

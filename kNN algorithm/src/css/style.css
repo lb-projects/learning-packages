@@ -654,6 +654,76 @@ tr.best > * {
   box-shadow: none;
 }
 
+/* Konfusionsmatrix (Seite 7): Farbstufe = Anteil an der Zeilensumme.
+   Grün = Diagonale (korrekt), Rot = außerhalb (falsch). Die Zahl steht immer
+   zusätzlich in der Zelle, die Farbe ist nie die einzige Information. */
+.confusion-matrix {
+  min-width: 0;
+}
+
+.confusion-matrix th,
+.confusion-matrix td {
+  text-align: center;
+}
+
+.confusion-matrix tbody th {
+  text-align: left;
+}
+
+.cm-corner {
+  font-weight: normal;
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cm-axis {
+  display: block;
+}
+
+.confusion-matrix .cm-cell {
+  min-width: 3.2rem;
+  font-weight: bold;
+  font-size: 1.05rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.cm-h0 { background: #f7f9fb; color: #9aa5b1; font-weight: normal; }
+.cm-diag.cm-h1 { background: #e6f5e9; }
+.cm-diag.cm-h2 { background: #c8e9cf; }
+.cm-diag.cm-h3 { background: #a3d9ae; }
+.cm-diag.cm-h4 { background: #6cbf7d; }
+.cm-diag.cm-h5 { background: #2e7d32; color: #fff; }
+.cm-off.cm-h1 { background: #fbe9e9; }
+.cm-off.cm-h2 { background: #f5cccc; }
+.cm-off.cm-h3 { background: #eda5a5; }
+.cm-off.cm-h4 { background: #df6f6f; }
+.cm-off.cm-h5 { background: #c62828; color: #fff; }
+
+.cm-sum {
+  background: #eef1f5;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.cm-total {
+  color: var(--text);
+}
+
+#test-tbody tr {
+  cursor: pointer;
+}
+
+.fraction-row {
+  align-items: flex-end;
+  margin-bottom: 0;
+}
+
+.fraction-row .field {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+
 details.card summary {
   cursor: pointer;
   font-weight: 600;
@@ -758,6 +828,12 @@ svg.scatter.clickable {
   fill: #fff;
   stroke: #1d2733;
   stroke-width: 2;
+}
+
+/* Testpunkt mit einem Label, das in den Trainingsdaten fehlt (Seite 7): neutral statt Farbe von label-0. */
+.pt.is-validation.unknown {
+  stroke: #5b6776;
+  stroke-dasharray: 3 2;
 }
 
 .pt.query {

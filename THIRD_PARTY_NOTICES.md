@@ -18,22 +18,26 @@ Darüber hinaus enthält das Projekt **keinen Code von Dritten**, keine Biblioth
 
 ### Iris-Datensatz (Szenario „Schwertlilien“)
 
-- **Betrifft:** `kNN algorithm/testdata/szenario_1_schwertlilien.csv`
-- **Inhalt:** Teilmenge (43 von 150 Datensätzen) der Merkmale Blütenblattlänge und Blütenblattbreite.
+- **Betrifft:**
+  - `kNN algorithm/testdata/szenario_1_schwertlilien.csv` (Trainingsdaten)
+  - `kNN algorithm/testdata/szenario_1_schwertlilien_test.csv` (Testdaten)
+- **Inhalt:** zwei getrennte Teilmengen der Merkmale Blütenblattlänge und Blütenblattbreite:
+  - Trainingsdaten: 43 von 150 Datensätzen;
+  - Testdaten: 11 weitere Datensätze (Nr. 13, 14, 19, 65, 66, 84, 99, 109, 118, 120 und 121 der UCI-Datei `iris.data`).
 - **Quelle:**
   - Messungen von Edgar Anderson (1935).
   - Veröffentlicht von R. A. Fisher: *The use of multiple measurements in taxonomic problems*, Annals of Eugenics 7 (1936), S. 179–188.
 - **Bezugsquelle:** Fisher, R. A. (1936). *Iris* [Datensatz]. UCI Machine Learning Repository, doi:10.24432/C56C76, lizenziert unter **CC BY 4.0** (creativecommons.org/licenses/by/4.0/).
 - **Änderungen:**
   - Nur zwei der vier Merkmale.
-  - Teilmenge der Datensätze.
+  - Teilmengen der Datensätze, aufgeteilt in Trainings- und Testdaten.
   - Deutsche Spaltenbezeichnungen, Dezimalkomma, Semikolon als Trennzeichen.
 
 ### Übrige Daten
 
 Alle übrigen Daten wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
 - die Beispieldaten im Simulator (Früchte);
-- die Szenarien Wetter, Spam, Lernerfolg und Musik.
+- die Szenarien Wetter, Spam, Lernerfolg und Musik, jeweils Trainings- und Testdaten (`szenario_2_…` bis `szenario_5_…`, auch `*_test.csv`).
 
 Es handelt sich nicht um Messungen realer Personen.
 

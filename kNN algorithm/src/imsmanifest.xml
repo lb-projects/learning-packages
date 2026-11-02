@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   SCORM-1.2-Manifest des kNN-Simulators.
-  - Ein einzelnes SCO (index.html), das alle sechs Seiten als Registerkarten enthält.
+  - Ein einzelnes SCO (index.html), das alle sieben Seiten als Registerkarten enthält.
   - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
   - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
 -->
@@ -45,6 +45,7 @@
       <file href="js/pages/k-selection.js"/>
       <file href="js/pages/loo-manual.js"/>
       <file href="js/pages/loo-auto.js"/>
+      <file href="js/pages/confusion.js"/>
       <file href="js/app.js"/>
     </resource>
   </resources>

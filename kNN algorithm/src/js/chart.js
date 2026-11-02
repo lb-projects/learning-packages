@@ -282,6 +282,8 @@
      * @param {string[]} [view.labels] - Labels für die Legende (in Farbreihenfolge).
      * @param {string} [view.queryLegend] - Legendentext für den hervorgehobenen Abfragepunkt.
      * @param {Set<number>} [view.validationIds] - IDs der Validierungspunkte (Hohlmarker).
+     * @param {string} [view.hollowName] - Bezeichnung der Hohlmarker in Legende und Tooltip
+     *        (Standard "Validierungspunkt", auf Seite 7 "Testpunkt").
      * @param {number|null} [view.selectedId] - ID des hervorgehobenen Punkts.
      * @param {{x:number, y:number, label:(string|null)}|null} [view.query] - Neuer Punkt
      *        (wird zusätzlich als großer Marker gezeichnet).
@@ -297,6 +299,7 @@
       const validationIds = view.validationIds || new Set();
       const neighbors = view.neighbors || [];
       const origin = view.origin || view.query || null;
+      const hollowName = view.hollowName || 'Validierungspunkt';
 
       // --- Layout: gleiche Skalierung in x und y -----------------------------
       const coords = points.slice();
@@ -407,9 +410,9 @@
         const index = view.labelIndex(p.label);
         const isVal = validationIds.has(p.id);
         pointLayer.appendChild(dom.svgEl('path', {
-          class: 'pt label-' + Math.max(0, index) + (isVal ? ' is-validation' : ''),
+          class: 'pt label-' + Math.max(0, index) + (isVal ? ' is-validation' : '') + (index < 0 ? ' unknown' : ''),
           d: markerPath(Math.max(0, index), s.sx, s.sy, MARKER_R)
-        }, [dom.svgEl('title', null, dom.describePoint(p) + (isVal ? ' (Validierungspunkt)' : ''))]));
+        }, [dom.svgEl('title', null, dom.describePoint(p) + (isVal ? ' (' + hollowName + ')' : ''))]));
       }
       svg.appendChild(pointLayer);
       this.drawnPoints = points;
@@ -461,7 +464,7 @@
         legend.appendChild(dom.el('li', null, [markerIcon(view.labelIndex(label)), label]));
       }
       if (points.some((p) => validationIds.has(p.id))) {
-        legend.appendChild(dom.el('li', null, [markerIcon(0, true), 'Validierungspunkt (Hohlmarker)']));
+        legend.appendChild(dom.el('li', null, [markerIcon(0, true), (view.hollowName || 'Validierungspunkt') + ' (Hohlmarker)']));
       }
       if (view.query) {
         legend.appendChild(dom.el('li', { class: 'legend-query' }, [view.queryLegend || 'neuer Datenpunkt (gestrichelter Ring)']));

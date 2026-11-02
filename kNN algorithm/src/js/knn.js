@@ -1,7 +1,7 @@
 /**
  * @file knn.js
  * @description Der k-nächste-Nachbarn-Algorithmus (kNN) mit allen Auswertungen,
- *              die die sechs Seiten benötigen.
+ *              die die sieben Seiten benötigen.
  *
  * Idee des Verfahrens:
  *   Ein Punkt mit unbekanntem Label wird klassifiziert, indem man die k

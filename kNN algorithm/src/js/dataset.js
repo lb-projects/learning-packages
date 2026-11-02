@@ -3,8 +3,9 @@
  * @description Zentraler, seitenübergreifender Zustand der Trainingsdaten.
  *
  * Zweck:
- *   Alle sechs Seiten arbeiten auf demselben Datensatz. Dieses Modul
+ *   Alle sieben Seiten arbeiten auf demselben Datensatz. Dieses Modul
  *   - speichert die Datenpunkte (jeder Punkt erhält eine stabile, fortlaufende ID),
+ *   - speichert getrennt davon die Testdaten für Seite 7 (eigener Beobachterkanal),
  *   - verwaltet die Achsenbeschriftungen,
  *   - merkt sich, welche Punkte als Validierungsdaten markiert sind,
  *   - ordnet jedem Label eine feste Farbe/Markerform zu,
@@ -373,6 +374,125 @@
     listeners.push(listener);
   }
 
+  // ---------------------------------------------------------------------------
+  // Testdaten (Seite 7 "Test und Konfusionsmatrix")
+  //
+  // Testpunkte werden getrennt von den Trainingsdaten gespeichert: Sie fließen
+  // nie in eine Klassifizierung als Nachbarn ein, verändern die Farbzuordnung
+  // nicht und lösen einen eigenen Beobachterkanal aus. So werten die Seiten 2–6
+  // eine Änderung der Testdaten nicht als Änderung der Trainingsdaten.
+  // Die IDs stammen aus demselben Zähler wie die der Trainingspunkte und sind
+  // damit im gesamten Programm eindeutig.
+  // ---------------------------------------------------------------------------
+
+  /** @type {Array<Readonly<{id:number, x:number, y:number, label:string}>>} */
+  let testPoints = [];
+  /** Registrierte Beobachter für Testdaten. */
+  const testListeners = [];
+
+  /**
+   * Benachrichtigt alle Beobachter der Testdaten.
+   * @param {{type: string, ids?: number[]}} event - Art der Änderung.
+   */
+  function emitTest(event) {
+    for (const listener of testListeners) {
+      listener(event);
+    }
+  }
+
+  /**
+   * Fügt einen einzelnen Testpunkt hinzu. Es gelten dieselben Prüfungen und
+   * Grenzen wie für Trainingsdaten (das Label muss nicht in den
+   * Trainingsdaten vorkommen; solche Punkte sind dann nicht auswertbar).
+   *
+   * @param {number|string} x - x-Wert.
+   * @param {number|string} y - y-Wert.
+   * @param {string} label - Tatsächliches Label.
+   * @returns {{ok: boolean, point?: Object, error?: string}} Ergebnis.
+   */
+  function addTestPoint(x, y, label) {
+    const vx = validateCoordinate(x, 'x-Wert');
+    if (!vx.ok) {
+      return vx;
+    }
+    const vy = validateCoordinate(y, 'y-Wert');
+    if (!vy.ok) {
+      return vy;
+    }
+    const vl = validateLabel(label);
+    if (!vl.ok) {
+      return vl;
+    }
+    if (testPoints.length >= LIMITS.maxPoints) {
+      return { ok: false, error: 'Es sind höchstens ' + LIMITS.maxPoints + ' Testpunkte möglich.' };
+    }
+    const testLabels = new Set(testPoints.map((p) => p.label));
+    if (!testLabels.has(vl.value) && testLabels.size >= LIMITS.maxLabels) {
+      return { ok: false, error: 'Es sind höchstens ' + LIMITS.maxLabels + ' verschiedene Labels möglich.' };
+    }
+    const point = makePoint(vx.value, vy.value, vl.value);
+    testPoints.push(point);
+    emitTest({ type: 'add', ids: [point.id] });
+    return { ok: true, point };
+  }
+
+  /**
+   * Entfernt einen Testpunkt anhand seiner ID.
+   * @param {number} id - ID des Testpunkts.
+   * @returns {boolean} true, wenn ein Punkt entfernt wurde.
+   */
+  function removeTestPoint(id) {
+    const index = testPoints.findIndex((p) => p.id === id);
+    if (index < 0) {
+      return false;
+    }
+    testPoints.splice(index, 1);
+    emitTest({ type: 'remove', ids: [id] });
+    return true;
+  }
+
+  /**
+   * Ersetzt alle Testpunkte (Datei-Upload). Jeder Punkt wird erneut geprüft;
+   * ungültige Punkte, Punkte mit einem elften Label und Punkte über der
+   * Höchstzahl werden verworfen.
+   *
+   * @param {Array<{x:(number|string), y:(number|string), label:string}>} newPoints - Punkte.
+   * @returns {number} Anzahl der übernommenen Punkte.
+   */
+  function replaceTestPoints(newPoints) {
+    const accepted = [];
+    const labels = new Set();
+    for (const p of Array.isArray(newPoints) ? newPoints : []) {
+      if (accepted.length >= LIMITS.maxPoints) {
+        break;
+      }
+      const vx = validateCoordinate(p && p.x, 'x-Wert');
+      const vy = validateCoordinate(p && p.y, 'y-Wert');
+      const vl = validateLabel(p && p.label);
+      if (!vx.ok || !vy.ok || !vl.ok || (!labels.has(vl.value) && labels.size >= LIMITS.maxLabels)) {
+        continue;
+      }
+      labels.add(vl.value);
+      accepted.push({ x: vx.value, y: vy.value, label: vl.value });
+    }
+    testPoints = accepted.map((p) => makePoint(p.x, p.y, p.label));
+    emitTest({ type: 'replace' });
+    return testPoints.length;
+  }
+
+  /** Löscht alle Testpunkte. */
+  function clearTestPoints() {
+    replaceTestPoints([]);
+  }
+
+  /**
+   * Registriert einen Beobachter für Änderungen der Testdaten.
+   * @param {function({type: string, ids?: number[]}): void} listener - Rückruffunktion.
+   */
+  function onTestChange(listener) {
+    testListeners.push(listener);
+  }
+
   /**
    * Liefert die Labels in der Reihenfolge ihrer Farbindizes.
    * @returns {string[]} Labels.
@@ -396,6 +516,17 @@
     selectRandomValidation,
     onChange,
     getLabels,
+    addTestPoint,
+    removeTestPoint,
+    replaceTestPoints,
+    clearTestPoints,
+    onTestChange,
+    /** @returns {Array} Kopie der Testpunktliste (Punkte selbst sind eingefroren). */
+    getTestPoints: () => testPoints.slice(),
+    /** @param {number} id @returns {Object|undefined} Testpunkt mit dieser ID. */
+    getTestPoint: (id) => testPoints.find((p) => p.id === id),
+    /** @returns {number} Anzahl der Testpunkte. */
+    testSize: () => testPoints.length,
     /** @returns {Array} Kopie der Punktliste (Punkte selbst sind eingefroren). */
     getPoints: () => points.slice(),
     /** @param {number} id @returns {Object|undefined} Punkt mit dieser ID. */

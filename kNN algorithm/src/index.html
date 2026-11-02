@@ -5,8 +5,8 @@
   Einstiegsseite des Lernpakets (im Manifest als SCO eingetragen).
 
   Aufbau:
-    - Kopfbereich mit Registerkarten (Tabs) für die sechs Seiten
-    - sechs <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Kopfbereich mit Registerkarten (Tabs) für die sieben Seiten
+    - sieben <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
     - Fußzeile mit Fortschrittsanzeige
 
   Sicherheit:
@@ -51,6 +51,7 @@
   <script src="js/pages/k-selection.js" defer></script>
   <script src="js/pages/loo-manual.js" defer></script>
   <script src="js/pages/loo-auto.js" defer></script>
+  <script src="js/pages/confusion.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -63,6 +64,7 @@
       <button type="button" role="tab" id="tab-k-selection" aria-controls="page-k-selection" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Auswahl eines passenden Wertes für k</button>
       <button type="button" role="tab" id="tab-loo-manual" aria-controls="page-loo-manual" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Leave One Out – Verfahren</button>
       <button type="button" role="tab" id="tab-loo-auto" aria-controls="page-loo-auto" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Leave One Out – automatisiert</button>
+      <button type="button" role="tab" id="tab-confusion" aria-controls="page-confusion" aria-selected="false" tabindex="-1"><span class="tab-no">7</span> Test und Konfusionsmatrix</button>
     </nav>
   </header>
 
@@ -214,10 +216,18 @@
          =================================================================== -->
     <section id="page-k-selection" class="page" role="tabpanel" aria-labelledby="tab-k-selection" hidden>
       <h2>Auswahl eines passenden Wertes für k</h2>
-      <p class="intro">Zufällig 20&nbsp;% der Daten werden als <strong>Validierungsdaten</strong> zurückgehalten (Hohlmarker im Diagramm). Sie werden nur anhand der übrigen Trainingsdaten klassifiziert. Tragen Sie in der Tabelle ein <strong>x</strong> ein, wenn ein Validierungspunkt für das jeweilige k korrekt klassifiziert wird. Unten sehen Sie, wie viel Prozent korrekt erkannt wurden.</p>
-      <div class="card button-row">
-        <button type="button" id="btn-validation" class="btn btn-primary">Validierungsdaten auswählen</button>
-        <span id="k4-split" class="hint"></span>
+      <p class="intro">Ein wählbarer Anteil der Daten (Standard 20&nbsp;%) wird zufällig als <strong>Validierungsdaten</strong> zurückgehalten (Hohlmarker im Diagramm). Sie werden nur anhand der übrigen Trainingsdaten klassifiziert. Tragen Sie in der Tabelle ein <strong>x</strong> ein, wenn ein Validierungspunkt für das jeweilige k korrekt klassifiziert wird. Unten sehen Sie, wie viel Prozent korrekt erkannt wurden.</p>
+      <div class="card">
+        <div class="button-row fraction-row">
+          <div class="field">
+            <label for="k4-fraction">Anteil der Validierungsdaten (%)</label>
+            <input type="number" id="k4-fraction" class="k-number" min="1" max="90" step="1" value="20" inputmode="numeric">
+          </div>
+          <button type="button" id="btn-validation" class="btn btn-primary">Validierungsdaten auswählen</button>
+          <span id="k4-fraction-info" class="hint" role="status" aria-live="polite"></span>
+        </div>
+        <p id="k4-fraction-error" class="error" role="alert"></p>
+        <p id="k4-split" class="hint"></p>
       </div>
       <div id="k4-split-notice" class="notice" hidden></div>
       <div id="notice-k-selection" class="notice" hidden></div>
@@ -304,6 +314,79 @@
           <div id="loo6-matrix"></div>
         </details>
       </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 7: Test und Konfusionsmatrix
+         =================================================================== -->
+    <section id="page-confusion" class="page" role="tabpanel" aria-labelledby="tab-confusion" hidden>
+      <h2>Test und Konfusionsmatrix</h2>
+      <p class="intro"><strong>Testdaten</strong> sind Datenpunkte mit bekanntem Label, die beim Training <strong>nicht</strong> verwendet werden. Jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert. Die <strong>Konfusionsmatrix</strong> zählt, wie oft ein tatsächliches Label (Zeile) als welches Label (Spalte) vorhergesagt wurde. Auf der Diagonalen stehen die korrekten Klassifizierungen.</p>
+      <div id="notice-confusion" class="notice" hidden></div>
+      <div class="layout">
+        <div class="controls">
+          <div class="card">
+            <h3>Testdaten hochladen</h3>
+            <p class="hint">Gleiches Format wie die Trainingsdaten: <strong>.csv</strong>, <strong>.xlsx</strong> oder <strong>.ods</strong> (höchstens 2&nbsp;MB) mit drei Spalten x-Wert, y-Wert, Label; Kopfzeile optional. Die Datei ersetzt die vorhandenen Testdaten. Die Trainingsdaten bleiben unverändert.</p>
+            <label class="file-label" for="test-file-input">Datei auswählen</label>
+            <input type="file" id="test-file-input" accept=".csv,.xlsx,.ods,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet">
+            <div id="test-import-status" class="status" role="status" aria-live="polite" hidden></div>
+          </div>
+
+          <form id="test-point-form" class="card" novalidate autocomplete="off">
+            <h3>Testpunkt eingeben</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="test-in-x">x-Wert</label>
+                <input type="text" id="test-in-x" inputmode="decimal" maxlength="12" required>
+              </div>
+              <div class="field">
+                <label for="test-in-y">y-Wert</label>
+                <input type="text" id="test-in-y" inputmode="decimal" maxlength="12" required>
+              </div>
+              <div class="field field-wide">
+                <label for="test-in-label">tatsächliches Label</label>
+                <input type="text" id="test-in-label" maxlength="30" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Hinzufügen</button>
+            <p id="test-form-error" class="error" role="alert"></p>
+            <p id="test-form-info" class="hint" role="status" aria-live="polite"></p>
+          </form>
+
+          <div class="card">
+            <h3>Einstellungen</h3>
+            <div id="k-confusion"></div>
+            <div id="metric-confusion"></div>
+          </div>
+
+          <div class="card button-row">
+            <button type="button" id="btn-test-clear" class="btn btn-danger">Alle Testdaten löschen</button>
+          </div>
+        </div>
+        <div class="visual">
+          <div id="chart-confusion"></div>
+          <p id="cm-chart-info" class="hint" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <div id="cm-results">
+        <h3>Konfusionsmatrix</h3>
+        <div id="cm-summary" class="result" role="status" aria-live="polite"></div>
+        <div id="cm-matrix"></div>
+      </div>
+
+      <h3 id="test-table-heading" tabindex="-1">Testdaten <span id="test-count" class="count"></span></h3>
+      <div class="table-wrap table-scroll">
+        <table class="data-table">
+          <caption>Alle Testpunkte mit vorhergesagtem Label</caption>
+          <thead>
+            <tr><th scope="col">Nr.</th><th scope="col">x-Wert</th><th scope="col">y-Wert</th><th scope="col">tatsächliches Label</th><th scope="col">vorhergesagtes Label</th><th scope="col">Ergebnis</th><th scope="col"><span class="visually-hidden">Aktion</span></th></tr>
+          </thead>
+          <tbody id="test-tbody"></tbody>
+        </table>
+      </div>
+      <p id="test-empty" class="hint">Noch keine Testpunkte vorhanden.</p>
     </section>
   </main>
 

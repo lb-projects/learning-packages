@@ -11,14 +11,21 @@ keine externen Bibliotheken.
 | 1 Training | Trainingsdaten per Datei (CSV, XLSX, ODS) oder Eingabemaske erfassen, anzeigen und einzeln entfernen |
 | 2 Klassifizierung neuer Datenpunkte | Neuen Punkt eingeben oder ins Diagramm klicken; k und Metrik wählen; Kreis bzw. Raute, Nachbarn und Rechenweg werden angezeigt |
 | 3 Auswirkungen des Parameters k | Für einen Trainingspunkt zeigt eine Tabelle über alle k, ob er korrekt (grün) oder falsch (rot) klassifiziert wird; bei Fehlern steht das berechnete Label dabei |
-| 4 Auswahl eines passenden Wertes für k | Zufällig werden 20 % der Daten zu Validierungsdaten; die Schülerinnen und Schüler tragen für k = 1 … 10 ein „x“ ein, die Prozentzeile wird berechnet, „Eintragungen prüfen“ markiert jede Zelle |
+| 4 Auswahl eines passenden Wertes für k | Ein wählbarer Anteil der Daten (1–90 %, Standard 20 %) wird zufällig zu Validierungsdaten; die Schülerinnen und Schüler tragen für k = 1 … 10 ein „x“ ein, die Prozentzeile wird berechnet, „Eintragungen prüfen“ markiert jede Zelle |
 | 5 Leave One Out – Verfahren | Wie Seite 4, aber jeder Punkt wird einmal weggelassen |
 | 6 Leave One Out – automatisiert | Trefferquote für alle k = 1 … n−1 als Balkendiagramm und Tabelle, beste k hervorgehoben, Detailmatrix |
+| 7 Test und Konfusionsmatrix | Testdaten per Datei oder Eingabemaske erfassen und einzeln entfernen; jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert (k und Metrik wählbar). Die Konfusionsmatrix (Zeilen = tatsächliches, Spalten = vorhergesagtes Label) passt ihre Größe an die Labels der Trainingsdaten an; dazu Trefferquote und Ergebnis je Testpunkt |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsdaten wirken sofort auf alle Seiten:
 
 - Eintragungen bleiben für alle noch vorhandenen Punkte erhalten.
 - Prüfmarkierungen werden zurückgesetzt, weil sich die Ergebnisse geändert haben können. Ein Hinweis weist darauf hin.
+
+**Testdaten (Seite 7)** werden getrennt von den Trainingsdaten gespeichert:
+
+- Sie fließen nie als Nachbarn in eine Klassifizierung ein.
+- Änderungen der Testdaten wirken sich nicht auf die Seiten 1–6 aus. Änderungen der Trainingsdaten lassen die Testdaten unverändert; die Matrix wird neu berechnet.
+- Testpunkte mit einem Label, das in den Trainingsdaten nicht vorkommt, bleiben erhalten. Sie gelten als „nicht auswertbar“ und werden in der Matrix nicht gezählt.
 
 ### Dateiformat für den Upload
 
@@ -32,6 +39,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
   - Werte zwischen −1000 und 1000;
   - Labels mit höchstens 30 Zeichen (Buchstaben, Ziffern, Leerzeichen, `. _ -`).
 - Ein Upload **ersetzt** die vorhandenen Daten (nach Rückfrage). Die Eingabemaske **ergänzt** sie.
+- Für Testdaten (Seite 7) gelten dasselbe Format und dieselben Grenzen. Die Achsenbeschriftung einer Testdatei wird nicht übernommen.
 
 ### Festlegungen des Algorithmus
 
@@ -40,6 +48,8 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 - **Stimmengleichstand:** Es gewinnt das Label des nächstgelegenen Nachbarn unter den gleichauf liegenden Labels. Die Seite zeigt den Hinweis „Gleichstand“.
 - **Gleicher Abstand:** Es zählt die Reihenfolge der Eingabe. Seite 2 weist darauf hin, wenn das an der Grenze des k-ten Nachbarn relevant ist.
 - **Seite 3:** Der betrachtete Punkt wird bei seiner eigenen Klassifizierung ausgeschlossen.
+- **Seite 4:** Es bleiben immer mindestens ein Validierungs- und ein Trainingspunkt; die Anzahl ist der gerundete Anteil.
+- **Seite 7:** Nachbarn sind alle Trainingspunkte (auch die auf Seite 4 als Validierungsdaten markierten).
 
 ## Aufbau
 
@@ -47,7 +57,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 kNN algorithm/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
-│  ├─ index.html             Gerüst der sechs Seiten, Content-Security-Policy
+│  ├─ index.html             Gerüst der sieben Seiten, Content-Security-Policy
 │  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert)
 │  ├─ css/style.css          Gestaltung (Systemschriften, farbenblindfreundliche Palette)
 │  └─ js/
@@ -59,13 +69,13 @@ kNN algorithm/
 │     ├─ csv-parser.js       CSV nach RFC 4180
 │     ├─ xlsx-parser.js      Excel (.xlsx), erstes Blatt, keine Formelauswertung
 │     ├─ ods-parser.js       OpenDocument (.ods), Wiederholungen begrenzt
-│     ├─ dataset.js          zentraler Datenzustand, Eingabeprüfung, Änderungsereignisse
+│     ├─ dataset.js          zentraler Datenzustand (Trainings- und Testdaten), Eingabeprüfung, Änderungsereignisse
 │     ├─ data-import.js      Upload-Prüfung und Umwandlung in Datenpunkte
 │     ├─ knn.js              kNN, Abstimmung, Leave One Out
 │     ├─ chart.js            SVG-Diagramme (gleiche Skalierung, 1er-Gitter)
-│     ├─ pages/*.js          die sechs Seiten (+ gemeinsame Bausteine)
+│     ├─ pages/*.js          die sieben Seiten (+ gemeinsame Bausteine)
 │     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Fortschritt
-├─ testdata/                 Szenario-Dateien für den Unterricht (szenario_*.csv)
+├─ testdata/                 Szenario-Dateien für den Unterricht (Training: szenario_*.csv, Test: szenario_*_test.csv)
 ├─ preview/                  Vorschau
 └─ README.md                 diese Datei
 ```
@@ -82,7 +92,7 @@ Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsma
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. ZIP-Datei hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle sechs Seiten besucht wurden.
+3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle sieben Seiten besucht wurden. Ein bereits gemeldeter Abschluss bleibt erhalten. Gespeicherte Fortschritte der früheren Fassung mit sechs Seiten werden weiter gelesen.
 
 ## Sicherheits- und Datenschutzkonzept
 
@@ -119,25 +129,28 @@ So wird das Paket in Moodle eingebunden:
 - Kein CDN, keine Webfonts (Systemschriften), keine Bibliotheken von Drittanbietern.
 
 **Datenschutz**
-- Trainingsdaten und Eintragungen verlassen den Browser nicht.
-- An Moodle gehen nur `cmi.core.lesson_status`, `cmi.core.exit` und die besuchten Seiten (`cmi.suspend_data`, z. B. `v=110100`). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
+- Trainings-, Testdaten und Eintragungen verlassen den Browser nicht.
+- An Moodle gehen nur `cmi.core.lesson_status`, `cmi.core.exit` und die besuchten Seiten (`cmi.suspend_data`, z. B. `v=1101001`). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
 - Der Name der Lernenden wird nicht gelesen.
 - Kein `localStorage`, keine Cookies.
 - **Hinweis:** Nach dem Neuladen sind die Daten weg – das ist bewusst so (Datensparsamkeit).
 
 ## Szenario-Dateien für den Unterricht
 
-In `testdata/` liegen fünf CSV-Dateien zum Hochladen auf der Seite „Training“ (Werte zwischen 0 und 10, Kopfzeile, Semikolon, Dezimalkomma):
+In `testdata/` liegen zu jedem Szenario zwei CSV-Dateien (Werte zwischen 0 und 10, Kopfzeile, Semikolon, Dezimalkomma):
 
-| Datei | Szenario | Labels |
-|---|---|---|
-| `szenario_1_schwertlilien.csv` | Iris-Blumen: Blütenblattlänge und -breite | Iris setosa, Iris versicolor, Iris virginica |
-| `szenario_2_wetter.csv` | Regenvorhersage: Bewölkung und Luftfeuchtigkeit | Regen, kein Regen |
-| `szenario_3_spam.csv` | Spam-Filter: Links und Ausrufezeichen | Spam, kein Spam |
-| `szenario_4_lernerfolg.csv` | Prüfung: Lernzeit und Schlaf | bestanden, nicht bestanden |
-| `szenario_5_musik.csv` | Musikgenres: Energie und Tanzbarkeit | Klassik, Rock, Hip-Hop, Pop |
+- `szenario_N_….csv`: Trainingsdaten zum Hochladen auf der Seite „Training“.
+- `szenario_N_…_test.csv`: 10 bis 12 Testdaten zum Hochladen auf der Seite „Test und Konfusionsmatrix“. Sie enthalten keine Punkte der Trainingsdatei. Einige liegen bewusst im Grenzbereich zwischen den Klassen, damit die Matrix auch Fehlklassifikationen zeigt; je nach k ändern sich die Ergebnisse.
 
-Die Daten sind frei erfunden, mit einer Ausnahme: `szenario_1_schwertlilien.csv` enthält eine Teilmenge des Iris-Datensatzes (Anderson 1935, Fisher 1936; UCI Machine Learning Repository, CC BY 4.0). Bei der Weitergabe dieser Datei bitte die Quelle nennen und auf die Lizenz verweisen.
+| Trainingsdatei | Testdatei | Szenario | Labels |
+|---|---|---|---|
+| `szenario_1_schwertlilien.csv` | `szenario_1_schwertlilien_test.csv` | Iris-Blumen: Blütenblattlänge und -breite | Iris setosa, Iris versicolor, Iris virginica |
+| `szenario_2_wetter.csv` | `szenario_2_wetter_test.csv` | Regenvorhersage: Bewölkung und Luftfeuchtigkeit | Regen, kein Regen |
+| `szenario_3_spam.csv` | `szenario_3_spam_test.csv` | Spam-Filter: Links und Ausrufezeichen | Spam, kein Spam |
+| `szenario_4_lernerfolg.csv` | `szenario_4_lernerfolg_test.csv` | Prüfung: Lernzeit und Schlaf | bestanden, nicht bestanden |
+| `szenario_5_musik.csv` | `szenario_5_musik_test.csv` | Musikgenres: Energie und Tanzbarkeit | Klassik, Rock, Hip-Hop, Pop |
+
+Die Daten sind frei erfunden, mit einer Ausnahme: `szenario_1_schwertlilien.csv` und `szenario_1_schwertlilien_test.csv` enthalten zwei getrennte Teilmengen des Iris-Datensatzes (Anderson 1935, Fisher 1936; UCI Machine Learning Repository, CC BY 4.0). Bei der Weitergabe dieser Dateien bitte die Quelle nennen und auf die Lizenz verweisen (Einzelheiten in `THIRD_PARTY_NOTICES.md`).
 
 ## Ausprobieren und Browser
 
