@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!--
+  SQL-Simulator – SCORM-1.2-Lernpaket
+  ===================================
+  Einstiegsseite des Lernpakets (im Manifest als SCO eingetragen).
+
+  Aufbau:
+    - Kopfbereich mit Registerkarten (Tabs) für die drei Seiten
+    - drei <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Fußzeile mit Fortschrittsanzeige
+
+  Sicherheit:
+    - Content-Security-Policy nach dem Prinzip "alles verboten, außer":
+      default-src 'none' sperrt jede Ressourcenart (Bilder, Schriften, Medien,
+      Frames, Worker, Netzwerkverbindungen, Plugins); erlaubt sind nur Skripte
+      und Stylesheets aus dem Paket selbst. Keine Formularübertragung, kein <base>.
+    - Trusted Types (require-trusted-types-for 'script'; trusted-types 'none'):
+      Browser mit Unterstützung (Chromium) blockieren zur Laufzeit jede
+      Übergabe von Zeichenketten an HTML-Senken. Es gibt keine einzige Ausnahme.
+    - Es gibt kein Inline-JavaScript und keine Inline-Stile.
+    - Keine externen Ressourcen (keine CDNs, keine Webfonts).
+    - Alle dynamischen Inhalte werden per JavaScript als Text eingefügt (siehe js/dom-utils.js).
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SQL-Simulator</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Reihenfolge ist wichtig: Grundmodule zuerst, app.js zuletzt. "defer" = nach dem Aufbau des HTML ausführen. -->
+  <script src="js/dom-utils.js" defer></script>
+  <script src="js/text-utils.js" defer></script>
+  <script src="js/scorm-api.js" defer></script>
+  <script src="js/sql/errors.js" defer></script>
+  <script src="js/sql/lexer.js" defer></script>
+  <script src="js/sql/parser.js" defer></script>
+  <script src="js/sql/values.js" defer></script>
+  <script src="js/sql/database.js" defer></script>
+  <script src="js/sql/executor.js" defer></script>
+  <script src="js/sql-import.js" defer></script>
+  <script src="js/state.js" defer></script>
+  <script src="js/samples/schule.js" defer></script>
+  <script src="js/samples/bibliothek.js" defer></script>
+  <script src="js/samples/online-shop.js" defer></script>
+  <script src="js/samples/sportverein.js" defer></script>
+  <script src="js/pages/common.js" defer></script>
+  <script src="js/pages/load.js" defer></script>
+  <script src="js/pages/tables.js" defer></script>
+  <script src="js/pages/query.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>SQL-Simulator <span class="subtitle">Datenbanken abfragen</span></h1>
+    <nav class="tabs" role="tablist" aria-label="Seiten des Simulators">
+      <button type="button" role="tab" id="tab-load" aria-controls="page-load" aria-selected="true"><span class="tab-no">1</span> Datenbank laden</button>
+      <button type="button" role="tab" id="tab-tables" aria-controls="page-tables" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Tabellen</button>
+      <button type="button" role="tab" id="tab-query" aria-controls="page-query" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> SQL-Befehle</button>
+    </nav>
+  </header>
+
+  <noscript><p class="status status-error">Dieser Simulator benötigt JavaScript.</p></noscript>
+  <p id="app-error" class="status status-error" role="alert">Die Anwendung wird geladen … Falls diese Meldung bestehen bleibt, ist JavaScript deaktiviert oder der Browser zu alt.</p>
+
+  <main>
+    <!-- ===================================================================
+         Seite 1: Datenbank laden
+         =================================================================== -->
+    <section id="page-load" class="page" role="tabpanel" aria-labelledby="tab-load">
+      <h2>Datenbank laden</h2>
+      <p class="intro">Wählen Sie eine vorbereitete Beispieldatenbank oder laden Sie eine eigene SQL-Datei hoch. Die Datenbank liegt nur in Ihrem Browser; nach dem Neuladen der Seite ist sie wieder weg.</p>
+      <div id="current-db" class="status" role="status" aria-live="polite"></div>
+
+      <h3>Beispieldatenbanken</h3>
+      <div id="sample-list" class="sample-grid"></div>
+
+      <div class="card upload-card">
+        <h3>Eigene SQL-Datei hochladen</h3>
+        <p class="hint">Erlaubt: <strong>.sql</strong> oder <strong>.txt</strong> (höchstens 1&nbsp;MB, am besten im Zeichensatz UTF-8) mit den Befehlen <code>DROP TABLE</code>, <code>CREATE TABLE</code> und <code>INSERT INTO</code>. Exporte aus phpMyAdmin werden ebenfalls verstanden. Grenzen: 50&nbsp;Tabellen, 50&nbsp;Spalten je Tabelle, 20.000&nbsp;Datensätze, Texte bis 1.000&nbsp;Zeichen. Die Datei ersetzt die aktuelle Datenbank – auch Änderungen von Seite&nbsp;3.</p>
+        <label class="file-label" for="file-input">Datei auswählen</label>
+        <input type="file" id="file-input" accept=".sql,.txt,text/plain">
+        <div id="import-status" class="status" role="status" aria-live="polite" hidden></div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 2: Tabellen
+         =================================================================== -->
+    <section id="page-tables" class="page" role="tabpanel" aria-labelledby="tab-tables" hidden>
+      <h2>Tabellen</h2>
+      <p class="intro">Hier sehen Sie den Aufbau und den Inhalt aller Tabellen der geladenen Datenbank. <strong>PK</strong> kennzeichnet den Primärschlüssel, <strong>FK</strong> einen Fremdschlüssel mit der Spalte, auf die er verweist. Je Tabelle sind etwa fünf Datensätze sichtbar; weitere erreichen Sie durch Scrollen innerhalb der Tabelle.</p>
+      <div id="tables-notice" class="notice" hidden></div>
+      <p id="tables-info" class="hint"></p>
+      <nav id="tables-toc" class="button-row" aria-label="Zu einer Tabelle springen"></nav>
+      <div id="tables-list"></div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 3: SQL-Befehle
+         =================================================================== -->
+    <section id="page-query" class="page" role="tabpanel" aria-labelledby="tab-query" hidden>
+      <h2>SQL-Befehle</h2>
+      <p class="intro">Geben Sie einen SQL-Befehl ein und klicken Sie auf „Ausführen“ (oder drücken Sie Strg&nbsp;+&nbsp;Enter). Erlaubt sind <code>SELECT</code> sowie <code>INSERT</code>, <code>UPDATE</code> und <code>DELETE</code>. Mehrere Befehle werden durch <code>;</code> getrennt und gemeinsam ausgeführt: Enthält einer einen Fehler, bleibt die Datenbank unverändert.</p>
+      <p id="query-db-info" class="hint"></p>
+      <div class="card">
+        <label for="sql-input">SQL-Befehl</label>
+        <textarea id="sql-input" class="sql-input" rows="7" maxlength="10000" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="SELECT * FROM schule;"></textarea>
+        <div class="button-row">
+          <button type="button" id="btn-run" class="btn btn-primary">Ausführen</button>
+          <button type="button" id="btn-clear-input" class="btn">Eingabe leeren</button>
+          <button type="button" id="btn-reset-db" class="btn btn-danger" disabled>Datenbank zurücksetzen</button>
+        </div>
+        <p id="query-status" class="visually-hidden" role="status" aria-live="polite"></p>
+      </div>
+      <div id="query-notice" class="notice" hidden></div>
+      <div id="query-output"></div>
+
+      <details class="card reference">
+        <summary>Kurzreferenz: unterstützte SQL-Befehle</summary>
+        <div class="reference-body">
+          <h4>Abfragen</h4>
+          <pre class="sql-example">SELECT [DISTINCT] Spalte1, Spalte2 AS Name, COUNT(*) …
+FROM tabelle t
+  [INNER | LEFT | RIGHT] JOIN andere a ON a.t_id = t.id
+WHERE Bedingung
+GROUP BY Spalte
+HAVING Bedingung mit Aggregatfunktion
+ORDER BY Spalte [ASC | DESC]
+LIMIT Anzahl [OFFSET Start];</pre>
+          <ul>
+            <li><strong>Bedingungen:</strong> <code>= &lt;&gt; &lt; &lt;= &gt; &gt;=</code>, <code>AND</code>, <code>OR</code>, <code>NOT</code>, <code>BETWEEN … AND …</code>, <code>LIKE 'M%'</code> (<code>%</code> beliebig viele Zeichen, <code>_</code> genau ein Zeichen), <code>IN (…)</code>, <code>IS NULL</code>, <code>IS NOT NULL</code>, <code>EXISTS (SELECT …)</code></li>
+            <li><strong>Aggregatfunktionen:</strong> <code>COUNT(*)</code>, <code>COUNT(Spalte)</code>, <code>COUNT(DISTINCT Spalte)</code>, <code>SUM</code>, <code>AVG</code>, <code>MIN</code>, <code>MAX</code>; dazu <code>ROUND(Zahl, Stellen)</code></li>
+            <li><strong>Rechnen:</strong> <code>+ - * / %</code>, Klammern</li>
+            <li><strong>Aliase:</strong> <code>FROM schule s</code> bzw. <code>FROM schule AS s</code>, danach <code>s.Adresse</code>; Spalten: <code>COUNT(*) AS Anzahl</code></li>
+            <li><strong>Verknüpfungen:</strong> <code>JOIN … ON …</code>, <code>LEFT JOIN</code>, <code>RIGHT JOIN</code>, <code>CROSS JOIN</code> oder <code>FROM a, b WHERE a.id = b.a_id</code></li>
+            <li><strong>Unterabfragen:</strong> <code>WHERE Preis &gt; (SELECT AVG(Preis) FROM artikel)</code>, <code>WHERE id IN (SELECT …)</code>, <code>FROM (SELECT …) AS t</code></li>
+            <li><strong>Texte</strong> stehen in einfachen Anführungszeichen: <code>'Müller'</code>; <strong>Datumswerte</strong> als Text: <code>'2024-03-15'</code>; <strong>Dezimalzahlen</strong> mit Punkt: <code>3.50</code></li>
+          </ul>
+          <h4>Daten ändern</h4>
+          <pre class="sql-example">INSERT INTO tabelle (Spalte1, Spalte2) VALUES (1, 'Text'), (2, 'Noch ein Text');
+UPDATE tabelle SET Spalte2 = 'Neu' WHERE Spalte1 = 1;
+DELETE FROM tabelle WHERE Spalte1 = 2;</pre>
+          <p class="hint">Groß- und Kleinschreibung spielt bei Schlüsselwörtern, Tabellen- und Spaltennamen sowie beim Vergleich von Texten keine Rolle. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her.</p>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p id="progress" role="status"></p>
+  </footer>
+</body>
+</html>

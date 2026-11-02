@@ -14,6 +14,8 @@ Davon abweichend oder ergänzend gilt Folgendes.
 
 Darüber hinaus enthält das Projekt **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder.
 
+Das gilt ausdrücklich auch für den **SQL-Simulator** (`SQL simulator/`): Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
+
 ## Daten
 
 ### Iris-Datensatz (Szenario „Schwertlilien“)
@@ -41,6 +43,19 @@ Alle übrigen Daten wurden für dieses Projekt frei erfunden und stehen unter de
 
 Es handelt sich nicht um Messungen realer Personen.
 
+### SQL-Simulator: Beispieldatenbanken
+
+- **Betrifft:**
+  - `SQL simulator/testdata/*.sql`
+  - die inhaltsgleichen eingebauten Beispieldatenbanken `SQL simulator/src/js/samples/*.js`
+- **Inhalt:** Schule, Bibliothek, Online-Shop, Sportverein, ein Beispiel im Stil eines Datenbank-Exports (Musikschule) und eine absichtlich fehlerhafte Übungsdatei.
+- **Herkunft:** frei erfunden für dieses Projekt, MIT-Lizenz:
+  - Namen sind frei kombinierte, gängige Vor- und Nachnamen.
+  - Orte sind erfunden („Musterstadt“, „Beispielhausen“, „Waldmusterdorf“), ebenso Adressen, Schul-, Vereins- und Mannschaftsnamen.
+  - Buchtitel, Autorinnen und Autoren sowie Artikelbezeichnungen sind erfunden. Markennamen kommen nicht vor; statt ISBN-Nummern gibt es eine erfundene Signatur.
+- Es handelt sich nicht um Daten realer Personen, Schulen, Firmen, Werke oder Vereine. Ähnlichkeiten wären zufällig.
+- Die Beispieldatei im Export-Stil ist selbst geschrieben. Sie übernimmt keine Texte aus phpMyAdmin, sondern ahmt nur die übliche SQL-Syntax solcher Exporte nach.
+
 ## Gestaltung
 
 - **Farbpalette:** Die Klassenfarben basieren auf der farbenblindfreundlichen Palette von Masataka Okabe und Kei Ito, *Color Universal Design* (2008). Die Nennung ist eine Würdigung. Farbwerte als solche sind nicht urheberrechtlich geschützt.
@@ -56,6 +71,7 @@ Das Projekt implementiert offene Formate und Schnittstellen mit eigenem Code. We
 | Office Open XML | ECMA-376 |
 | OpenDocument | OASIS/ISO/IEC 26300 |
 | SCORM-1.2-Laufzeitschnittstelle und IMS Content Packaging | Namensraum-URIs im Manifest sind nur Bezeichner |
+| SQL (SQL-Simulator) | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
 
 ## Marken
 
@@ -65,6 +81,10 @@ Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu
 - **SCORM®** ist eine eingetragene Marke des U.S. Department of Defense (Advanced Distributed Learning Initiative).
 - **Microsoft Excel, Windows, Edge und PowerShell** sind Marken der Microsoft Corporation.
 - **LibreOffice** ist eine Marke der The Document Foundation.
+- **MySQL** ist eine eingetragene Marke der Oracle Corporation und/oder ihrer verbundenen Unternehmen.
+- **MariaDB** ist eine eingetragene Marke der MariaDB Corporation Ab.
+- **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy.
+- **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc.
 - **Chrome** ist eine Marke von Google LLC, **Firefox** von der Mozilla Foundation, **Safari** von Apple Inc.
 
 Dieses Projekt steht in keiner Verbindung zu den Markeninhabern und wird von ihnen weder unterstützt noch empfohlen.
