@@ -3,7 +3,7 @@
  * @description Wandelt Tokens in einen Syntaxbaum (AST) um – rekursiver Abstieg.
  *
  * Unterstützte Anweisungen:
- *   [WITH …] SELECT, INSERT (VALUES oder Abfrage), UPDATE, DELETE,
+ *   [WITH …] SELECT [UNION|INTERSECT|EXCEPT …], INSERT (VALUES oder Abfrage), UPDATE, DELETE,
  *   CREATE [OR REPLACE] VIEW, DROP VIEW,
  *   CREATE TABLE, CREATE [UNIQUE] INDEX, DROP TABLE, ALTER TABLE (Teilmenge),
  *   sowie Anweisungen aus Datenbank-Exporten, die übersprungen werden
@@ -274,9 +274,6 @@
         this.fail('„' + tok.value + '“ steht an der falschen Stelle', null,
           'Reihenfolge: SELECT … FROM … WHERE … GROUP BY … HAVING … ORDER BY … LIMIT …');
       }
-      if (tok.type === 'word' && (tok.upper === 'UNION' || tok.upper === 'INTERSECT' || tok.upper === 'EXCEPT')) {
-        this.fail(tok.upper + ' wird in diesem Simulator nicht unterstützt');
-      }
       // Ein Tippfehler in einem Schlüsselwort wird oft als Alias gelesen: "SELECT name FORM schule".
       const alias = this.lastImplicitAlias;
       if (alias && alias.name.length >= 3) {
@@ -296,6 +293,9 @@
     parseStatement() {
       const tok = this.peek();
       if (tok.type !== 'word') {
+        if (this.startsQuery()) {
+          return this.parseQuery();
+        }
         if (this.isSym('(')) {
           this.fail('Ein Befehl muss mit einem SQL-Wort beginnen (z. B. SELECT)');
         }
@@ -336,7 +336,7 @@
      */
     parseQuery() {
       if (!this.isKw('WITH')) {
-        return this.parseSelect();
+        return this.parseSetExpr();
       }
       this.next();
       this.enter();
@@ -360,24 +360,164 @@
         }
         this.expectKw('AS', 'Nach dem Namen der WITH-Abfrage wird „AS (SELECT …)“ erwartet');
         this.expectSym('(', 'Nach AS wird „(“ mit einer Abfrage erwartet');
-        if (!this.isQueryStart()) {
+        if (!this.startsQuery()) {
           this.fail('Erwartet wird eine Abfrage (SELECT …)', ['SELECT']);
         }
         const query = this.parseQuery();
         this.expectSym(')', 'Die WITH-Abfrage wird nicht mit „)“ geschlossen');
         ctes.push({ name: name.name, pos: name.pos, columns, query });
       } while (this.acceptSym(','));
-      if (!this.isKw('SELECT')) {
+      if (!this.isKw('SELECT') && !this.startsQuery()) {
         if (this.isKw('UPDATE') || this.isKw('DELETE') || this.isKw('INSERT')) {
           throw new SqlError('WITH ist in diesem Simulator nur vor SELECT erlaubt.', this.peek().pos,
             'Zum Einfügen schreiben Sie: INSERT INTO tabelle (Spalten) WITH … SELECT …');
         }
         this.fail('Nach den WITH-Abfragen wird „SELECT …“ erwartet', ['SELECT']);
       }
-      const node = this.parseSelect();
+      const node = this.parseSetExpr();
       node.with = ctes;
       this.leave();
       return node;
+    }
+
+    /**
+     * @param {number} [k=0] - Abstand zum aktuellen Token.
+     * @returns {boolean} true, wenn dort (nach beliebig vielen "(") eine Abfrage beginnt.
+     */
+    startsQuery(k) {
+      let j = k || 0;
+      while (this.isSym('(', j)) {
+        j++;
+      }
+      return this.isQueryStart(j);
+    }
+
+    /**
+     * Liest Abfragen mit Mengenoperationen: … UNION|EXCEPT [ALL|DISTINCT] …
+     * (INTERSECT bindet stärker, wie im SQL-Standard). ORDER BY und LIMIT am
+     * Ende gelten für das Gesamtergebnis.
+     *
+     * @returns {Object} SELECT-Knoten; bei Mengenoperationen mit Eigenschaft "compound".
+     */
+    parseSetExpr() {
+      let left = this.parseIntersectExpr();
+      while (this.isKw('UNION') || this.isKw('EXCEPT')) {
+        left = this.parseSetOp(left, () => this.parseIntersectExpr());
+      }
+      return this.finishCompound(left);
+    }
+
+    /** Liest … INTERSECT [ALL|DISTINCT] … */
+    parseIntersectExpr() {
+      let left = this.parseQueryTerm();
+      while (this.isKw('INTERSECT')) {
+        left = this.parseSetOp(left, () => this.parseQueryTerm());
+      }
+      return left;
+    }
+
+    /**
+     * Liest einen Mengenoperator und die rechte Seite.
+     *
+     * @param {Object} left - Linke Seite.
+     * @param {function(): Object} parseRight - Liest die rechte Seite.
+     * @returns {Object} Verbund-Knoten.
+     */
+    parseSetOp(left, parseRight) {
+      const tok = this.next();
+      let all = false;
+      if (this.acceptKw('ALL')) {
+        all = true;
+      } else {
+        this.acceptKw('DISTINCT');
+      }
+      if (!left.compound && !left.parenthesized && (left.orderBy.length > 0 || left.limit)) {
+        throw new SqlError('ORDER BY bzw. LIMIT vor ' + tok.upper + ' ist nur in Klammern möglich.', tok.pos,
+          'Setzen Sie die Abfrage in Klammern, wenn sie ein eigenes ORDER BY oder LIMIT haben soll: (SELECT … ORDER BY … LIMIT …) ' + tok.upper + ' SELECT …');
+      }
+      if (!this.startsQuery()) {
+        this.fail('Nach ' + tok.upper + ' wird eine Abfrage (SELECT …) erwartet', ['SELECT']);
+      }
+      this.enter();
+      const right = parseRight();
+      this.leave();
+      return { type: 'select', compound: { op: tok.upper, all, left, right }, orderBy: [], limit: null, with: null, pos: left.pos, opPos: tok.pos };
+    }
+
+    /**
+     * Ordnet ORDER BY/LIMIT am Ende einem Verbund zu: Stehen sie direkt am
+     * letzten Glied ohne Klammern, gelten sie für das Gesamtergebnis (wie MySQL).
+     *
+     * @param {Object} node - Ergebnis von parseSetExpr.
+     * @returns {Object} node.
+     */
+    finishCompound(node) {
+      if (!node.compound) {
+        return node;
+      }
+      let last = node;
+      while (last.compound) {
+        last = last.compound.right;
+      }
+      if (!last.parenthesized && (last.orderBy.length > 0 || last.limit)) {
+        node.orderBy = last.orderBy;
+        node.limit = last.limit;
+        last.orderBy = [];
+        last.limit = null;
+      } else {
+        this.parseOrderLimit(node);
+      }
+      return node;
+    }
+
+    /** Liest ein Glied einer Mengenoperation: (Abfrage) oder SELECT …. */
+    parseQueryTerm() {
+      if (this.isSym('(')) {
+        this.next();
+        this.enter();
+        if (!this.startsQuery()) {
+          this.fail('Nach „(“ wird eine Abfrage (SELECT …) erwartet', ['SELECT']);
+        }
+        const q = this.parseQuery();
+        this.expectSym(')', 'Die Klammer um die Abfrage wird nicht mit „)“ geschlossen');
+        this.leave();
+        q.parenthesized = true;
+        return q;
+      }
+      if (!this.isKw('SELECT')) {
+        this.fail('Erwartet wird eine Abfrage (SELECT …)', ['SELECT']);
+      }
+      return this.parseSelect();
+    }
+
+    /** Liest [ORDER BY …] [LIMIT …] in einen Abfrageknoten. */
+    parseOrderLimit(node) {
+      if (this.isKw('ORDER')) {
+        this.next();
+        this.expectKw('BY', 'Nach ORDER wird „BY“ erwartet');
+        do {
+          const expr = this.parseExpr();
+          let desc = false;
+          if (this.acceptKw('DESC')) {
+            desc = true;
+          } else {
+            this.acceptKw('ASC');
+          }
+          node.orderBy.push({ expr, desc });
+        } while (this.acceptSym(','));
+      }
+      if (this.acceptKw('LIMIT')) {
+        const a = this.parseLimitNumber();
+        if (this.acceptSym(',')) {
+          node.limit = { offset: a, count: this.parseLimitNumber() };
+        } else {
+          let offset = 0;
+          if (this.acceptKw('OFFSET')) {
+            offset = this.parseLimitNumber();
+          }
+          node.limit = { offset, count: a };
+        }
+      }
     }
 
     parseSelect() {
@@ -417,38 +557,10 @@
       if (this.acceptKw('HAVING')) {
         node.having = this.parseExpr();
       }
-      if (this.isKw('ORDER')) {
-        this.next();
-        this.expectKw('BY', 'Nach ORDER wird „BY“ erwartet');
-        do {
-          const expr = this.parseExpr();
-          let desc = false;
-          if (this.acceptKw('DESC')) {
-            desc = true;
-          } else {
-            this.acceptKw('ASC');
-          }
-          node.orderBy.push({ expr, desc });
-        } while (this.acceptSym(','));
-      }
-      if (this.acceptKw('LIMIT')) {
-        const a = this.parseLimitNumber();
-        if (this.acceptSym(',')) {
-          node.limit = { offset: a, count: this.parseLimitNumber() };
-        } else {
-          let offset = 0;
-          if (this.acceptKw('OFFSET')) {
-            offset = this.parseLimitNumber();
-          }
-          node.limit = { offset, count: a };
-        }
-      }
+      this.parseOrderLimit(node);
       const after = this.peek();
       if (after.type === 'word' && CLAUSE_WORDS.has(after.upper)) {
         this.failStatementEnd();
-      }
-      if (after.type === 'word' && (after.upper === 'UNION' || after.upper === 'INTERSECT' || after.upper === 'EXCEPT')) {
-        throw new SqlError(after.upper + ' wird in diesem Simulator nicht unterstützt.', after.pos);
       }
       this.leave();
       return node;
@@ -561,7 +673,7 @@
     parseTableRef() {
       const tok = this.peek();
       if (this.isSym('(')) {
-        if (!this.isQueryStart(1)) {
+        if (!this.startsQuery(1)) {
           this.fail('Nach „(“ in FROM wird eine Unterabfrage (SELECT …) erwartet', null);
         }
         this.next();
@@ -847,7 +959,7 @@
       this.expectKw('INTO', 'Nach INSERT wird „INTO“ erwartet');
       const table = this.parseName('ein Tabellenname');
       let columns = null;
-      if (this.isSym('(') && !this.isQueryStart(1)) {
+      if (this.isSym('(') && !this.startsQuery(1)) {
         this.next();
         columns = [];
         do {
@@ -855,14 +967,8 @@
         } while (this.acceptSym(','));
         this.expectSym(')', 'Die Spaltenliste wird nicht mit „)“ geschlossen');
       }
-      let query = null;
-      if (this.isQueryStart()) {
-        query = this.parseQuery();
-      } else if (this.isSym('(') && this.isQueryStart(1)) {
-        this.next();
-        query = this.parseQuery();
-        this.expectSym(')', 'Die Abfrage wird nicht mit „)“ geschlossen');
-      }
+      // INSERT … SELECT (auch geklammert, mit WITH oder Mengenoperationen)
+      const query = this.startsQuery() ? this.parseQuery() : null;
       if (query) {
         if (this.isKw('ON')) {
           throw new SqlError('ON DUPLICATE KEY UPDATE wird nicht unterstützt.', this.peek().pos);
@@ -1073,7 +1179,7 @@
         this.expectSym(')', 'Die Spaltenliste wird nicht mit „)“ geschlossen');
       }
       this.expectKw('AS', 'Nach dem Namen der Sicht wird „AS SELECT …“ erwartet');
-      if (!this.isQueryStart()) {
+      if (!this.startsQuery()) {
         this.fail('Nach AS wird eine Abfrage (SELECT …) erwartet', ['SELECT']);
       }
       const first = this.i;

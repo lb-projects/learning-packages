@@ -585,6 +585,59 @@
     return plan;
   }
 
+  /** @returns {boolean} true, wenn zwei Spaltentypen für die Anzeige gleich sind. */
+  function sameType(a, b) {
+    return !!a && !!b && a.base === b.base && a.display === b.display;
+  }
+
+  /**
+   * Bindet eine Mengenoperation (UNION, INTERSECT, EXCEPT). Spaltennamen
+   * stammen aus der ersten Abfrage; ORDER BY darf nur Spalten des Ergebnisses
+   * verwenden (Name oder Nummer).
+   *
+   * @param {Object} q - Verbund-Knoten mit q.compound.
+   * @param {Object|null} parentScope - Scope der umgebenden Abfrage.
+   * @param {Object|null} env - Sichtbare WITH-Abfragen.
+   */
+  function bindCompound(q, parentScope, env) {
+    const c = q.compound;
+    if (q.topLevel || q === rt.topQuery) {
+      c.left.topLevel = true;
+      c.right.topLevel = true;
+    }
+    bindSelect(c.left, parentScope, env);
+    bindSelect(c.right, parentScope, env);
+    const lo = c.left.outputs;
+    const ro = c.right.outputs;
+    if (lo.length !== ro.length) {
+      throw new SqlError('Die Abfragen vor und nach ' + c.op + ' liefern unterschiedlich viele Spalten (' + lo.length + ' und ' + ro.length + ').', q.opPos,
+        'Bei ' + c.op + ' müssen beide Abfragen gleich viele Spalten liefern.');
+    }
+    q.outputs = lo.map((o, i) => ({ name: o.name, type: sameType(o.type, ro[i].type) ? o.type : null }));
+    q.correlated = c.left.correlated || c.right.correlated;
+    const names = q.outputs.map((o) => o.name);
+    q.orderPlan = q.orderBy.map((o) => {
+      const e = o.expr;
+      if (e.type === 'literal' && typeof e.value === 'number' && e.isInteger) {
+        if (e.value < 1 || e.value > names.length) {
+          throw new SqlError('ORDER BY ' + e.value + ': Das Ergebnis hat nur ' + names.length + ' Spalte(n).', e.pos);
+        }
+        return { position: e.value - 1, desc: o.desc };
+      }
+      if (e.type === 'column' && e.table === null) {
+        const idx = names.findIndex((n) => n.toLowerCase() === e.name.toLowerCase());
+        if (idx >= 0) {
+          ns.sql.requireExactName(e.name, names[idx], 'Das Ergebnis hat keine Spalte „' + e.name + '“.', e.pos);
+          return { position: idx, desc: o.desc };
+        }
+        throw new SqlError('Das Ergebnis von ' + c.op + ' hat keine Spalte „' + e.name + '“.', e.pos,
+          ns.sql.didYouMean(ns.sql.suggestions(e.name, names)) || 'Spalten des Ergebnisses: ' + names.join(', ') + '.');
+      }
+      throw new SqlError('Nach ' + c.op + ' kann ORDER BY nur Spalten des Ergebnisses verwenden (Name oder Nummer, z. B. ORDER BY 1).', e.pos,
+        'Vergeben Sie in der ersten Abfrage einen Namen mit AS und sortieren Sie danach.');
+    });
+  }
+
   /** Größte Verschachtelung von Sichten (Schutz vor Sichten, die auf sich selbst verweisen). */
   const MAX_VIEW_DEPTH = 16;
 
@@ -715,9 +768,6 @@
    * @param {Object|null} [cteEnv] - Sichtbare WITH-Abfragen (ohne Angabe: die des umgebenden Scopes).
    */
   function bindSelect(q, parentScope, cteEnv) {
-    const scope = makeScope(parentScope, q);
-    q.correlated = false;
-    q.scope = scope;
     let env = cteEnv !== undefined ? cteEnv : (parentScope ? parentScope.cteEnv : null);
     if (q.with) {
       // WITH-Abfragen der Reihe nach: jede sieht nur die vorher definierten.
@@ -727,6 +777,13 @@
         env = { map: new Map([[cte.name.toLowerCase(), cte]]), parent: env };
       }
     }
+    if (q.compound) {
+      bindCompound(q, parentScope, env);
+      return;
+    }
+    const scope = makeScope(parentScope, q);
+    q.correlated = false;
+    q.scope = scope;
     scope.cteEnv = env;
     const aliasNames = new Set(q.columns.filter((c) => c.kind === 'expr' && c.alias).map((c) => c.alias.toLowerCase()));
     const baseFlags = { aliasNames };
@@ -924,9 +981,7 @@
       if (node.type === 'in') {
         collectSourceRefs(node.expr, depth, set);
       }
-      const q = node.query;
-      const parts = planConditions(q.fromPlan, []).concat(q.where ? [q.where] : [], q.having ? [q.having] : [], (q.outputs || []).map((o) => o.expr));
-      for (const p of parts) {
+      for (const p of queryParts(node.query)) {
         collectSourceRefs(p, depth + 1, set);
       }
       return;
@@ -934,6 +989,14 @@
     for (const child of exprChildren(node)) {
       collectSourceRefs(child, depth, set);
     }
+  }
+
+  /** @returns {Array<Object>} Ausdrücke einer Abfrage (bei Mengenoperationen aller Glieder). */
+  function queryParts(q) {
+    if (q.compound) {
+      return queryParts(q.compound.left).concat(queryParts(q.compound.right));
+    }
+    return planConditions(q.fromPlan, []).concat(q.where ? [q.where] : [], q.having ? [q.having] : [], (q.outputs || []).map((o) => o.expr));
   }
 
   /** @returns {string} Eine Quelle wie in FROM geschrieben, z. B. „bestellung b“. */
@@ -1083,7 +1146,7 @@
       text += ' Fehlt eine Verknüpfungsbedingung (JOIN … ON … oder in WHERE)?';
     }
     text += ' Ist das kartesische Produkt beabsichtigt, schreiben Sie CROSS JOIN.';
-    addWarning((q === rt.topQuery ? '' : 'In einer Unterabfrage: ') + text);
+    addWarning((q === rt.topQuery || q.topLevel ? '' : 'In einer Unterabfrage: ') + text);
   }
 
   /**
@@ -1707,6 +1770,84 @@
   }
 
   /**
+   * Wertet eine Mengenoperation aus. Zeilen gelten als gleich, wenn alle Werte
+   * im Sinne von DISTINCT gleich sind (NULL = NULL, Groß-/Kleinschreibung zählt).
+   *
+   * @param {Object} q - Gebundener Verbund-Knoten.
+   * @param {Object|null} outerCtx - Kontext der umgebenden Abfrage.
+   * @param {boolean} isTop - true für die äußerste Abfrage (Grenze für die Ergebnisgröße).
+   * @returns {{columns:Array<string>, types:Array<Object|null>, rows:Array<Array<*>>}} Ergebnis.
+   */
+  function runCompound(q, outerCtx, isTop) {
+    const c = q.compound;
+    const L = runSelect(c.left, outerCtx, false).rows;
+    const R = runSelect(c.right, outerCtx, false).rows;
+    const key = (row) => row.map(V.valueKey).join('\u0001');
+    let rows = [];
+    if (c.op === 'UNION') {
+      if (c.all) {
+        rows = L.concat(R);
+      } else {
+        const seen = new Set();
+        for (const row of L.concat(R)) {
+          tick();
+          const k = key(row);
+          if (!seen.has(k)) {
+            seen.add(k);
+            rows.push(row);
+          }
+        }
+      }
+    } else {
+      // INTERSECT bzw. EXCEPT: Häufigkeiten der rechten Seite zählen.
+      const counts = new Map();
+      for (const row of R) {
+        tick();
+        const k = key(row);
+        counts.set(k, (counts.get(k) || 0) + 1);
+      }
+      const seen = new Set();
+      for (const row of L) {
+        tick();
+        const k = key(row);
+        const n = counts.get(k) || 0;
+        if (c.all) {
+          if (n > 0) {
+            counts.set(k, n - 1);
+          }
+          if ((c.op === 'INTERSECT') === (n > 0)) {
+            rows.push(row);
+          }
+        } else if ((c.op === 'INTERSECT') === (n > 0) && !seen.has(k)) {
+          seen.add(k);
+          rows.push(row);
+        }
+      }
+    }
+    if (q.orderPlan.length > 0) {
+      const indexed = rows.map((row, i) => ({ row, i }));
+      indexed.sort((a, b) => {
+        for (const p of q.orderPlan) {
+          const cmp = V.orderValues(a.row[p.position], b.row[p.position]);
+          if (cmp !== 0) {
+            return p.desc ? -cmp : cmp;
+          }
+        }
+        return a.i - b.i;
+      });
+      rows = indexed.map((x) => x.row);
+    }
+    if (q.limit) {
+      rows = rows.slice(q.limit.offset, q.limit.offset + q.limit.count);
+    }
+    if (isTop && rows.length > EXEC_LIMITS.maxResultRows) {
+      throw new SqlError('Das Ergebnis hätte ' + rows.length.toLocaleString('de-DE') + ' Zeilen – erlaubt sind höchstens ' +
+        EXEC_LIMITS.maxResultRows.toLocaleString('de-DE') + '.', null, 'Grenzen Sie das Ergebnis mit WHERE oder LIMIT ein.');
+    }
+    return { columns: q.outputs.map((o) => o.name), types: q.outputs.map((o) => o.type), rows };
+  }
+
+  /**
    * Wertet eine gebundene SELECT-Anweisung aus.
    *
    * @param {Object} q - SELECT-Knoten (gebunden).
@@ -1715,6 +1856,9 @@
    * @returns {{columns:Array<string>, types:Array<Object|null>, rows:Array<Array<*>>}} Ergebnis.
    */
   function runSelect(q, outerCtx, isTop) {
+    if (q.compound) {
+      return runCompound(q, outerCtx, isTop);
+    }
     let frames = q.fromPlan ? runFrom(q.fromPlan, outerCtx) : [[]];
     if (q.where) {
       const kept = [];
