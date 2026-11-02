@@ -1,0 +1,8 @@
+# Text: im Repo und im Arbeitsverzeichnis immer LF (plattformunabhängig)
+* text=auto eol=lf
+
+# Testdaten: bewusst UTF-8 mit BOM + CRLF (Excel-kompatibel), Bytes unverändert lassen
+*.csv -text
+
+# Binärdateien
+*.png binary
