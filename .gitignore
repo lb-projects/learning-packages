@@ -1,0 +1,10 @@
+# Build-Ergebnisse gehören nicht ins Repository
+# (Teilprojekte enthalten nur src/, preview/ und testdata/)
+*.zip
+build/
+dist/
+
+# Betriebssystem-Dateien
+Thumbs.db
+desktop.ini
+.DS_Store
