@@ -1,0 +1,35 @@
+﻿Anzahl Links in der E-Mail;Anzahl Ausrufezeichen;Einstufung
+0;0;kein Spam
+1;0;kein Spam
+0;1;kein Spam
+2;1;kein Spam
+1;2;kein Spam
+3;0;kein Spam
+2;0;kein Spam
+0;2;kein Spam
+1;1;kein Spam
+4;1;kein Spam
+2;3;kein Spam
+3;2;kein Spam
+5;0;kein Spam
+0;4;kein Spam
+3;1;kein Spam
+1;3;kein Spam
+6;1;kein Spam
+2;2;kein Spam
+8;7;Spam
+9;9;Spam
+7;6;Spam
+10;8;Spam
+6;9;Spam
+8;10;Spam
+9;5;Spam
+5;7;Spam
+7;8;Spam
+10;10;Spam
+6;5;Spam
+4;8;Spam
+8;4;Spam
+3;6;Spam
+9;7;Spam
+7;3;Spam

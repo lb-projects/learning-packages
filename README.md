@@ -1,20 +1,15 @@
-# SCORM Packages for Teaching
+# moodle-learning-packages
 
-This repository publishes SCORM packages created for educational purposes, such as interactive lessons and quizzes.
+SCORM-1.2-Lernpakete für Lernplattformen wie Moodle.
 
-## Usage
+| Paket | Inhalt |
+|---|---|
+| [kNN algorithm](kNN%20algorithm/README.md) | Interaktiver Simulator zum Klassifikationsverfahren k nächste Nachbarn (kNN) |
 
-1. Download the desired package (ZIP file).
-2. In your LMS (e.g. Moodle), create a new "SCORM package" activity.
-3. Upload the ZIP file and save the activity.
+## Lizenz
 
-There is no need to unzip the files.
+- Der Quelltext steht unter der [MIT-Lizenz](LICENSE).
+- Eine Datei enthält zusätzlich Code unter der zlib-Lizenz.
+- Eine Testdatei enthält Daten unter CC BY 4.0.
 
-## Notes
-
-- The packages are intended for classroom use.
-- Feedback and suggestions for improvement are welcome via issues.
-
-## License
-
-See the `LICENSE` file for license terms.
+Die Einzelheiten sowie Hinweise zu Marken stehen in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
