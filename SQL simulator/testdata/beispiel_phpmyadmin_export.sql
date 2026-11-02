@@ -12,7 +12,7 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 -- --------------------------------------------------------
--- Tabellenstruktur für Tabelle `kurs`
+-- Aufbau der Tabelle `kurs`
 -- --------------------------------------------------------
 
 CREATE TABLE `kurs` (
@@ -34,7 +34,7 @@ INSERT INTO `kurs` (`id`, `Titel`, `Instrument`, `Wochentag`, `Gebuehr`, `Plaetz
 (6, 'Ukulele am Samstag', 'Ukulele', 'Sa', 30.00, 12);
 
 -- --------------------------------------------------------
--- Tabellenstruktur für Tabelle `teilnehmer`
+-- Aufbau der Tabelle `teilnehmer`
 -- --------------------------------------------------------
 
 CREATE TABLE `teilnehmer` (
@@ -55,7 +55,7 @@ INSERT INTO `teilnehmer` (`id`, `Vorname`, `Nachname`, `Geburtsjahr`) VALUES
 (8, 'Hugo', 'Iversen', NULL);
 
 -- --------------------------------------------------------
--- Tabellenstruktur für Tabelle `anmeldung`
+-- Aufbau der Tabelle `anmeldung`
 -- --------------------------------------------------------
 
 CREATE TABLE `anmeldung` (

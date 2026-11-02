@@ -70,7 +70,7 @@ INSERT INTO buch (id, Titel, autor_id, Erscheinungsjahr, Genre, Seiten, Signatur
 (9, 'Fünf Tage im August', 4, 2011, 'Roman', 240, 'ROM-DEL-2'),
 (10, 'Programmieren für Neugierige', 5, 2022, 'Sachbuch', 198, 'SAC-STE-1'),
 (11, 'Datenbanken verstehen', 5, 2023, 'Sachbuch', 224, 'SAC-STE-2'),
-(12, 'Die Bergwacht', 6, 1998, 'Abenteuer', 388, 'ABE-FEL-1'),
+(12, 'Seilschaft am Nebelgrat', 6, 1998, 'Abenteuer', 388, 'ABE-FEL-1'),
 (13, 'Gletscherzeit', 6, 2003, 'Sachbuch', 176, 'SAC-FEL-1'),
 (14, 'Der Garten der Zeit', 7, 2017, 'Fantasy', 520, 'FAN-KOW-1'),
 (15, 'Das Lied der Drachenflöte', 7, 2019, 'Fantasy', 476, 'FAN-KOW-2'),

@@ -52,9 +52,12 @@ Es handelt sich nicht um Messungen realer Personen.
 - **Herkunft:** frei erfunden für dieses Projekt, MIT-Lizenz:
   - Namen sind frei kombinierte, gängige Vor- und Nachnamen.
   - Orte sind erfunden („Musterstadt“, „Beispielhausen“, „Waldmusterdorf“), ebenso Adressen, Schul-, Vereins- und Mannschaftsnamen.
-  - Buchtitel, Autorinnen und Autoren sowie Artikelbezeichnungen sind erfunden. Markennamen kommen nicht vor; statt ISBN-Nummern gibt es eine erfundene Signatur.
+  - Buchtitel, Autorinnen und Autoren sind frei erfunden und nicht an bestehende Werke angelehnt. Gerade kurze, allgemeine Titel kann es auch als reale Werke geben; solche Übereinstimmungen wären zufällig. Statt ISBN-Nummern gibt es eine erfundene Signatur.
+  - Artikelbezeichnungen sind allgemeine Gattungsbezeichnungen. Marken- und Produktnamen kommen nicht vor.
 - Es handelt sich nicht um Daten realer Personen, Schulen, Firmen, Werke oder Vereine. Ähnlichkeiten wären zufällig.
-- Die Beispieldatei im Export-Stil ist selbst geschrieben. Sie übernimmt keine Texte aus phpMyAdmin, sondern ahmt nur die übliche SQL-Syntax solcher Exporte nach.
+- Die Beispieldatei im Export-Stil ist selbst geschrieben:
+  - Sie bildet nur den üblichen Aufbau solcher Exporte und deren funktionale SQL-Befehle nach (z. B. `SET SQL_MODE = …`, `START TRANSACTION`, `/*!40101 SET NAMES … */`).
+  - Kommentare und Daten sind eigene Formulierungen. Texte oder Übersetzungen aus phpMyAdmin werden nicht übernommen.
 
 ## Gestaltung
 
@@ -79,10 +82,11 @@ Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu
 
 - **Moodle™** ist eine Marke der Moodle Pty Ltd.
 - **SCORM®** ist eine eingetragene Marke des U.S. Department of Defense (Advanced Distributed Learning Initiative).
-- **Microsoft Excel, Windows, Edge und PowerShell** sind Marken der Microsoft Corporation.
+- **Microsoft Excel, Windows, Edge, PowerShell und .NET** sind Marken der Microsoft Corporation.
 - **LibreOffice** ist eine Marke der The Document Foundation.
 - **MySQL** ist eine eingetragene Marke der Oracle Corporation und/oder ihrer verbundenen Unternehmen.
-- **MariaDB** ist eine eingetragene Marke der MariaDB Corporation Ab.
+- **MariaDB®** ist eine eingetragene Marke der MariaDB plc.
+- **PostgreSQL** und **Postgres** sind Marken oder eingetragene Marken der PostgreSQL Community Association of Canada.
 - **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy.
 - **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc.
 - **Chrome** ist eine Marke von Google LLC, **Firefox** von der Mozilla Foundation, **Safari** von Apple Inc.
