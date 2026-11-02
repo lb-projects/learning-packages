@@ -1,4 +1,4 @@
-# kNN-Simulator – SCORM-1.2-Lernpaket für Moodle
+# kNN-Simulator – SCORM-1.2-Lernpaket
 
 Interaktiver Simulator zum Klassifikationsverfahren **k nächste Nachbarn (kNN)**.
 Das Paket läuft vollständig im Browser, lädt keine externen Ressourcen und verwendet
