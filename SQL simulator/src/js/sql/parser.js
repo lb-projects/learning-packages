@@ -168,6 +168,27 @@
       this.depth--;
     }
 
+    /**
+     * Setzt den Quelltext der Tokens [from, to) wieder zusammen: Tokens wie
+     * geschrieben, Leerraum und Kommentare dazwischen als ein Leerzeichen.
+     * Texte in Anführungszeichen bleiben dadurch unverändert.
+     *
+     * @param {number} from - Index des ersten Tokens.
+     * @param {number} to - Index nach dem letzten Token.
+     * @returns {string} Quelltext.
+     */
+    sourceText(from, to) {
+      let out = '';
+      for (let k = from; k < to; k++) {
+        const tok = this.tokens[k];
+        if (k > from && tok.pos.offset > this.tokens[k - 1].end) {
+          out += ' ';
+        }
+        out += this.src.slice(tok.pos.offset, tok.end);
+      }
+      return out;
+    }
+
     /** Überspringt alle Tokens bis zum Ende der Anweisung. */
     skipStatement() {
       while (!this.isSym(';') && this.peek().type !== 'eof') {
@@ -193,6 +214,7 @@
           this.fail('Erwartet wird ' + what, null,
             '„' + tok.value + '“ ist ein reserviertes SQL-Wort. Als Name muss es in `Backticks` stehen.');
         }
+        tok.isName = true;
         this.next();
         return { name: tok.value, pos: tok.pos };
       }
@@ -390,6 +412,7 @@
         return { kind: 'star', table: null, pos: start.pos };
       }
       if ((start.type === 'word' || start.type === 'ident') && this.isSym('.', 1) && this.isSym('*', 2)) {
+        start.isName = true;
         this.next();
         this.next();
         this.next();
@@ -700,6 +723,7 @@
           this.fail('Erwartet wird ein Ausdruck (z. B. ein Spaltenname, eine Zahl oder ein Text)', null,
             '„' + tok.value + '“ ist ein SQL-Schlüsselwort. Fehlt davor eine Spalte oder ein Wert?');
         }
+        tok.isName = true;
         this.next();
         if (this.isSym('.')) {
           this.next();
@@ -936,18 +960,47 @@
               }
               return { kind: 'index', columns: this.parseKeyColumns(), pos: t.pos };
             case 'CHECK':
-              throw new SqlError('CHECK-Bedingungen werden in diesem Simulator nicht unterstützt.', t.pos);
+              return this.parseCheck(name);
             case 'FULLTEXT':
             case 'SPATIAL':
               throw new SqlError(t.upper + '-Indizes werden nicht unterstützt.', t.pos);
             default:
               if (name !== null) {
-                this.fail('Nach CONSTRAINT Name wird PRIMARY KEY, UNIQUE oder FOREIGN KEY erwartet');
+                this.fail('Nach CONSTRAINT Name wird PRIMARY KEY, UNIQUE, FOREIGN KEY oder CHECK erwartet');
               }
           }
         }
       }
       return { kind: 'column', column: this.parseColumnDef() };
+    }
+
+    /**
+     * Liest "CHECK (Bedingung) [[NOT] ENFORCED]".
+     *
+     * @param {string|null} name - Name aus "CONSTRAINT name" oder null.
+     * @returns {Object} Constraint {kind:'check', name, expr, text, enforced, pos}.
+     */
+    parseCheck(name) {
+      const start = this.expectKw('CHECK', 'Erwartet wird „CHECK (Bedingung)“');
+      const open = this.expectSym('(', 'Nach CHECK wird „(“ mit einer Bedingung erwartet');
+      this.enter();
+      if (this.isSym(')')) {
+        this.fail('Die Bedingung nach CHECK darf nicht leer sein');
+      }
+      const firstIndex = this.i;
+      const expr = this.parseExpr();
+      const text = this.sourceText(firstIndex, this.i);
+      this.expectSym(')', 'Die Bedingung nach CHECK wird nicht mit „)“ geschlossen');
+      this.leave();
+      let enforced = true;
+      if (this.isKw('NOT') && this.isKw('ENFORCED', 1)) {
+        this.next();
+        this.next();
+        enforced = false;
+      } else {
+        this.acceptKw('ENFORCED');
+      }
+      return { kind: 'check', name, expr, text, enforced, pos: start.pos, openPos: open.pos };
     }
 
     /** Liest "(a, b)" in Schlüsseldefinitionen; Präfixlängen wie name(10) und ASC/DESC sind erlaubt. */
@@ -1010,7 +1063,7 @@
       const type = this.parseType();
       const col = {
         name: name.name, pos: name.pos, type, notNull: false, defaultValue: undefined,
-        primaryKey: false, autoIncrement: false, unique: false, references: null
+        primaryKey: false, autoIncrement: false, unique: false, references: null, checks: []
       };
       for (;;) {
         const tok = this.peek();
@@ -1077,7 +1130,17 @@
             col.references = this.parseReferences();
             break;
           case 'CHECK':
-            throw new SqlError('CHECK-Bedingungen werden in diesem Simulator nicht unterstützt.', tok.pos);
+            col.checks.push(this.parseCheck(null));
+            break;
+          case 'CONSTRAINT': {
+            this.next();
+            const cname = this.isKw('CHECK') ? null : this.parseName('ein Name für das Constraint').name;
+            if (!this.isKw('CHECK')) {
+              this.fail('In einer Spaltendefinition wird nach CONSTRAINT Name „CHECK (Bedingung)“ erwartet', ['CHECK']);
+            }
+            col.checks.push(this.parseCheck(cname));
+            break;
+          }
           default:
             return col;
         }
@@ -1252,9 +1315,45 @@
    */
   function parse(source) {
     const tokens = ns.sql.tokenize(source);
-    return new Parser(String(source), tokens).parseScript();
+    const statements = new Parser(String(source), tokens).parseScript();
+    statements.keywordCase = keywordCase(tokens);
+    return statements;
+  }
+
+  /** Höchstzahl der gemeldeten Schlüsselwörter in falscher Schreibung. */
+  const MAX_KEYWORD_NOTES = 8;
+
+  /**
+   * Sucht Schlüsselwörter, die nicht großgeschrieben sind (z. B. "select").
+   * Wörter, die der Parser als Namen (Tabelle, Spalte, Alias) gelesen hat, zählen nicht.
+   *
+   * @param {Array<Object>} tokens - Tokens nach dem Parsen.
+   * @returns {Array<{written:string, upper:string}>} Eindeutige Fundstellen (höchstens MAX_KEYWORD_NOTES).
+   */
+  function keywordCase(tokens) {
+    const seen = new Set();
+    const list = [];
+    for (const tok of tokens) {
+      if (tok.type === 'word' && !tok.isName && tok.value !== tok.upper && !seen.has(tok.value)) {
+        seen.add(tok.value);
+        list.push({ written: tok.value, upper: tok.upper });
+        if (list.length >= MAX_KEYWORD_NOTES) {
+          break;
+        }
+      }
+    }
+    return list;
+  }
+
+  /**
+   * @param {string} word - Wort.
+   * @returns {boolean} true, wenn das Wort reserviert ist und als Name in Backticks stehen muss.
+   */
+  function isReserved(word) {
+    return RESERVED.has(String(word).toUpperCase());
   }
 
   ns.sql.parse = parse;
   ns.sql.RESERVED = RESERVED;
+  ns.sql.isReserved = isReserved;
 })(window.SQLSIM = window.SQLSIM || {});

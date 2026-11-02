@@ -10,6 +10,10 @@
  *   2. Auswerten: FROM (Verknüpfungen) → WHERE → GROUP BY → HAVING →
  *      SELECT-Liste → DISTINCT → ORDER BY → LIMIT.
  *
+ * Hinweise (kein Fehler, das Ergebnis wird angezeigt):
+ *   - Tabellen in FROM ohne Verknüpfungsbedingung (vermutlich vergessenes JOIN … ON).
+ *   - Vergleich mit einem Text, der nur in anderer Groß-/Kleinschreibung vorkommt.
+ *
  * Verknüpfungen werden als verschachtelte Schleifen ausgeführt; bei einer
  * Gleichheitsbedingung zwischen zwei Spalten gleicher Art wird eine
  * Hash-Tabelle verwendet (schneller, gleiches Ergebnis).
@@ -35,7 +39,7 @@
   /** Grenzwerte der Ausführung. */
   const EXEC_LIMITS = Object.freeze({
     maxJoinRows: 200000,
-    maxResultRows: 10000,
+    maxResultRows: 25000,
     timeMs: 3000,
     importTimeMs: 10000
   });
@@ -135,7 +139,8 @@
    */
   function bindColumn(node, scope, flags) {
     const nameKey = node.name.toLowerCase();
-    if (node.table === null && flags.aliasMap && flags.aliasFirst && flags.aliasMap.has(nameKey)) {
+    if (node.table === null && flags.aliasMap && flags.aliasFirst && flags.aliasMap.has(nameKey) &&
+        flags.aliasSpelling.get(nameKey) === node.name) {
       return flags.aliasMap.get(nameKey);
     }
     let hiddenTable = null;
@@ -147,12 +152,14 @@
         const srcIdx = s.sources.findIndex((x) => x.key === tKey);
         if (srcIdx >= 0) {
           const src = s.sources[srcIdx];
+          ns.sql.requireExactName(node.table, src.label, 'Unbekannte Tabelle bzw. unbekannter Alias „' + node.table + '“ in „' + columnText(node) + '“.', node.pos);
           const col = src.colIndex.get(nameKey);
           if (col === undefined) {
             const hint = ns.sql.didYouMean(ns.sql.suggestions(node.name, src.columns.map((c) => c.name)), src.label + '.');
             throw new SqlError('„' + src.label + '“' + (src.aliasGiven && src.tableName ? ' (Tabelle ' + src.tableName + ')' : '') + ' hat keine Spalte „' + node.name + '“.', node.pos,
               hint || 'Vorhandene Spalten: ' + src.columns.map((c) => c.name).join(', ') + '.');
           }
+          ns.sql.requireExactName(node.name, src.columns[col].name, '„' + src.label + '“ hat keine Spalte „' + node.name + '“.', node.pos);
           return markBound(node, scope, depth, srcIdx, col);
         }
         if (!hiddenTable) {
@@ -173,13 +180,15 @@
             'Geben Sie die Tabelle oder den Alias mit an, z. B. ' + matches[0] + '.' + node.name + '.');
         }
         if (found) {
+          ns.sql.requireExactName(node.name, s.sources[found.srcIdx].columns[found.col].name, 'Unbekannte Spalte „' + node.name + '“.', node.pos);
           return markBound(node, scope, depth, found.srcIdx, found.col);
         }
       }
       s = s.parent;
       depth++;
     }
-    if (node.table === null && flags.aliasMap && flags.aliasFallback && flags.aliasMap.has(nameKey)) {
+    if (node.table === null && flags.aliasMap && (flags.aliasFallback || flags.aliasFirst) && flags.aliasMap.has(nameKey)) {
+      ns.sql.requireExactName(node.name, flags.aliasSpelling.get(nameKey), 'Unbekannter Alias bzw. unbekannte Spalte „' + node.name + '“.', node.pos);
       return flags.aliasMap.get(nameKey);
     }
     // Fehlermeldungen
@@ -267,6 +276,7 @@
       case 'binary':
         node.left = bindExpr(node.left, scope, flags);
         node.right = bindExpr(node.right, scope, flags);
+        noteLiteralComparison(node, scope, flags);
         return node;
       case 'between':
         node.expr = bindExpr(node.expr, scope, flags);
@@ -276,6 +286,7 @@
       case 'like':
         node.expr = bindExpr(node.expr, scope, flags);
         node.pattern = bindExpr(node.pattern, scope, flags);
+        noteLiteralComparison(node, scope, flags);
         return node;
       case 'isnull':
         node.expr = bindExpr(node.expr, scope, flags);
@@ -284,6 +295,7 @@
         node.expr = bindExpr(node.expr, scope, flags);
         if (node.list) {
           node.list = node.list.map((e) => bindExpr(e, scope, flags));
+          noteLiteralComparison(node, scope, flags);
         } else {
           bindSelect(node.query, scope);
           if (node.query.outputs.length !== 1) {
@@ -381,7 +393,7 @@
   function exprKey(n) {
     switch (n.type) {
       case 'literal':
-        return 'L' + (n.value === null ? 'N' : typeof n.value + ':' + String(n.value).toLowerCase());
+        return 'L' + (n.value === null ? 'N' : typeof n.value + ':' + String(n.value));
       case 'column':
         return 'C' + n.ref.depth + ':' + n.ref.src + ':' + n.ref.col;
       case 'func':
@@ -613,12 +625,15 @@
         assignWhereHashes(q.fromPlan, conjuncts(q.where, []), scope);
       }
     }
+    checkConnectivity(q, scope);
 
     // SELECT-Liste (inklusive * und t.*)
     q.outputs = [];
     /** Alias (klein) → Ausdruck bzw. Position in der SELECT-Liste. */
     const aliasMap = new Map();
     const aliasPosition = new Map();
+    /** Alias (klein) → Schreibweise wie in der SELECT-Liste (Verweise müssen exakt passen). */
+    const aliasSpelling = new Map();
     for (const item of q.columns) {
       if (item.kind === 'star') {
         if (scope.sources.length === 0) {
@@ -633,6 +648,7 @@
             throw new SqlError('Unbekannte Tabelle bzw. unbekannter Alias „' + item.table + '“ in „' + item.table + '.*“.', item.pos,
               cand ? 'Meinten Sie „' + cand + '.*“?' : 'In FROM stehen: ' + labels.join(', ') + '.');
           }
+          ns.sql.requireExactName(item.table, scope.sources[idx].label, 'Unbekannte Tabelle bzw. unbekannter Alias „' + item.table + '“ in „' + item.table + '.*“.', item.pos);
           indices = [idx];
         }
         for (const srcIdx of indices) {
@@ -645,6 +661,7 @@
         const name = item.alias || (item.expr.type === 'column' ? item.expr.name : item.text);
         if (item.alias && !aliasMap.has(item.alias.toLowerCase())) {
           aliasMap.set(item.alias.toLowerCase(), expr);
+          aliasSpelling.set(item.alias.toLowerCase(), item.alias);
           aliasPosition.set(item.alias.toLowerCase(), q.outputs.length);
         }
         q.outputs.push({ expr, name, type: outputType(expr, scope) });
@@ -660,7 +677,7 @@
         }
         expr = q.outputs[g.value - 1].expr;
       } else {
-        expr = bindExpr(g, scope, Object.assign({}, baseFlags, { clause: 'GROUP BY', allowAgg: false, aliasMap, aliasFallback: true }));
+        expr = bindExpr(g, scope, Object.assign({}, baseFlags, { clause: 'GROUP BY', allowAgg: false, aliasMap, aliasSpelling, aliasFallback: true }));
       }
       if (containsAggregate(expr)) {
         throw new SqlError('Nach einer Aggregatfunktion kann nicht gruppiert werden.', g.pos);
@@ -670,7 +687,7 @@
 
     // HAVING
     if (q.having) {
-      q.having = bindExpr(q.having, scope, Object.assign({}, baseFlags, { clause: 'HAVING', allowAgg: true, aliasMap, aliasFirst: true }));
+      q.having = bindExpr(q.having, scope, Object.assign({}, baseFlags, { clause: 'HAVING', allowAgg: true, aliasMap, aliasSpelling, aliasFirst: true }));
     }
 
     // ORDER BY
@@ -682,10 +699,10 @@
         }
         return { position: e.value - 1, desc: o.desc };
       }
-      if (e.type === 'column' && e.table === null && aliasPosition.has(e.name.toLowerCase())) {
+      if (e.type === 'column' && e.table === null && aliasPosition.has(e.name.toLowerCase()) && aliasSpelling.get(e.name.toLowerCase()) === e.name) {
         return { position: aliasPosition.get(e.name.toLowerCase()), desc: o.desc };
       }
-      return { expr: bindExpr(e, scope, Object.assign({}, baseFlags, { clause: 'ORDER BY', allowAgg: true, aliasMap, aliasFirst: true })), desc: o.desc };
+      return { expr: bindExpr(e, scope, Object.assign({}, baseFlags, { clause: 'ORDER BY', allowAgg: true, aliasMap, aliasSpelling, aliasFirst: true })), desc: o.desc };
     });
 
     q.aggregated = q.groupExprs.length > 0 || scope.hasAgg;
@@ -712,6 +729,346 @@
           checkGrouped(p.expr, info);
         }
       });
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Hinweise (kein Fehler, das Ergebnis wird trotzdem angezeigt)
+  // ---------------------------------------------------------------------------
+
+  /** Höchstzahl der Hinweise je Anweisung. */
+  const MAX_WARNINGS = 6;
+
+  /** Klauseln, in denen Vergleiche mit Texten auf falsche Schreibung geprüft werden. */
+  const LITERAL_CLAUSES = new Set(['WHERE', 'ON', 'HAVING']);
+
+  /** Fügt einen Hinweis hinzu (ohne Doppelungen, höchstens MAX_WARNINGS). */
+  function addWarning(text) {
+    if (rt.warnings.length < MAX_WARNINGS && !rt.warnings.includes(text)) {
+      rt.warnings.push(text);
+    }
+  }
+
+  /**
+   * Direkte Teilausdrücke eines Ausdrucks (ohne Unterabfragen).
+   *
+   * @param {Object} node - Ausdruck.
+   * @returns {Array<Object>} Teilausdrücke.
+   */
+  function exprChildren(node) {
+    switch (node.type) {
+      case 'neg':
+      case 'not':
+        return [node.operand];
+      case 'binary':
+        return [node.left, node.right];
+      case 'between':
+        return [node.expr, node.low, node.high];
+      case 'like':
+        return [node.expr, node.pattern];
+      case 'isnull':
+        return [node.expr];
+      case 'in':
+        return node.list ? [node.expr].concat(node.list) : [node.expr];
+      case 'func':
+        return node.args;
+      default:
+        return [];
+    }
+  }
+
+  /** @returns {Array<Object>} Alle ON-Bedingungen eines FROM-Plans. */
+  function planConditions(plan, out) {
+    if (plan && plan.type === 'join') {
+      planConditions(plan.left, out);
+      planConditions(plan.right, out);
+      if (plan.on) {
+        out.push(plan.on);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Sammelt die Quellen einer Abfrageebene, auf die ein Ausdruck verweist –
+   * auch aus Unterabfragen heraus (dort mit entsprechend größerer Tiefe).
+   *
+   * @param {Object} node - Gebundener Ausdruck.
+   * @param {number} depth - Abstand zur betrachteten Ebene.
+   * @param {Set<number>} set - Gefundene Quellen (Index in scope.sources).
+   */
+  function collectSourceRefs(node, depth, set) {
+    if (!node || typeof node !== 'object') {
+      return;
+    }
+    if (node.type === 'column') {
+      if (node.ref && node.ref.depth === depth) {
+        set.add(node.ref.src);
+      }
+      return;
+    }
+    if (node.type === 'subquery' || node.type === 'exists' || (node.type === 'in' && node.query)) {
+      if (node.type === 'in') {
+        collectSourceRefs(node.expr, depth, set);
+      }
+      const q = node.query;
+      const parts = planConditions(q.fromPlan, []).concat(q.where ? [q.where] : [], q.having ? [q.having] : [], (q.outputs || []).map((o) => o.expr));
+      for (const p of parts) {
+        collectSourceRefs(p, depth + 1, set);
+      }
+      return;
+    }
+    for (const child of exprChildren(node)) {
+      collectSourceRefs(child, depth, set);
+    }
+  }
+
+  /** @returns {string} Eine Quelle wie in FROM geschrieben, z. B. „bestellung b“. */
+  function sourceLabel(src) {
+    return '„' + (src.aliasGiven && src.tableName ? src.tableName + ' ' + src.label : src.label) + '“';
+  }
+
+  /** @returns {string} Aufzählung "a, b und c". */
+  function joinList(items) {
+    return items.length <= 1 ? items.join('') : items.slice(0, -1).join(', ') + ' und ' + items[items.length - 1];
+  }
+
+  /**
+   * Sucht eine Verknüpfungsbedingung zwischen zwei Quellen aus einem Fremdschlüssel.
+   *
+   * @param {Object} from - Quelle mit dem Fremdschlüssel.
+   * @param {Object} to - Quelle, auf die verwiesen wird.
+   * @returns {string|null} Bedingung, z. B. "bp.bestellung_id = b.id".
+   */
+  function fkCondition(from, to) {
+    if (!from.tableKey || !to.tableKey) {
+      return null;
+    }
+    const fromTable = rt.db.tables.get(from.tableKey);
+    const toTable = rt.db.tables.get(to.tableKey);
+    if (!fromTable || !toTable) {
+      return null;
+    }
+    for (const fk of fromTable.foreignKeys) {
+      if (fk.refTable.toLowerCase() !== to.tableKey) {
+        continue;
+      }
+      let refCols = fk.refColumns.slice();
+      if (refCols.length === 0 && toTable.primaryKey) {
+        refCols = toTable.primaryKey.map((i) => toTable.columns[i].name);
+      }
+      if (refCols.length !== fk.columns.length) {
+        continue;
+      }
+      return fk.columns.map((c, k) => {
+        const refIdx = toTable.colIndex.get(refCols[k].toLowerCase());
+        const refName = refIdx === undefined ? refCols[k] : toTable.columns[refIdx].name;
+        return from.label + '.' + fromTable.columns[c].name + ' = ' + to.label + '.' + refName;
+      }).join(' AND ');
+    }
+    return null;
+  }
+
+  /**
+   * Prüft, ob alle Tabellen einer Abfrageebene über Bedingungen verknüpft sind.
+   * Fehlt eine Verknüpfung, wird jede Zeile mit jeder kombiniert (kartesisches
+   * Produkt) – meist eine vergessene JOIN-Bedingung. Ein ausdrückliches
+   * CROSS JOIN gilt als beabsichtigt.
+   *
+   * @param {Object} q - Gebundene SELECT-Anweisung (FROM und WHERE gebunden).
+   * @param {Object} scope - Scope der Abfrage.
+   */
+  function checkConnectivity(q, scope) {
+    const n = scope.sources.length;
+    if (n < 2) {
+      return;
+    }
+    const parent = scope.sources.map((s, i) => i);
+    const find = (x) => {
+      while (parent[x] !== x) {
+        parent[x] = parent[parent[x]];
+        x = parent[x];
+      }
+      return x;
+    };
+    const connect = (list) => {
+      for (let k = 1; k < list.length; k++) {
+        parent[find(list[k])] = find(list[0]);
+      }
+    };
+    const markCross = (plan) => {
+      if (plan && plan.type === 'join') {
+        markCross(plan.left);
+        markCross(plan.right);
+        if (plan.kind === 'cross' && !plan.implicit) {
+          const all = [];
+          for (let i = plan.range[0]; i < plan.range[2]; i++) {
+            all.push(i);
+          }
+          connect(all);
+        }
+      }
+    };
+    markCross(q.fromPlan);
+    const conds = [];
+    for (const on of planConditions(q.fromPlan, [])) {
+      conjuncts(on, conds);
+    }
+    if (q.where) {
+      conjuncts(q.where, conds);
+    }
+    for (const c of conds) {
+      const set = new Set();
+      collectSourceRefs(c, 0, set);
+      connect(Array.from(set));
+    }
+    const groupMap = new Map();
+    for (let i = 0; i < n; i++) {
+      const root = find(i);
+      if (!groupMap.has(root)) {
+        groupMap.set(root, []);
+      }
+      groupMap.get(root).push(i);
+    }
+    if (groupMap.size < 2) {
+      return;
+    }
+    const groups = Array.from(groupMap.values());
+    const src = scope.sources;
+    const parts = groups.map((g) => (g.length === 1 ? sourceLabel(src[g[0]]) : '(' + g.map((i) => sourceLabel(src[i])).join(', ') + ')'));
+    let text;
+    if (groups.length === 2 && groups[1].length === 1) {
+      text = 'Die Tabelle ' + sourceLabel(src[groups[1][0]]) + ' ist mit ' +
+        (groups[0].length === 1 ? sourceLabel(src[groups[0][0]]) : 'den übrigen Tabellen ' + parts[0]) + ' über keine Bedingung verknüpft.';
+    } else {
+      text = 'Die Tabellen in FROM sind nicht alle über Bedingungen verknüpft. Getrennte Gruppen: ' + joinList(parts) + '.';
+    }
+    text += ' Dadurch wird jede Zeile mit jeder kombiniert (kartesisches Produkt) – das Ergebnis enthält vermutlich zu viele Zeilen.';
+    // Vorschläge aus Fremdschlüsseln: je getrennter Gruppe eine Bedingung zu einer anderen Gruppe.
+    const proposals = [];
+    for (let g = 1; g < groups.length && proposals.length < 3; g++) {
+      let found = null;
+      for (let h = 0; h < groups.length && !found; h++) {
+        if (h === g) {
+          continue;
+        }
+        for (const i of groups[g]) {
+          for (const j of groups[h]) {
+            found = found || fkCondition(src[i], src[j]) || fkCondition(src[j], src[i]);
+          }
+        }
+      }
+      if (found && !proposals.includes('„' + found + '“')) {
+        proposals.push('„' + found + '“');
+      }
+    }
+    if (proposals.length === 1) {
+      text += ' Fehlt eine Bedingung wie ' + proposals[0] + ' (mit JOIN … ON … oder in WHERE)?';
+    } else if (proposals.length > 1) {
+      text += ' Fehlen Bedingungen wie ' + joinList(proposals) + ' (mit JOIN … ON … oder in WHERE)?';
+    } else {
+      text += ' Fehlt eine Verknüpfungsbedingung (JOIN … ON … oder in WHERE)?';
+    }
+    text += ' Ist das kartesische Produkt beabsichtigt, schreiben Sie CROSS JOIN.';
+    addWarning((q === rt.topQuery ? '' : 'In einer Unterabfrage: ') + text);
+  }
+
+  /**
+   * Merkt Vergleiche einer Spalte mit einem Text vor (=, IN, LIKE), um nach der
+   * Ausführung auf Werte hinzuweisen, die sich nur in der Schreibung unterscheiden.
+   *
+   * @param {Object} node - Gebundener Vergleich.
+   * @param {Object} scope - Scope.
+   * @param {Object} flags - Kontext (clause).
+   */
+  function noteLiteralComparison(node, scope, flags) {
+    if (!rt || !rt.literalChecks || !LITERAL_CLAUSES.has(flags.clause) || rt.literalChecks.length >= 20) {
+      return;
+    }
+    let column = null;
+    let values = [];
+    let kind = 'eq';
+    const isText = (e) => e.type === 'literal' && typeof e.value === 'string' && e.value.toLowerCase() !== e.value.toUpperCase();
+    if (node.type === 'binary' && node.op === '=') {
+      if (node.left.type === 'column' && isText(node.right)) {
+        column = node.left;
+        values = [node.right.value];
+      } else if (node.right.type === 'column' && isText(node.left)) {
+        column = node.right;
+        values = [node.left.value];
+      }
+    } else if (node.type === 'in' && node.list && !node.not && node.expr.type === 'column') {
+      column = node.expr;
+      values = node.list.filter(isText).map((e) => e.value);
+    } else if (node.type === 'like' && !node.not && node.expr.type === 'column' && isText(node.pattern)) {
+      column = node.expr;
+      values = [node.pattern.value];
+      kind = 'like';
+    }
+    if (!column || !column.ref || values.length === 0) {
+      return;
+    }
+    let s = scope;
+    for (let d = column.ref.depth; d > 0 && s; d--) {
+      s = s.parent;
+    }
+    const source = s ? s.sources[column.ref.src] : null;
+    const table = source && source.tableKey ? rt.db.tables.get(source.tableKey) : null;
+    if (!table) {
+      return;
+    }
+    rt.literalChecks.push({ table, rows: table.rows, col: column.ref.col, values, kind });
+  }
+
+  /**
+   * Weist auf Texte hin, die so in der Spalte nicht vorkommen, wohl aber in
+   * anderer Groß-/Kleinschreibung. Geprüft wird der Tabelleninhalt vor der Anweisung.
+   */
+  function literalCaseHints() {
+    for (const lc of rt.literalChecks) {
+      for (const text of lc.values) {
+        if (rt.warnings.length >= MAX_WARNINGS) {
+          return;
+        }
+        let exact = false;
+        let similar = null;
+        const folded = V.textKey(text).toLowerCase();
+        for (const row of lc.rows) {
+          tick();
+          const v = row[lc.col];
+          if (typeof v !== 'string') {
+            continue;
+          }
+          if (lc.kind === 'like') {
+            if (likeMatch(v, text)) {
+              exact = true;
+              break;
+            }
+            if (similar === null && likeMatch(v, text, true)) {
+              similar = v;
+            }
+          } else {
+            if (V.compareValues(v, text) === 0) {
+              exact = true;
+              break;
+            }
+            if (similar === null && V.textKey(v).toLowerCase() === folded) {
+              similar = v;
+            }
+          }
+        }
+        if (exact || similar === null) {
+          continue;
+        }
+        const where = '„' + lc.table.name + '.' + lc.table.columns[lc.col].name + '“';
+        if (lc.kind === 'like') {
+          addWarning('Das Muster ' + show(text) + ' passt auf keinen Wert in ' + where + ', ohne Beachtung der Groß-/Kleinschreibung aber z. B. auf ' +
+            show(similar) + '. Bei LIKE kommt es auf die Groß-/Kleinschreibung an.');
+        } else {
+          addWarning('In ' + where + ' gibt es den Wert ' + show(text) + ' nicht, wohl aber ' + show(similar) + '. Meinten Sie ' + show(similar) +
+            '? Texte werden mit Beachtung der Groß-/Kleinschreibung verglichen.');
+        }
+      }
     }
   }
 
@@ -754,16 +1111,18 @@
 
   /**
    * Vergleicht einen Text mit einem LIKE-Muster (% = beliebig viele Zeichen,
-   * _ = genau ein Zeichen, \ maskiert das folgende Zeichen). Groß-/Kleinschreibung egal.
+   * _ = genau ein Zeichen, \ maskiert das folgende Zeichen). Groß-/Kleinschreibung zählt
+   * (außer mit ignoreCase – das dient nur dem Hinweis auf eine falsche Schreibung).
    * Laufzeit höchstens Textlänge × Musterlänge, ohne reguläre Ausdrücke.
    *
    * @param {string} text - Text.
    * @param {string} pattern - Muster.
+   * @param {boolean} [ignoreCase=false] - Groß-/Kleinschreibung nicht beachten.
    * @returns {boolean} true bei Übereinstimmung.
    */
-  function likeMatch(text, pattern) {
-    const t = Array.from(text.toLowerCase());
-    const raw = Array.from(pattern.toLowerCase());
+  function likeMatch(text, pattern, ignoreCase) {
+    const t = Array.from(ignoreCase ? text.toLowerCase() : text);
+    const raw = Array.from(ignoreCase ? pattern.toLowerCase() : pattern);
     const p = [];
     for (let i = 0; i < raw.length; i++) {
       if (raw[i] === '\\' && i + 1 < raw.length) {
@@ -1340,6 +1699,105 @@
   }
 
   // ---------------------------------------------------------------------------
+  // CHECK-Bedingungen
+  // ---------------------------------------------------------------------------
+
+  /** Lehnt Unterabfragen in einer CHECK-Bedingung ab (wie MySQL). */
+  function rejectSubqueries(node) {
+    if (node.type === 'subquery' || node.type === 'exists' || (node.type === 'in' && node.query)) {
+      throw new SqlError('In einer CHECK-Bedingung sind keine Unterabfragen erlaubt.', node.pos,
+        'Eine CHECK-Bedingung darf sich nur auf die Werte des eigenen Datensatzes beziehen.');
+    }
+    for (const child of exprChildren(node)) {
+      rejectSubqueries(child);
+    }
+  }
+
+  /** @returns {Array<number>} Spaltenindizes, die in einer gebundenen Bedingung vorkommen. */
+  function checkColumns(node, out) {
+    if (node.type === 'column') {
+      if (!out.includes(node.ref.col)) {
+        out.push(node.ref.col);
+      }
+    } else {
+      for (const child of exprChildren(node)) {
+        checkColumns(child, out);
+      }
+    }
+    return out;
+  }
+
+  /**
+   * Erzeugt die Fehlermeldung für einen Datensatz, der eine CHECK-Bedingung verletzt.
+   *
+   * @param {Object} table - Tabelle.
+   * @param {Object} check - CHECK-Bedingung (gebunden).
+   * @param {Array<*>} row - Datensatz.
+   * @param {Object|null} pos - Position.
+   * @param {boolean} existing - true für vorhandene Datensätze (beim Anlegen der Bedingung).
+   * @returns {SqlError} Fehler.
+   */
+  function checkViolation(table, check, row, pos, existing) {
+    const values = checkColumns(check.expr, []).map((i) => {
+      const v = row[i];
+      return table.columns[i].name + ' = ' + (typeof v === 'number' ? V.formatValue(v, table.columns[i].type) : show(v));
+    });
+    const condition = check.text.length > 120 ? check.text.slice(0, 120) + '…' : check.text;
+    return new SqlError((existing ? 'Ein vorhandener Datensatz' : 'Der Datensatz') + ' verstößt gegen die CHECK-Bedingung ' +
+      (check.name !== null ? '„' + check.name + '“ ' : '') + '(' + condition + ') der Tabelle „' + table.name + '“' +
+      (values.length ? ': ' + values.join(', ') : '') + '.', pos,
+      existing ? 'Ändern oder löschen Sie zuerst die betroffenen Datensätze.' : 'Gespeichert werden nur Datensätze, die die Bedingung erfüllen.');
+  }
+
+  /**
+   * Prüft einen Datensatz gegen alle (erzwungenen) CHECK-Bedingungen.
+   * Wie in SQL üblich gilt nur FALSCH als Verstoß; ergibt die Bedingung NULL
+   * (z. B. weil ein Wert fehlt), ist der Datensatz zulässig.
+   *
+   * @param {Object} table - Tabelle.
+   * @param {Array<*>} row - Datensatz.
+   * @param {Object|null} pos - Position für die Fehlermeldung.
+   * @param {boolean} [existing=false] - Prüfung vorhandener Datensätze.
+   */
+  function checkRow(table, row, pos, existing) {
+    for (const check of table.checks) {
+      if (!check.enforced || !check.bound) {
+        continue;
+      }
+      const ctx = { frame: [row], parent: null, offset: 0 };
+      if (V.truth(evalExpr(check.expr, ctx)) === false) {
+        throw checkViolation(table, check, row, existing ? check.pos : pos, !!existing);
+      }
+    }
+  }
+
+  /**
+   * Bindet neu angelegte CHECK-Bedingungen einer Tabelle und prüft alle
+   * vorhandenen Datensätze (nach CREATE TABLE und ALTER TABLE).
+   *
+   * @param {Object|undefined} table - Tabelle.
+   */
+  function prepareChecks(table) {
+    if (!table || table.checks.length === 0) {
+      return;
+    }
+    table.checks.forEach((check, i) => {
+      if (check.bound) {
+        return;
+      }
+      rejectSubqueries(check.expr);
+      const scope = makeScope(null, null);
+      addSource(scope, tableSource(table, null), check.pos);
+      const expr = bindExpr(check.expr, scope, { clause: 'CHECK', allowAgg: false });
+      table.checks[i] = Object.assign({}, check, { expr, bound: true });
+    });
+    for (const row of table.rows) {
+      tick();
+      checkRow(table, row, null, true);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
   // INSERT, UPDATE, DELETE
   // ---------------------------------------------------------------------------
 
@@ -1409,6 +1867,7 @@
         }
         return value;
       });
+      checkRow(table, out, row.pos);
       rows.push(out);
       positions.push(row.pos);
     });
@@ -1434,6 +1893,9 @@
           throw new SqlError('Die Tabelle „' + table.name + '“ hat den Alias „' + source.label + '“.', s.pos, 'Schreiben Sie ' + source.label + '.' + s.column + '.');
         }
         throw new SqlError('„' + s.table + '“ ist hier nicht die geänderte Tabelle.', s.pos);
+      }
+      if (s.table !== null) {
+        ns.sql.requireExactName(s.table, source.label, 'Unbekannte Tabelle bzw. unbekannter Alias „' + s.table + '“.', s.pos);
       }
       const idx = table.requireColumn(s.column, s.pos);
       return { idx, column: table.columns[idx], expr: bindExpr(s.expr, scope, { clause: 'SET', allowAgg: false }), pos: s.pos };
@@ -1462,6 +1924,7 @@
         }
         copy[s.idx] = value;
       }
+      checkRow(table, copy, stmt.pos);
       return copy;
     });
     db.replaceRows(table, newRows, stmt.pos);
@@ -1504,31 +1967,47 @@
   function executeStatement(db, stmt, options) {
     const opts = options || {};
     const timeMs = opts.timeMs || EXEC_LIMITS.timeMs;
-    rt = { db, deadline: performance.now() + timeMs, timeMs, steps: 0 };
+    rt = { db, deadline: performance.now() + timeMs, timeMs, steps: 0, warnings: [], literalChecks: [], topQuery: null };
     try {
+      let result;
       switch (stmt.type) {
         case 'select':
+          rt.topQuery = stmt;
           bindSelect(stmt, null);
-          return Object.assign({ kind: 'select' }, runSelect(stmt, null, true));
+          result = Object.assign({ kind: 'select' }, runSelect(stmt, null, true));
+          break;
         case 'insert':
-          return executeInsert(db, stmt);
+          result = executeInsert(db, stmt);
+          break;
         case 'update':
-          return executeUpdate(db, stmt);
+          result = executeUpdate(db, stmt);
+          break;
         case 'delete':
-          return executeDelete(db, stmt);
+          result = executeDelete(db, stmt);
+          break;
         case 'createTable':
-          return { kind: 'ddl', message: ns.sql.ddl.createTable(db, stmt, opts.notices || []) };
+          result = { kind: 'ddl', message: ns.sql.ddl.createTable(db, stmt, opts.notices || []) };
+          prepareChecks(db.tables.get(stmt.name.toLowerCase()));
+          break;
         case 'dropTable':
-          return { kind: 'ddl', message: ns.sql.ddl.dropTable(db, stmt) };
+          result = { kind: 'ddl', message: ns.sql.ddl.dropTable(db, stmt) };
+          break;
         case 'createIndex':
-          return { kind: 'ddl', message: ns.sql.ddl.createIndex(db, stmt) };
+          result = { kind: 'ddl', message: ns.sql.ddl.createIndex(db, stmt) };
+          break;
         case 'alterTable':
-          return { kind: 'ddl', message: ns.sql.ddl.alterTable(db, stmt) };
+          result = { kind: 'ddl', message: ns.sql.ddl.alterTable(db, stmt) };
+          prepareChecks(db.tables.get(stmt.table.toLowerCase()));
+          break;
         case 'ignored':
-          return { kind: 'ignored', keyword: stmt.keyword };
+          result = { kind: 'ignored', keyword: stmt.keyword };
+          break;
         default:
           throw new Error('Unbekannte Anweisung ' + stmt.type);
       }
+      literalCaseHints();
+      result.warnings = rt.warnings;
+      return result;
     } finally {
       rt = null;
     }
@@ -1549,7 +2028,8 @@
    *
    * @param {Object} db - Aktuelle Datenbank (wird nicht verändert).
    * @param {string} source - Eingabe.
-   * @returns {{db:Object, changed:boolean, results:Array<Object>, statementCount:number}} Ergebnis.
+   * @returns {{db:Object, changed:boolean, results:Array<Object>, statementCount:number, keywordCase:Array<Object>}} Ergebnis
+   *   (jedes Ergebnis mit warnings: Hinweise wie fehlende Verknüpfung oder falsche Schreibung).
    * @throws {SqlError} Bei Fehlern (mit statementIndex).
    */
   function runQueries(db, source) {
@@ -1578,7 +2058,7 @@
         throw withIndex(error, s.statementIndex);
       }
     }
-    return { db: work, changed, results, statementCount: statements.length };
+    return { db: work, changed, results, statementCount: statements.length, keywordCase: statements.keywordCase || [] };
   }
 
   /**

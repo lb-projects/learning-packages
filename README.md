@@ -5,7 +5,7 @@ SCORM-1.2-Lernpakete für Lernplattformen.
 | Paket | Inhalt |
 |---|---|
 | [kNN algorithm](kNN%20algorithm/README.md) | Interaktiver Simulator zum Klassifikationsverfahren k nächste Nachbarn (kNN) |
-| [SQL simulator](SQL%20simulator/README.md) | SQL-Abfragen im Browser: Beispieldatenbanken oder eigene SQL-Dateien laden, Tabellen ansehen, SELECT/INSERT/UPDATE/DELETE ausführen |
+| [SQL simulator](SQL%20simulator/README.md) | **SQL Sandbox:** SQL-Abfragen im Browser: Beispieldatenbanken oder eigene SQL-Dateien laden, Tabellen ansehen, SELECT/INSERT/UPDATE/DELETE ausführen |
 
 ## Lizenz
 

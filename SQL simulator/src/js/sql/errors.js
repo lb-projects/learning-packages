@@ -121,7 +121,26 @@
     return 'Meinten Sie ' + (quoted.length === 1 ? quoted[0] : quoted.slice(0, -1).join(', ') + ' oder ' + quoted[quoted.length - 1]) + '?';
   }
 
+  /**
+   * Prüft, ob ein Name genau so geschrieben ist wie definiert. Namen werden
+   * ohne Beachtung der Groß-/Kleinschreibung gefunden (sie sind so eindeutig),
+   * müssen aber exakt geschrieben werden.
+   *
+   * @param {string} given - Geschriebener Name.
+   * @param {string} actual - Definierter Name.
+   * @param {string} message - Fehlermeldung, z. B. "Unbekannte Spalte „preis“.".
+   * @param {Object|null} pos - Position.
+   * @throws {SqlError} Wenn sich die Schreibung unterscheidet.
+   */
+  function requireExactName(given, actual, message, pos) {
+    if (given !== actual) {
+      throw new SqlError(message, pos,
+        'Meinten Sie „' + actual + '“? Bei Tabellen- und Spaltennamen kommt es auf die Groß-/Kleinschreibung an.');
+    }
+  }
+
   ns.sql = ns.sql || {};
+  ns.sql.requireExactName = requireExactName;
   ns.sql.SqlError = SqlError;
   ns.sql.suggest = suggest;
   ns.sql.suggestions = suggestions;

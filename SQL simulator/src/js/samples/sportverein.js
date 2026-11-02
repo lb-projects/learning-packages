@@ -54,7 +54,7 @@ CREATE TABLE mitglied (
   Nachname VARCHAR(30) NOT NULL,
   Geburtsjahr INT,
   Eintrittsdatum DATE,
-  Beitrag DECIMAL(6,2),
+  Beitrag DECIMAL(6,2) CHECK (Beitrag >= 0),
   mannschaft_id INT,
   FOREIGN KEY (mannschaft_id) REFERENCES mannschaft (id)
 );
@@ -67,7 +67,8 @@ CREATE TABLE spiel (
   Heimspiel BOOLEAN,
   Tore_eigene INT,
   Tore_gegner INT,
-  FOREIGN KEY (mannschaft_id) REFERENCES mannschaft (id)
+  FOREIGN KEY (mannschaft_id) REFERENCES mannschaft (id),
+  CHECK (Tore_eigene >= 0 AND Tore_gegner >= 0)
 );
 
 INSERT INTO abteilung (id, Bezeichnung) VALUES

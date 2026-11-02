@@ -8,6 +8,8 @@
  * - INSERT, UPDATE und DELETE ändern die Datenbank; mehrere Befehle werden
  *   gemeinsam (atomar) ausgeführt – bei einem Fehler bleibt alles unverändert.
  * - Eingabe und Ergebnis bleiben beim Seitenwechsel erhalten.
+ * - Hinweise (kein Fehler) stehen über dem Ergebnis: kleingeschriebene
+ *   Schlüsselwörter, fehlende Verknüpfungsbedingung, Text in falscher Schreibung.
  *
  * Abhängigkeiten:
  *   dom-utils.js, state.js, sql/executor.js, pages/common.js
@@ -66,16 +68,35 @@
   }
 
   /**
+   * Erzeugt einen Hinweis (kein Fehler) zu einem Ergebnis.
+   *
+   * @param {string} text - Hinweistext.
+   * @returns {HTMLElement} Hinweisbox.
+   */
+  function warningBox(text) {
+    return dom.el('p', { class: 'status notice result-warning', role: 'note' }, [
+      dom.el('strong', null, 'Hinweis: '), ns.text.cleanCellText(text)
+    ]);
+  }
+
+  /**
    * Stellt die Ergebnisse dar.
    *
    * @param {Object} res - Ergebnis von runQueries.
    */
   function renderResults(res) {
     const multi = res.statementCount > 1;
+    if (res.keywordCase && res.keywordCase.length) {
+      ui.output.appendChild(warningBox('SQL-Schlüsselwörter werden üblicherweise großgeschrieben: ' +
+        res.keywordCase.map((k) => k.written + ' → ' + k.upper).join(', ') + '.'));
+    }
     for (const r of res.results) {
       const block = dom.el('div', { class: 'result-block' });
       if (multi) {
         block.appendChild(dom.el('h3', null, 'Befehl ' + r.statementIndex));
+      }
+      for (const w of r.warnings || []) {
+        block.appendChild(warningBox(w));
       }
       if (r.kind === 'select') {
         block.appendChild(dom.el('p', { class: 'result-count' }, 'Ergebnis: ' + dom.plural(r.rows.length, 'Zeile', 'Zeilen')));

@@ -1,15 +1,15 @@
-# SQL-Simulator – SCORM-1.2-Lernpaket
+# SQL Sandbox – SCORM-1.2-Lernpaket
 
-Interaktiver Simulator zum Abfragen relationaler Datenbanken mit **SQL**.
+Interaktiver Simulator zum Abfragen relationaler Datenbanken mit **SQL**. In Moodle und im Browser erscheint das Lernpaket unter dem Namen **„SQL Sandbox“** (Ordner im Repository: `SQL simulator/`).
 Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausführung) ist eigener Code: Es werden keine externen Ressourcen geladen und keine externen Bibliotheken verwendet (auch kein SQLite/sql.js).
 
 ## Inhalt für den Unterricht
 
 | Seite | Inhalt |
 |---|---|
-| 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE`, `INSERT INTO`) |
-| 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen |
-| 3 SQL-Befehle | Eingabemaske mit „Ausführen“ (auch Strg + Enter); Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Kurzreferenz der unterstützten Befehle |
+| 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO`) |
+| 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL, CHECK-Bedingungen) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen. Unter jeder Tabelle lässt sich der `CREATE TABLE`-Befehl aufklappen (anfangs zugeklappt) |
+| 3 SQL-Befehle | Eingabemaske mit „Ausführen“ (auch Strg + Enter); Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten.
 Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her.
@@ -24,15 +24,20 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und d
 - **Unterabfragen:** als Wert (`WHERE Preis > (SELECT AVG(Preis) …)`), mit `IN`/`EXISTS`, korreliert und als Tabelle in `FROM (SELECT …) AS t`.
 - **Rechnen:** `+ - * / %`, Klammern, Vorzeichen.
 - **Daten ändern (Seite 3):** `INSERT INTO … [(Spalten)] VALUES (…), (…)`, `UPDATE … SET … [WHERE …]`, `DELETE FROM … [WHERE …]`. Mehrere Befehle (getrennt durch `;`) werden **gemeinsam** ausgeführt: Enthält einer einen Fehler, bleibt die Datenbank unverändert.
+- **Hinweise zum Ergebnis** (die Abfrage wird trotzdem ausgeführt):
+  - Stehen mehrere Tabellen in `FROM`, ohne dass alle über eine Bedingung (in `ON` oder `WHERE`) verbunden sind, entsteht ein kartesisches Produkt. Der Hinweis nennt die nicht verknüpften Tabellen und schlägt, wenn möglich, eine Bedingung aus den Fremdschlüsseln vor, z. B. `bp.bestellung_id = b.id`. Ein ausdrückliches `CROSS JOIN` gilt als beabsichtigt und ergibt keinen Hinweis.
+  - Vergleicht `=`, `IN` oder `LIKE` eine Spalte mit einem Text, der nur in anderer Groß-/Kleinschreibung vorkommt (`'berlin'` statt `'Berlin'`), kommt der Vorschlag „Meinten Sie 'Berlin'?“.
+  - Nicht großgeschriebene Schlüsselwörter werden mit der üblichen Schreibweise genannt (`select → SELECT`).
 - **Nicht unterstützt** (mit eigener, verständlicher Meldung): `UNION`, `CASE`, `WITH`, `FULL OUTER JOIN`, `NATURAL JOIN`, `USING`, `ANY/ALL`, weitere Funktionen (z. B. `UPPER`, `CONCAT`, Datumsfunktionen).
 
 ### Festlegungen (an MySQL/MariaDB angelehnt)
 
-Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält sich deshalb in den folgenden Punkten wie MySQL:
+Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält sich deshalb in den meisten Punkten wie MySQL. Bei der Groß-/Kleinschreibung ist er bewusst strenger, damit sich Lernende eine saubere Schreibweise angewöhnen.
 
-- Schlüsselwörter, Tabellen- und Spaltennamen: Groß-/Kleinschreibung egal.
+- **Schlüsselwörter** werden in jeder Schreibweise erkannt. Nicht großgeschriebene Schlüsselwörter ergeben aber einen kurzen Hinweis.
+- **Tabellen-, Spalten- und Aliasnamen** müssen genau so geschrieben werden wie definiert. `preis` statt `Preis` ergibt einen Fehler mit dem Vorschlag „Meinten Sie „Preis“?“. Namen, die sich nur in der Schreibung unterscheiden (`Preis` und `preis` in derselben Tabelle), sind nicht erlaubt.
 - **Texte** stehen in einfachen oder doppelten Anführungszeichen (`'Müller'`, `"Müller"`). **Namen** mit Sonderzeichen oder reservierten Wörtern stehen in `` `Backticks` ``.
-- **Textvergleich** und `LIKE` ohne Beachtung der Groß-/Kleinschreibung. Umlaute werden unterschieden (`'Müller' <> 'Muller'`). Sortiert wird nach deutscher Ordnung.
+- **Textvergleich** und `LIKE` beachten die Groß-/Kleinschreibung (`'Berlin' <> 'berlin'`), ebenso `GROUP BY`, `DISTINCT`, `UNIQUE` und `ENUM`-Werte. Umlaute werden unterschieden (`'Müller' <> 'Muller'`), Leerzeichen am Ende zählen nicht. Sortiert wird nach deutscher Ordnung.
 - `NULL` folgt der dreiwertigen Logik (`NULL = NULL` ergibt `NULL`; `NOT IN` mit `NULL` in der Liste liefert keine Zeilen). Bei `ORDER BY` steht `NULL` zuerst.
 - `/` liefert eine Dezimalzahl, Division durch 0 ergibt `NULL`. Ein Text, der eine Zahl ist (`'42'`), wird beim Vergleich mit einer Zahl als Zahl gelesen.
 - **Datumswerte** sind Texte im Format `'JJJJ-MM-TT'` (bzw. `'JJJJ-MM-TT hh:mm:ss'`); sie lassen sich vergleichen und sortieren, aber nicht berechnen.
@@ -40,12 +45,20 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält 
 - Aliase aus der SELECT-Liste sind in `GROUP BY`, `HAVING` und `ORDER BY` erlaubt, in `WHERE` nicht (mit Hinweis).
 - `UPDATE`: Alle Ausdrücke in `SET` verwenden die Werte **vor** der Änderung (wie im SQL-Standard).
 - **Datentypen** werden geprüft: `INT` (mit Wertebereich je Typ, auch `UNSIGNED`), `DECIMAL(p,s)`, `FLOAT/DOUBLE`, `CHAR/VARCHAR(n)` (Länge), `TEXT`, `ENUM(…)`, `DATE`, `DATETIME/TIMESTAMP`, `TIME`, `YEAR`, `BOOLEAN` (als 0/1).
-- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT` und `AUTO_INCREMENT` werden durchgesetzt. **Fremdschlüssel** werden gespeichert und auf Seite 2 angezeigt, aber **nicht erzwungen**.
+- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT`, `AUTO_INCREMENT` und `CHECK` werden durchgesetzt. **Fremdschlüssel** werden gespeichert und auf Seite 2 angezeigt, aber **nicht erzwungen**.
+- **CHECK-Bedingungen**:
+  - Sie stehen an einer Spalte (`Preis DECIMAL(8,2) CHECK (Preis >= 0)`) oder als Tabellenbedingung, auch mit Namen (`CONSTRAINT chk_rueckgabe CHECK (Rueckgabedatum IS NULL OR Rueckgabedatum >= Ausleihdatum)`). `ALTER TABLE … ADD [CONSTRAINT name] CHECK (…)` ist ebenfalls möglich.
+  - Geprüft wird bei `INSERT` und `UPDATE`; beim Anlegen mit `ALTER TABLE` auch an den vorhandenen Datensätzen.
+  - Wie im SQL-Standard und in MySQL ist ein Datensatz nur unzulässig, wenn die Bedingung **falsch** ist. Ergibt sie `NULL`, etwa weil ein Wert fehlt, wird er gespeichert.
+  - Unterabfragen und Aggregatfunktionen sind in CHECK nicht erlaubt.
+  - `NOT ENFORCED` (MySQL 8) speichert die Bedingung, ohne sie zu prüfen.
+- **CREATE TABLE auf Seite 2** wird aus dem aktuellen Tabellenaufbau erzeugt (ähnlich `SHOW CREATE TABLE`). Er enthält daher auch Schlüssel, die erst per `ALTER TABLE` hinzukamen. Einfache Indizes (`KEY`, `INDEX`) und Tabellenoptionen (`ENGINE=…`) haben im Simulator keine Wirkung und erscheinen dort nicht.
 
 ### Dateiformat für den Upload (Seite 1)
 
 - **Dateien:** `.sql` oder `.txt`, höchstens 1 MB, Zeichensatz UTF-8 (sonst wird Windows-1252 angenommen, mit Hinweis).
-- **Erlaubte Anweisungen:** `DROP TABLE [IF EXISTS]`, `CREATE TABLE [IF NOT EXISTS]` und `INSERT INTO`; aus Exporten zusätzlich `ALTER TABLE … ADD PRIMARY KEY / ADD [UNIQUE] KEY / ADD CONSTRAINT … FOREIGN KEY / ADD COLUMN / MODIFY` und `CREATE [UNIQUE] INDEX`.
+- **Erlaubte Anweisungen:** `DROP TABLE [IF EXISTS]`, `CREATE TABLE [IF NOT EXISTS]` (auch mit `CHECK`) und `INSERT INTO`; aus Exporten zusätzlich `ALTER TABLE … ADD PRIMARY KEY / ADD [UNIQUE] KEY / ADD CONSTRAINT … FOREIGN KEY / ADD [CONSTRAINT …] CHECK / ADD COLUMN / MODIFY` und `CREATE [UNIQUE] INDEX`.
+- **Namen** müssen auch in der Datei überall gleich geschrieben sein (z. B. in `PRIMARY KEY (id)` und `INSERT INTO kurs (…)`).
 - **Übersprungen** (ohne Wirkung, mit Hinweis): `SET`, `START TRANSACTION`, `BEGIN`, `COMMIT`, `LOCK/UNLOCK TABLES`, `USE`, `CREATE DATABASE` sowie Sonderkommentare `/*! … */`. Tabellenoptionen wie `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4` werden ignoriert.
 - **Grenzen:** 50 Tabellen, 50 Spalten je Tabelle, 20.000 Datensätze insgesamt, Texte bis 1.000 Zeichen, Namen bis 64 Zeichen.
 - Eine Datei wird **ganz oder gar nicht** übernommen. Bei einem Fehler erscheint die Meldung mit Zeile, Spalte und Ausschnitt; die bisherige Datenbank bleibt unverändert.
@@ -60,10 +73,10 @@ Alle Daten sind **frei erfunden** (Namen, Orte wie „Musterstadt“, Buchtitel,
 | `bibliothek.sql` | Autorinnen und Autoren, Bücher, Leserinnen und Leser, Ausleihen (auch offene) | autor, buch, leser, ausleihe |
 | `online_shop.sql` | Kategorien, Artikel mit Preisen, Kundinnen und Kunden, Bestellungen, Bestellpositionen (zusammengesetzter Primärschlüssel) | kategorie, artikel, kunde, bestellung, bestellposition |
 | `sportverein.sql` | Abteilungen, Trainerinnen und Trainer, Mannschaften, Mitglieder mit Beiträgen, Spiele (auch ohne Ergebnis) | abteilung, trainer, mannschaft, mitglied, spiel |
-| `beispiel_phpmyadmin_export.sql` | Kursangebot einer Musikschule im Stil eines Datenbank-Exports (Backticks, `ENGINE=…`, `SET`, Schlüssel per `ALTER TABLE`) | kurs, teilnehmer, anmeldung |
+| `beispiel_phpmyadmin_export.sql` | Kursangebot einer Musikschule im Stil eines Datenbank-Exports (Backticks, `ENGINE=…`, `SET`, `CONSTRAINT … CHECK`, Schlüssel per `ALTER TABLE`) | kurs, teilnehmer, anmeldung |
 | `beispiel_fehlerhaft.sql` | Übungsdatei mit zwei absichtlichen Fehlern (fehlendes Komma, doppelter Primärschlüssel) | – |
 
-Die ersten vier Dateien sind identisch mit den eingebauten Beispieldatenbanken auf Seite 1 (der Build prüft das). Sie eignen sich als Vorlage für eigene Datenbanken. Die Daten enthalten bewusst `NULL`-Werte und Datensätze ohne Partner, z. B. Lehrkräfte ohne Klasse, Fächer ohne Noten, Kundinnen und Kunden ohne Bestellung. So lassen sich `LEFT JOIN` und `IS NULL` sinnvoll üben.
+Die ersten vier Dateien sind identisch mit den eingebauten Beispieldatenbanken auf Seite 1 (der Build prüft das). Sie eignen sich als Vorlage für eigene Datenbanken. Jede enthält einige `CHECK`-Bedingungen, z. B. `Note BETWEEN 1 AND 6`, `Preis >= 0` oder `Menge > 0`; ein `INSERT` mit unzulässigem Wert zeigt die entsprechende Meldung. Die Daten enthalten bewusst `NULL`-Werte und Datensätze ohne Partner, z. B. Lehrkräfte ohne Klasse, Fächer ohne Noten, Kundinnen und Kunden ohne Bestellung. So lassen sich `LEFT JOIN` und `IS NULL` sinnvoll üben.
 
 ## Aufbau
 
@@ -120,7 +133,7 @@ So wird das Paket in Moodle eingebunden:
 **Schutz vor Hängern und Speicherüberlauf im Browser**
 - Verschachtelungstiefe höchstens 32 (Klammern, Unterabfragen, `NOT`).
 - Zwischenergebnisse von Verknüpfungen höchstens 200.000 Zeilen. Ein vergessenes `ON` führt zu einer erklärenden Meldung zum kartesischen Produkt statt zum Absturz.
-- Ergebnisse höchstens 10.000 Zeilen; angezeigt werden höchstens 1.000 Zeilen je Tabelle (mit Hinweis).
+- Ergebnisse höchstens 25.000 Zeilen; angezeigt werden höchstens 1.000 Zeilen je Tabelle (mit Hinweis).
 - Zeitbudget 3 Sekunden je Befehl (Upload: 10 Sekunden), danach Abbruch mit Meldung.
 - `LIKE` wird ohne reguläre Ausdrücke ausgewertet (kein ReDoS).
 
@@ -171,11 +184,12 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (über 100) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (über 120) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
-- jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis;
-- `INSERT`/`UPDATE`/`DELETE` mit Typ- und Schlüsselprüfungen sowie Atomarität;
+- jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;
+- `INSERT`/`UPDATE`/`DELETE` mit Typ-, Schlüssel- und `CHECK`-Prüfungen sowie Atomarität;
+- erzeugter `CREATE TABLE`-Befehl: Er lässt sich für alle Beispieltabellen wieder einlesen und ergibt denselben Aufbau;
 - Import der Beispieldateien, eines Exports im phpMyAdmin-Stil und fehlerhafter Dateien; Grenzwerte;
 - präparierte Angriffe: HTML-/Skript-Einschleusung in Werten und Namen, `__proto__` als Name, Richtungszeichen, kartesisches Produkt, tiefe Verschachtelung, langsame `LIKE`-Muster, getarnte Binärdateien, übergroße Dateien, schneller Doppel-Upload;
 - Klickpfade aller Seiten: Erhalt der Eingaben beim Seitenwechsel, Höhe der Scrollbereiche (5 bzw. 10 Zeilen), Strg + Enter, Zurücksetzen, Tastaturbedienung;

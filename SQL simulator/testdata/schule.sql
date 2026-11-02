@@ -32,7 +32,7 @@ CREATE TABLE lehrkraft (
 CREATE TABLE klasse (
   id INT PRIMARY KEY,
   Bezeichnung VARCHAR(10) NOT NULL,
-  Jahrgangsstufe INT,
+  Jahrgangsstufe INT CHECK (Jahrgangsstufe BETWEEN 1 AND 13),
   schule_id INT,
   klassenleitung_id INT,
   FOREIGN KEY (schule_id) REFERENCES schule (id),
@@ -59,7 +59,7 @@ CREATE TABLE note (
   id INT AUTO_INCREMENT PRIMARY KEY,
   schueler_id INT NOT NULL,
   fach_id INT NOT NULL,
-  Note INT NOT NULL,
+  Note INT NOT NULL CHECK (Note BETWEEN 1 AND 6),
   Art VARCHAR(20),
   Datum DATE,
   FOREIGN KEY (schueler_id) REFERENCES schueler (id),

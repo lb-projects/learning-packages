@@ -399,6 +399,10 @@ body > .status {
   margin-top: 0.6rem;
 }
 
+.result-warning {
+  margin: 0.4rem 0;
+}
+
 .result-count {
   font-weight: 600;
   margin: 0.4rem 0;
@@ -435,6 +439,25 @@ body > .status {
 }
 
 /* ---------- Tabellen ---------- */
+
+.check-list code {
+  white-space: normal;
+}
+
+.create-sql {
+  margin-top: 0.6rem;
+}
+
+.create-sql summary {
+  cursor: pointer;
+  font-size: 0.92rem;
+  color: var(--primary);
+}
+
+.create-sql pre {
+  margin: 0.4rem 0 0;
+  white-space: pre;
+}
 
 .table-card h3 {
   margin-top: 0;

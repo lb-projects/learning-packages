@@ -24,7 +24,7 @@ CREATE TABLE buch (
   autor_id INT,
   Erscheinungsjahr INT,
   Genre VARCHAR(20),
-  Seiten INT,
+  Seiten INT CHECK (Seiten > 0),
   Signatur VARCHAR(12) UNIQUE,
   FOREIGN KEY (autor_id) REFERENCES autor (id)
 );
@@ -44,7 +44,8 @@ CREATE TABLE ausleihe (
   Ausleihdatum DATE NOT NULL,
   Rueckgabedatum DATE,
   FOREIGN KEY (buch_id) REFERENCES buch (id),
-  FOREIGN KEY (leser_id) REFERENCES leser (id)
+  FOREIGN KEY (leser_id) REFERENCES leser (id),
+  CONSTRAINT chk_rueckgabe CHECK (Rueckgabedatum IS NULL OR Rueckgabedatum >= Ausleihdatum)
 );
 
 INSERT INTO autor (id, Vorname, Nachname, Geburtsjahr, Land) VALUES

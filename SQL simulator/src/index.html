@@ -27,7 +27,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
   <meta name="referrer" content="no-referrer">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SQL-Simulator</title>
+  <title>SQL Sandbox</title>
   <link rel="stylesheet" href="css/style.css">
   <!-- Reihenfolge ist wichtig: Grundmodule zuerst, app.js zuletzt. "defer" = nach dem Aufbau des HTML ausführen. -->
   <script src="js/dom-utils.js" defer></script>
@@ -53,7 +53,7 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>SQL-Simulator <span class="subtitle">Datenbanken abfragen</span></h1>
+    <h1>SQL Sandbox <span class="subtitle">Datenbanken abfragen</span></h1>
     <nav class="tabs" role="tablist" aria-label="Seiten des Simulators">
       <button type="button" role="tab" id="tab-load" aria-controls="page-load" aria-selected="true"><span class="tab-no">1</span> Datenbank laden</button>
       <button type="button" role="tab" id="tab-tables" aria-controls="page-tables" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Tabellen</button>
@@ -78,7 +78,7 @@
 
       <div class="card upload-card">
         <h3>Eigene SQL-Datei hochladen</h3>
-        <p class="hint">Erlaubt: <strong>.sql</strong> oder <strong>.txt</strong> (höchstens 1&nbsp;MB, am besten im Zeichensatz UTF-8) mit den Befehlen <code>DROP TABLE</code>, <code>CREATE TABLE</code> und <code>INSERT INTO</code>. Exporte aus phpMyAdmin werden ebenfalls verstanden. Grenzen: 50&nbsp;Tabellen, 50&nbsp;Spalten je Tabelle, 20.000&nbsp;Datensätze, Texte bis 1.000&nbsp;Zeichen. Die Datei ersetzt die aktuelle Datenbank – auch Änderungen von Seite&nbsp;3.</p>
+        <p class="hint">Erlaubt: <strong>.sql</strong> oder <strong>.txt</strong> (höchstens 1&nbsp;MB, am besten im Zeichensatz UTF-8) mit den Befehlen <code>DROP TABLE</code>, <code>CREATE TABLE</code> (auch mit <code>CHECK</code>-Bedingungen) und <code>INSERT INTO</code>. Exporte aus phpMyAdmin werden ebenfalls verstanden. Grenzen: 50&nbsp;Tabellen, 50&nbsp;Spalten je Tabelle, 20.000&nbsp;Datensätze, Texte bis 1.000&nbsp;Zeichen. Die Datei ersetzt die aktuelle Datenbank – auch Änderungen von Seite&nbsp;3.</p>
         <label class="file-label" for="file-input">Datei auswählen</label>
         <input type="file" id="file-input" accept=".sql,.txt,text/plain">
         <div id="import-status" class="status" role="status" aria-live="polite" hidden></div>
@@ -90,7 +90,7 @@
          =================================================================== -->
     <section id="page-tables" class="page" role="tabpanel" aria-labelledby="tab-tables" hidden>
       <h2>Tabellen</h2>
-      <p class="intro">Hier sehen Sie den Aufbau und den Inhalt aller Tabellen der geladenen Datenbank. <strong>PK</strong> kennzeichnet den Primärschlüssel, <strong>FK</strong> einen Fremdschlüssel mit der Spalte, auf die er verweist. Je Tabelle sind etwa fünf Datensätze sichtbar; weitere erreichen Sie durch Scrollen innerhalb der Tabelle.</p>
+      <p class="intro">Hier sehen Sie den Aufbau und den Inhalt aller Tabellen der geladenen Datenbank. <strong>PK</strong> kennzeichnet den Primärschlüssel, <strong>FK</strong> einen Fremdschlüssel mit der Spalte, auf die er verweist. Je Tabelle sind etwa fünf Datensätze sichtbar; weitere erreichen Sie durch Scrollen innerhalb der Tabelle. Unter jeder Tabelle lässt sich der <code>CREATE TABLE</code>-Befehl aufklappen, der die Tabelle erzeugt.</p>
       <div id="tables-notice" class="notice" hidden></div>
       <p id="tables-info" class="hint"></p>
       <nav id="tables-toc" class="button-row" aria-label="Zu einer Tabelle springen"></nav>
@@ -142,7 +142,11 @@ LIMIT Anzahl [OFFSET Start];</pre>
           <pre class="sql-example">INSERT INTO tabelle (Spalte1, Spalte2) VALUES (1, 'Text'), (2, 'Noch ein Text');
 UPDATE tabelle SET Spalte2 = 'Neu' WHERE Spalte1 = 1;
 DELETE FROM tabelle WHERE Spalte1 = 2;</pre>
-          <p class="hint">Groß- und Kleinschreibung spielt bei Schlüsselwörtern, Tabellen- und Spaltennamen sowie beim Vergleich von Texten keine Rolle. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her.</p>
+          <ul>
+            <li><strong>Groß- und Kleinschreibung:</strong> Tabellen- und Spaltennamen müssen genau so geschrieben werden wie auf Seite&nbsp;2 (<code>Preis</code>, nicht <code>preis</code>). Auch beim Vergleich von Texten zählt sie: <code>'Berlin'</code> ist nicht <code>'berlin'</code>. SQL-Schlüsselwörter schreibt man üblicherweise groß (<code>SELECT</code>, <code>FROM</code>).</li>
+            <li><strong>Hinweise:</strong> Stehen mehrere Tabellen in <code>FROM</code>, aber nicht alle sind über eine Bedingung verknüpft, erscheint ein Hinweis auf das kartesische Produkt. Ist es beabsichtigt, schreiben Sie <code>CROSS JOIN</code>.</li>
+          </ul>
+          <p class="hint">„Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her.</p>
         </div>
       </details>
     </section>

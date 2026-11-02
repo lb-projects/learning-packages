@@ -34,7 +34,8 @@
     maxTables: 50,
     maxColumns: 50,
     maxRows: 20000,
-    maxString: 1000
+    maxString: 1000,
+    maxChecks: 50
   });
 
   /** Ganzzahltypen mit Wertebereich (vorzeichenbehaftet). */
@@ -263,7 +264,10 @@
         const key = V.textKey(text);
         const match = type.values.find((v) => V.textKey(v) === key);
         if (match === undefined) {
-          throw new SqlError(where + ': ' + show(value) + ' ist nicht erlaubt. Erlaubt: ' + type.values.map((v) => '\'' + v + '\'').join(', ') + '.', pos);
+          const lower = key.toLowerCase();
+          const similar = type.values.find((v) => V.textKey(v).toLowerCase() === lower);
+          throw new SqlError(where + ': ' + show(value) + ' ist nicht erlaubt. Erlaubt: ' + type.values.map((v) => '\'' + v + '\'').join(', ') + '.', pos,
+            similar !== undefined ? 'Meinten Sie \'' + similar + '\'? Bei Texten kommt es auf die Groß-/Kleinschreibung an.' : null);
         }
         return match;
       }
@@ -324,6 +328,8 @@
       this.uniques = [];
       /** @type {Array<{columns:Array<number>, refTable:string, refColumns:Array<string>}>} Fremdschlüssel. */
       this.foreignKeys = [];
+      /** @type {Array<Object>} CHECK-Bedingungen {name, text, expr, column, enforced, pos, bound}. */
+      this.checks = [];
       /** Nächster AUTO_INCREMENT-Wert. */
       this.autoIncrementNext = 1;
       /** Zwischenspeicher der Schlüsselmengen für die Eindeutigkeitsprüfung (wird bei Änderungen verworfen). */
@@ -339,6 +345,7 @@
       t.primaryKey = this.primaryKey ? this.primaryKey.slice() : null;
       t.uniques = this.uniques.map((u) => u.slice());
       t.foreignKeys = this.foreignKeys.map((f) => Object.assign({}, f));
+      t.checks = this.checks.slice();
       t.autoIncrementNext = this.autoIncrementNext;
       return t;
     }
@@ -357,6 +364,7 @@
         throw new SqlError('Die Tabelle „' + this.name + '“ hat keine Spalte „' + name + '“.', pos,
           hint || 'Vorhandene Spalten: ' + this.columns.map((c) => c.name).join(', ') + '.');
       }
+      ns.sql.requireExactName(name, this.columns[idx].name, 'Die Tabelle „' + this.name + '“ hat keine Spalte „' + name + '“.', pos);
       return idx;
     }
 
@@ -493,6 +501,7 @@
         throw new SqlError('Die Tabelle „' + name + '“ gibt es nicht.', pos,
           hint || (names.length ? 'Vorhandene Tabellen: ' + names.join(', ') + '.' : 'Die Datenbank enthält noch keine Tabellen.'));
       }
+      ns.sql.requireExactName(name, table.name, 'Die Tabelle „' + name + '“ gibt es nicht.', pos);
       return table;
     }
 
@@ -643,6 +652,27 @@
   }
 
   /**
+   * Fügt eine CHECK-Bedingung hinzu. Gebunden und an den vorhandenen
+   * Datensätzen geprüft wird sie in executor.js (prepareChecks).
+   *
+   * @param {Table} table - Tabelle.
+   * @param {Object} c - CHECK aus dem Parser {name, expr, text, enforced, pos}.
+   * @param {number|null} column - Spaltenindex bei einer Spaltenbedingung, sonst null.
+   */
+  function addCheck(table, c, column) {
+    if (c.name !== null) {
+      const key = c.name.toLowerCase();
+      if (table.checks.some((k) => k.name !== null && k.name.toLowerCase() === key)) {
+        throw new SqlError('Die Tabelle „' + table.name + '“ hat bereits eine Bedingung namens „' + c.name + '“.', c.pos);
+      }
+    }
+    if (table.checks.length >= LIMITS.maxChecks) {
+      throw new SqlError('Eine Tabelle darf höchstens ' + LIMITS.maxChecks + ' CHECK-Bedingungen haben.', c.pos);
+    }
+    table.checks.push({ name: c.name, text: c.text, expr: c.expr, column, enforced: c.enforced, pos: c.pos, bound: false });
+  }
+
+  /**
    * Wendet ein Tabellen-Constraint (aus CREATE TABLE oder ALTER TABLE ADD) an.
    *
    * @param {Table} table - Tabelle.
@@ -666,6 +696,9 @@
       }
       case 'index':
         columnIndices(table, c.columns);
+        break;
+      case 'check':
+        addCheck(table, c, null);
         break;
       default:
         throw new Error('Unbekanntes Constraint ' + c.kind);
@@ -724,6 +757,9 @@
       if (def.references) {
         table.foreignKeys.push({ columns: [idx], refTable: def.references.refTable, refColumns: def.references.refColumns.slice() });
       }
+      for (const c of def.checks) {
+        addCheck(table, c, idx);
+      }
     });
     for (const c of stmt.constraints) {
       applyConstraint(table, c);
@@ -741,7 +777,7 @@
    */
   function dropTable(db, stmt) {
     for (const n of stmt.names) {
-      if (!db.tables.has(n.name.toLowerCase()) && !stmt.ifExists) {
+      if (db.tables.has(n.name.toLowerCase()) || !stmt.ifExists) {
         db.requireTable(n.name, n.pos);
       }
     }
@@ -829,6 +865,9 @@
           if (def.unique) {
             addUnique(table, [table.columns.length - 1], def.pos);
           }
+          for (const c of def.checks) {
+            addCheck(table, c, table.columns.length - 1);
+          }
           break;
         }
         case 'modify': {
@@ -860,6 +899,9 @@
           if (def.unique) {
             addUnique(table, [idx], def.pos);
           }
+          for (const c of def.checks) {
+            addCheck(table, c, idx);
+          }
           checkAllKeys(table, table.rows, def.pos);
           refreshAutoIncrement(table);
           break;
@@ -875,7 +917,121 @@
     return 'Tabelle „' + table.name + '“ geändert.';
   }
 
+  // ---------------------------------------------------------------------------
+  // CREATE TABLE aus dem aktuellen Tabellenaufbau (Anzeige auf Seite 2)
+  // ---------------------------------------------------------------------------
+
+  /** Einfacher Name, der ohne Backticks geschrieben werden kann (wie im Lexer). */
+  const PLAIN_NAME = /^[\p{L}_][\p{L}\p{N}_$]*$/u;
+
+  /** Nicht reservierte Wörter, die am Anfang einer Spaltendefinition trotzdem anders gelesen würden. */
+  const QUOTE_ALWAYS = new Set(['FULLTEXT', 'SPATIAL']);
+
+  /**
+   * Schreibt einen Namen, bei Bedarf in Backticks.
+   *
+   * @param {string} name - Name.
+   * @returns {string} Name für SQL.
+   */
+  function quoteName(name) {
+    if (PLAIN_NAME.test(name) && !ns.sql.isReserved(name) && !QUOTE_ALWAYS.has(name.toUpperCase())) {
+      return name;
+    }
+    return '`' + name.replace(/`/g, '``') + '`';
+  }
+
+  /**
+   * Schreibt einen Wert als SQL-Literal.
+   *
+   * @param {*} value - Wert.
+   * @param {Object|null} type - Spaltentyp (für die Zahlformatierung).
+   * @returns {string} Literal.
+   */
+  function sqlLiteral(value, type) {
+    if (value === null) {
+      return 'NULL';
+    }
+    if (typeof value === 'number') {
+      return V.formatValue(value, type);
+    }
+    return '\'' + value.replace(/\\/g, '\\\\').replace(/'/g, '\'\'').replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t') + '\'';
+  }
+
+  /** @returns {string} Datentyp einer Spalte als SQL. */
+  function typeSql(type) {
+    if (type.base === 'ENUM') {
+      return 'ENUM(' + type.values.map((v) => sqlLiteral(v, null)).join(', ') + ')';
+    }
+    return type.display;
+  }
+
+  /** @returns {string} CHECK-Bedingung als SQL. */
+  function checkSql(check) {
+    return (check.name !== null ? 'CONSTRAINT ' + quoteName(check.name) + ' ' : '') +
+      'CHECK (' + check.text + ')' + (check.enforced ? '' : ' NOT ENFORCED');
+  }
+
+  /**
+   * Erzeugt den CREATE-TABLE-Befehl, der den aktuellen Aufbau einer Tabelle
+   * ergibt (ähnlich SHOW CREATE TABLE). Normale Indizes und Tabellenoptionen
+   * haben im Simulator keine Wirkung und erscheinen daher nicht.
+   *
+   * @param {Table} table - Tabelle.
+   * @returns {string} SQL-Befehl (mehrzeilig).
+   */
+  function createTableSql(table) {
+    const pk = table.primaryKey;
+    const inlinePk = pk && pk.length === 1 ? pk[0] : -1;
+    const inlineUnique = new Set(table.uniques.filter((u) => u.length === 1).map((u) => u[0]));
+    const lines = table.columns.map((c, idx) => {
+      const parts = [quoteName(c.name), typeSql(c.type)];
+      if (c.notNull && idx !== inlinePk) {
+        parts.push('NOT NULL');
+      }
+      if (c.defaultNow) {
+        parts.push('DEFAULT ' + (c.defaultNow === 'date' ? 'CURRENT_DATE' : 'CURRENT_TIMESTAMP'));
+      } else if (c.defaultValue !== undefined) {
+        parts.push('DEFAULT ' + sqlLiteral(c.defaultValue, c.type));
+      }
+      if (c.autoIncrement) {
+        parts.push('AUTO_INCREMENT');
+      }
+      if (idx === inlinePk) {
+        parts.push('PRIMARY KEY');
+      }
+      if (inlineUnique.has(idx)) {
+        parts.push('UNIQUE');
+      }
+      for (const check of table.checks) {
+        if (check.column === idx) {
+          parts.push(checkSql(check));
+        }
+      }
+      return parts.join(' ');
+    });
+    const names = (cols) => cols.map((i) => quoteName(table.columns[i].name)).join(', ');
+    if (pk && pk.length > 1) {
+      lines.push('PRIMARY KEY (' + names(pk) + ')');
+    }
+    for (const u of table.uniques) {
+      if (u.length > 1) {
+        lines.push('UNIQUE (' + names(u) + ')');
+      }
+    }
+    for (const fk of table.foreignKeys) {
+      lines.push('FOREIGN KEY (' + names(fk.columns) + ') REFERENCES ' + quoteName(fk.refTable) +
+        (fk.refColumns.length ? ' (' + fk.refColumns.map(quoteName).join(', ') + ')' : ''));
+    }
+    for (const check of table.checks) {
+      if (check.column === null) {
+        lines.push(checkSql(check));
+      }
+    }
+    return 'CREATE TABLE ' + quoteName(table.name) + ' (\n  ' + lines.join(',\n  ') + '\n);';
+  }
+
   ns.sql.LIMITS = LIMITS;
+  ns.sql.createTableSql = createTableSql;
   ns.sql.Database = Database;
   ns.sql.Table = Table;
   ns.sql.coerceValue = coerceValue;

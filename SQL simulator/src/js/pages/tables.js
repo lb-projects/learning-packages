@@ -5,6 +5,8 @@
  * Je Tabelle werden die Spalten (Typ, Primär-/Fremdschlüssel, NOT NULL) und die
  * Datensätze angezeigt. Der Tabellenbereich ist so hoch, dass etwa fünf
  * Datensätze sichtbar sind; weitere erreicht man durch Scrollen.
+ * Unter jeder Tabelle lässt sich der CREATE-TABLE-Befehl aufklappen, der aus
+ * dem aktuellen Aufbau erzeugt wird (standardmäßig zugeklappt).
  *
  * Abhängigkeiten:
  *   dom-utils.js, state.js, pages/common.js
@@ -16,6 +18,8 @@
   const ui = {};
   /** true, wenn sich die Datenbank seit dem letzten Aufbau geändert hat. */
   let stale = true;
+  /** Tabellen (Schlüssel in Kleinbuchstaben), deren CREATE-TABLE-Befehl aufgeklappt ist – bleibt beim Neuaufbau erhalten. */
+  const openCreate = new Set();
 
   /**
    * Erzeugt die Spaltenbeschreibung einer Tabelle.
@@ -61,6 +65,43 @@
     return list;
   }
 
+  /**
+   * Erzeugt die Zeile mit den CHECK-Bedingungen einer Tabelle.
+   *
+   * @param {Object} table - Tabelle.
+   * @returns {HTMLElement|null} Absatz oder null, wenn es keine gibt.
+   */
+  function checkList(table) {
+    if (table.checks.length === 0) {
+      return null;
+    }
+    const items = table.checks.map((c) => (c.name !== null ? c.name + ': ' : '') + c.text + (c.enforced ? '' : ' (NOT ENFORCED)'));
+    return dom.el('p', { class: 'hint check-list' }, ['Bedingungen (CHECK): ', dom.el('code', null, ns.text.cleanCellText(items.join('; ')))]);
+  }
+
+  /**
+   * Erzeugt den aufklappbaren CREATE-TABLE-Befehl einer Tabelle.
+   *
+   * @param {Object} table - Tabelle.
+   * @returns {HTMLElement} <details>-Element (zugeklappt, außer es war zuvor offen).
+   */
+  function createBlock(table) {
+    const sql = ns.sql.createTableSql(table).split('\n').map((line) => ns.text.cleanSourceLine(line)).join('\n');
+    const details = dom.el('details', { class: 'create-sql' }, [
+      dom.el('summary', null, 'CREATE-TABLE-Befehl anzeigen'),
+      dom.el('pre', { class: 'sql-example', 'aria-label': 'CREATE-TABLE-Befehl der Tabelle ' + table.name }, sql)
+    ]);
+    details.open = openCreate.has(table.key);
+    details.addEventListener('toggle', () => {
+      if (details.open) {
+        openCreate.add(table.key);
+      } else {
+        openCreate.delete(table.key);
+      }
+    });
+    return details;
+  }
+
   /** Baut die Seite neu auf. */
   function build() {
     const db = ns.state.db();
@@ -94,6 +135,10 @@
       ui.toc.appendChild(jump);
 
       const content = [heading, schemaList(table)];
+      const checks = checkList(table);
+      if (checks) {
+        content.push(checks);
+      }
       if (table.rows.length === 0) {
         content.push(dom.el('p', { class: 'hint' }, 'Die Tabelle enthält keine Datensätze.'));
       } else {
@@ -105,6 +150,7 @@
           scrollClass: 'scroll-5'
         }));
       }
+      content.push(createBlock(table));
       ui.list.appendChild(dom.el('section', { class: 'card table-card', 'aria-labelledby': headingId }, content));
     });
   }

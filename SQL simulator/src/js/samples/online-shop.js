@@ -35,8 +35,8 @@ CREATE TABLE artikel (
   id INT PRIMARY KEY,
   Bezeichnung VARCHAR(50) NOT NULL,
   kategorie_id INT,
-  Preis DECIMAL(8,2) NOT NULL,
-  Lagerbestand INT DEFAULT 0,
+  Preis DECIMAL(8,2) NOT NULL CHECK (Preis >= 0),
+  Lagerbestand INT DEFAULT 0 CHECK (Lagerbestand >= 0),
   FOREIGN KEY (kategorie_id) REFERENCES kategorie (id)
 );
 
@@ -59,7 +59,7 @@ CREATE TABLE bestellung (
 CREATE TABLE bestellposition (
   bestellung_id INT NOT NULL,
   artikel_id INT NOT NULL,
-  Menge INT NOT NULL,
+  Menge INT NOT NULL CHECK (Menge > 0),
   PRIMARY KEY (bestellung_id, artikel_id),
   FOREIGN KEY (bestellung_id) REFERENCES bestellung (id),
   FOREIGN KEY (artikel_id) REFERENCES artikel (id)

@@ -1,6 +1,6 @@
 -- Beispiel im Stil eines Datenbank-Exports (z. B. aus phpMyAdmin) für den SQL-Simulator.
 -- Zeigt, dass typische Export-Bestandteile verstanden werden:
--- Backticks, ENGINE/CHARSET-Angaben, SET-/Transaktionsbefehle, Sonderkommentare
+-- Backticks, ENGINE/CHARSET-Angaben, SET-/Transaktionsbefehle, Sonderkommentare, CHECK-Bedingungen
 -- sowie Schlüssel und AUTO_INCREMENT über ALTER TABLE am Dateiende.
 -- Thema: Kursangebot einer erfundenen Musikschule. Alle Daten sind frei erfunden.
 -- Lizenz: MIT (siehe LICENSE).
@@ -21,7 +21,8 @@ CREATE TABLE `kurs` (
   `Instrument` varchar(30) DEFAULT NULL,
   `Wochentag` enum('Mo','Di','Mi','Do','Fr','Sa') NOT NULL,
   `Gebuehr` decimal(6,2) NOT NULL DEFAULT 0.00,
-  `Plaetze` tinyint(3) UNSIGNED NOT NULL DEFAULT 8
+  `Plaetze` tinyint(3) UNSIGNED NOT NULL DEFAULT 8,
+  CONSTRAINT `chk_gebuehr` CHECK (`Gebuehr` >= 0)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 INSERT INTO `kurs` (`id`, `Titel`, `Instrument`, `Wochentag`, `Gebuehr`, `Plaetze`) VALUES

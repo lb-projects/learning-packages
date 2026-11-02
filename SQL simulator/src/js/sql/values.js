@@ -7,10 +7,13 @@
  *   (Texte sowie Datum/Uhrzeit im festen Format "JJJJ-MM-TT [hh:mm:ss]").
  *   Wahrheitswerte sind wie in MySQL die Zahlen 1 (wahr) und 0 (falsch).
  *
- * Semantik (an MySQL mit Standard-Sortierung *_ci angelehnt):
- *   - Texte werden ohne Beachtung der Groß-/Kleinschreibung verglichen,
- *     Akzente/Umlaute werden unterschieden ("Müller" ≠ "Muller"),
- *     Leerzeichen am Ende werden ignoriert. Sortiert wird nach deutscher Ordnung.
+ * Semantik (an MySQL angelehnt, aber mit einer Sortierung, die die
+ * Groß-/Kleinschreibung beachtet – wie utf8mb4_bin bzw. *_cs; MySQL selbst
+ * verwendet standardmäßig *_ci):
+ *   - Texte werden mit Beachtung der Groß-/Kleinschreibung verglichen
+ *     ("Berlin" ≠ "berlin"), Akzente/Umlaute werden unterschieden
+ *     ("Müller" ≠ "Muller"), Leerzeichen am Ende werden ignoriert.
+ *     Sortiert wird nach deutscher Ordnung.
  *   - Zahl gegen Text: Ist der Text eine Zahl ("42"), wird numerisch
  *     verglichen, sonst als Text.
  *   - Vergleiche mit NULL ergeben NULL (dreiwertige Logik).
@@ -24,8 +27,8 @@
   /** Text, der vollständig eine Zahl darstellt. */
   const NUMERIC_TEXT = /^\s*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?\s*$/;
 
-  /** Sortierung nach deutscher Ordnung, Groß-/Kleinschreibung egal, Akzente zählen. */
-  const collator = new Intl.Collator('de', { sensitivity: 'accent' });
+  /** Sortierung nach deutscher Ordnung; Groß-/Kleinschreibung und Akzente zählen. */
+  const collator = new Intl.Collator('de', { sensitivity: 'variant' });
 
   /**
    * @param {string} text - Text.
@@ -40,13 +43,13 @@
   }
 
   /**
-   * Vergleichsschlüssel eines Textes (Groß-/Kleinschreibung und Leerzeichen am Ende egal).
+   * Vergleichsschlüssel eines Textes (Leerzeichen am Ende egal, Groß-/Kleinschreibung zählt).
    *
    * @param {string} text - Text.
    * @returns {string} Schlüssel.
    */
   function textKey(text) {
-    return text.toLowerCase().replace(/ +$/, '');
+    return text.replace(/ +$/, '');
   }
 
   /**
