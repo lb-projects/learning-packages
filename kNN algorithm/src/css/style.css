@@ -126,10 +126,6 @@ h3 {
   color: #fff;
 }
 
-.tabs button.visited::after {
-  content: " ✓";
-}
-
 .tab-no {
   display: inline-block;
   min-width: 1.4em;
