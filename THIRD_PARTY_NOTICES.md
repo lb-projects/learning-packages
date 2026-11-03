@@ -38,7 +38,7 @@ Das gilt ausdrücklich auch für die **SQL Sandbox** (`SQL Sandbox/`): Lexer, Pa
 ### Übrige Daten
 
 Alle übrigen Daten wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
-- die Beispieldaten im Simulator (Früchte);
+- die eingebauten Beispieldaten im kNN-Paket (Früchte);
 - die Szenarien Wetter, Spam, Lernerfolg und Musik, jeweils Trainings- und Testdaten (`szenario_2_…` bis `szenario_5_…`, auch `*_test.csv`).
 
 Es handelt sich nicht um Messungen realer Personen.
