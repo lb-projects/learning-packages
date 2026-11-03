@@ -36,8 +36,16 @@ Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu
 - **SCORM®** ist eine eingetragene Marke des U.S. Department of Defense (Advanced Distributed Learning Initiative).
 - **Microsoft Windows und Edge** sind Marken der Microsoft Corporation.
 - **Chrome** ist eine Marke von Google LLC, **Firefox** von der Mozilla Foundation, **Safari** von Apple Inc.
+- **Microsoft Excel** ist eine Marke der Microsoft Corporation (kNN-Paket: Import von `.xlsx`).
+- **LibreOffice** ist eine Marke der The Document Foundation (kNN-Paket: Import von `.ods`).
+- **MySQL** ist eine eingetragene Marke der Oracle Corporation und/oder ihrer verbundenen Unternehmen (SQL-Paket).
+- **MariaDB®** ist eine eingetragene Marke der MariaDB plc (SQL-Paket).
+- **PostgreSQL** und **Postgres** sind Marken oder eingetragene Marken der PostgreSQL Community Association of Canada (SQL-Paket).
+- **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy (SQL-Paket).
+- **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc. (SQL-Paket).
+- **UML®** und **Unified Modeling Language™** sind Marken der Object Management Group, Inc. (SQL-Paket).
 
-Weitere Marken, die nur ein Paket betreffen, stehen in den Abschnitten zum jeweiligen Paket.
+Dieses Projekt steht in keiner Verbindung zu den Inhabern der genannten Marken und wird von ihnen weder unterstützt noch empfohlen.
 
 ## kNN algorithm
 
@@ -84,11 +92,6 @@ Es handelt sich nicht um Messungen realer Personen.
 | Office Open XML | ECMA-376 |
 | OpenDocument | OASIS/ISO/IEC 26300 |
 
-### Marken
-
-- **Microsoft Excel** ist eine Marke der Microsoft Corporation.
-- **LibreOffice** ist eine Marke der The Document Foundation.
-
 ## SQL Sandbox
 
 ### Code
@@ -117,16 +120,3 @@ Das SQL-Paket enthält keinen Code von Dritten: Lexer, Parser und Ausführung de
 |---|---|
 | SQL | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
 | UML-Klassendiagramm | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
-
-### Marken
-
-- **MySQL** ist eine eingetragene Marke der Oracle Corporation und/oder ihrer verbundenen Unternehmen.
-- **MariaDB®** ist eine eingetragene Marke der MariaDB plc.
-- **PostgreSQL** und **Postgres** sind Marken oder eingetragene Marken der PostgreSQL Community Association of Canada.
-- **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy.
-- **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc.
-- **UML®** und **Unified Modeling Language™** sind Marken der Object Management Group, Inc.
-
----
-
-Dieses Projekt steht in keiner Verbindung zu den Inhabern der genannten Marken und wird von ihnen weder unterstützt noch empfohlen.
