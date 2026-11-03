@@ -79,7 +79,8 @@ Darüber hinaus enthält das kNN-Paket keinen Code von Dritten.
 
 Alle übrigen Daten des kNN-Pakets wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
 - die eingebauten Beispieldaten im kNN-Paket (Früchte);
-- die Szenarien Wetter, Spam, Lernerfolg und Musik, jeweils Trainings- und Testdaten (`szenario_2_…` bis `szenario_5_…`, auch `*_test.csv`).
+- die Szenarien Wetter, Spam, Lernerfolg und Musik, jeweils Trainings- und Testdaten (`szenario_2_…` bis `szenario_5_…`, auch `*_test.csv`);
+- die Regressionsdateien Eisverkauf, Bremsweg, Lernzeit, Gebrauchtwagen und Stromverbrauch (`regression_1_…` bis `regression_5_…`).
 
 Es handelt sich nicht um Messungen realer Personen.
 

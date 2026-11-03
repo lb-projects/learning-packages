@@ -83,7 +83,7 @@ kNN algorithm/
 │     ├─ pages/*.js          die acht Seiten (+ gemeinsame Bausteine)
 │     ├─ progress.js         Speichern/Wiederherstellen der Eintragungen (Seiten 4 und 5) in Moodle
 │     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
-├─ testdata/                 Szenario-Dateien für den Unterricht (Training: szenario_*.csv, Test: szenario_*_test.csv)
+├─ testdata/                 Dateien für den Unterricht (Klassifikation: szenario_*.csv, szenario_*_test.csv; Regression: regression_*.csv)
 ├─ preview/                  Vorschau
 └─ README.md                 diese Datei
 ```
@@ -171,6 +171,20 @@ In `testdata/` liegen zu jedem Szenario zwei CSV-Dateien (Werte zwischen 0 und 1
 
 Die Daten sind frei erfunden, mit einer Ausnahme: `szenario_1_schwertlilien.csv` und `szenario_1_schwertlilien_test.csv` enthalten zwei getrennte Teilmengen des Iris-Datensatzes (Anderson 1935, Fisher 1936; UCI Machine Learning Repository, CC BY 4.0). Bei der Weitergabe dieser Dateien bitte die Quelle nennen und auf die Lizenz verweisen (Einzelheiten in `THIRD_PARTY_NOTICES.md`).
 
+### Regressionsdateien (Seite 8)
+
+Zu jedem Thema liegt in `testdata/` eine CSV-Datei (Kopfzeile, Semikolon, Dezimalkomma) zum Hochladen auf der Seite „Training“. Danach zeigt Seite 8 die Daten. x ist das Merkmal, y der Zielwert. Die dritte Spalte (Gruppe) wird vom Paket verlangt, spielt aber für die Regression keine Rolle; sie lässt sich auf den anderen Seiten nutzen.
+
+| Datei | Thema | x | y | Verlauf |
+|---|---|---|---|---|
+| `regression_1_eisverkauf.csv` | Eisverkauf | Temperatur (°C) | verkaufte Eiskugeln pro Tag | ungefähr linear ab etwa 9 °C, am Wochenende höher |
+| `regression_2_bremsweg.csv` | Bremsweg | Geschwindigkeit (km/h) | Anhalteweg (m) | quadratisch, bei Nässe länger |
+| `regression_3_lernzeit.csv` | Lernzeit | Lernzeit pro Woche (h) | Punkte in der Klassenarbeit | steigt und sättigt sich |
+| `regression_4_gebrauchtwagen.csv` | Gebrauchtwagen | Alter (Jahre) | Preis (1000 Euro) | fällt exponentiell, je nach Fahrzeugklasse verschieden hoch |
+| `regression_5_stromverbrauch.csv` | Stromverbrauch | Uhrzeit (h) | Verbrauch eines Haushalts (kW) | zwei Spitzen (morgens, abends); eignet sich gut, um den Einfluss von k zu zeigen |
+
+Die Daten sind frei erfunden (zufällig um einen vorgegebenen Verlauf gestreut) und stehen unter der MIT-Lizenz.
+
 ## Ausprobieren und Browser
 
 `src/index.html` lässt sich auch ohne Lernplattform direkt im Browser öffnen. Die Anwendung läuft dann im Offline-Modus; die Fußzeile weist darauf hin.
@@ -191,10 +205,10 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (71) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (72) im Browser, mit simulierter SCORM-Schnittstelle:
 - Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
-- Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario-Dateien sowie von XLSX- und ODS-Dateien;
+- Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario- und Regressionsdateien sowie von XLSX- und ODS-Dateien;
 - präparierte Angriffsdateien (Skript-Einschleusung, Zip-Bombe, „Billion Laughs“, getarnte Dateitypen, übergroße Dateien);
 - Klickpfade aller Seiten und seitenübergreifende Änderungen;
 - SCORM-Meldungen; Speichern nach jeder Eintragung, Wiederherstellen (mit und ohne gespeicherte Daten), ungültige gespeicherte Stände, Größengrenze, Offline-Modus;
