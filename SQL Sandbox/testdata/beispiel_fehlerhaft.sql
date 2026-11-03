@@ -1,4 +1,4 @@
--- Absichtlich fehlerhafte Datei für den SQL-Simulator.
+-- Absichtlich fehlerhafte Datei für die SQL Sandbox.
 -- Beim Hochladen erscheint eine Fehlermeldung mit Zeilen- und Spaltenangabe;
 -- die bisher geladene Datenbank bleibt unverändert.
 -- Aufgabe: Finden und beheben Sie die Fehler (es sind zwei).

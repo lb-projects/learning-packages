@@ -1,7 +1,7 @@
 -- Titel: Sportverein
 -- Beschreibung: Abteilungen, Trainerinnen und Trainer, Mannschaften, Mitglieder mit Beiträgen und Spiele mit Ergebnissen.
 --
--- Beispieldatenbank für den SQL-Simulator.
+-- Beispieldatenbank für die SQL Sandbox.
 -- Alle Namen, Vereine und Werte sind frei erfunden; Ähnlichkeiten mit realen
 -- Personen oder Vereinen wären zufällig. Lizenz: MIT (siehe LICENSE).
 

@@ -1,4 +1,4 @@
--- Beispiel im Stil eines Datenbank-Exports (z. B. aus phpMyAdmin) für den SQL-Simulator.
+-- Beispiel im Stil eines Datenbank-Exports (z. B. aus phpMyAdmin) für die SQL Sandbox.
 -- Zeigt, dass typische Export-Bestandteile verstanden werden:
 -- Backticks, ENGINE/CHARSET-Angaben, SET-/Transaktionsbefehle, Sonderkommentare, CHECK-Bedingungen
 -- sowie Schlüssel und AUTO_INCREMENT über ALTER TABLE am Dateiende.

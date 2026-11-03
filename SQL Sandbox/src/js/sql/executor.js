@@ -1391,7 +1391,7 @@
     const n = V.numericValue(v);
     if (n === null) {
       throw new SqlError('Mit dem Text ' + show(v) + ' kann nicht gerechnet werden.', node.pos,
-        'Rechnen ist nur mit Zahlen möglich. Datumswerte sind in diesem Simulator Texte (JJJJ-MM-TT).');
+        'Rechnen ist nur mit Zahlen möglich. Datumswerte sind in der SQL Sandbox Texte (JJJJ-MM-TT).');
     }
     return n;
   }

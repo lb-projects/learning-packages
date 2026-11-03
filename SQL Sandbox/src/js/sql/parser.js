@@ -367,7 +367,7 @@
       this.next();
       this.enter();
       if (this.isKw('RECURSIVE')) {
-        throw new SqlError('WITH RECURSIVE (rekursive Abfragen) wird in diesem Simulator nicht unterstützt.', this.peek().pos);
+        throw new SqlError('WITH RECURSIVE (rekursive Abfragen) wird in der SQL Sandbox nicht unterstützt.', this.peek().pos);
       }
       const ctes = [];
       do {
@@ -965,7 +965,7 @@
         this.fail('„*“ ist hier nicht erlaubt', null, '„*“ steht nur direkt nach SELECT oder in COUNT(*).');
       }
       if (this.isSym('@')) {
-        this.fail('Erwartet wird ein Ausdruck (z. B. ein Spaltenname, eine Zahl oder ein Text)', null, 'Variablen wie @name werden in diesem Simulator nicht unterstützt.');
+        this.fail('Erwartet wird ein Ausdruck (z. B. ein Spaltenname, eine Zahl oder ein Text)', null, 'Variablen wie @name werden in der SQL Sandbox nicht unterstützt.');
       }
       return this.fail('Erwartet wird ein Ausdruck (z. B. ein Spaltenname, eine Zahl oder ein Text)', EXPRESSION_WORDS);
     }

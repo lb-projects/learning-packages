@@ -1,6 +1,6 @@
 /**
  * @file samples/bibliothek.js
- * @description Beispieldatenbank „Bibliothek“ für den SQL-Simulator.
+ * @description Beispieldatenbank „Bibliothek“ für die SQL Sandbox.
  *
  * Der SQL-Text ist identisch mit testdata/bibliothek.sql (der Build prüft das).
  * Alle Daten sind frei erfunden. Lizenz: MIT (siehe LICENSE.txt).
@@ -16,7 +16,7 @@
     sql: `-- Titel: Bibliothek
 -- Beschreibung: Autorinnen und Autoren, Bücher, Leserinnen und Leser sowie Ausleihen (auch noch nicht zurückgegebene).
 --
--- Beispieldatenbank für den SQL-Simulator.
+-- Beispieldatenbank für die SQL Sandbox.
 -- Alle Namen, Buchtitel und Werte sind frei erfunden; Ähnlichkeiten mit realen
 -- Personen oder Werken wären zufällig. Lizenz: MIT (siehe LICENSE).
 

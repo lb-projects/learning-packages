@@ -1,6 +1,6 @@
 /**
  * @file samples/sportverein.js
- * @description Beispieldatenbank „Sportverein“ für den SQL-Simulator.
+ * @description Beispieldatenbank „Sportverein“ für die SQL Sandbox.
  *
  * Der SQL-Text ist identisch mit testdata/sportverein.sql (der Build prüft das).
  * Alle Daten sind frei erfunden. Lizenz: MIT (siehe LICENSE.txt).
@@ -16,7 +16,7 @@
     sql: `-- Titel: Sportverein
 -- Beschreibung: Abteilungen, Trainerinnen und Trainer, Mannschaften, Mitglieder mit Beiträgen und Spiele mit Ergebnissen.
 --
--- Beispieldatenbank für den SQL-Simulator.
+-- Beispieldatenbank für die SQL Sandbox.
 -- Alle Namen, Vereine und Werte sind frei erfunden; Ähnlichkeiten mit realen
 -- Personen oder Vereinen wären zufällig. Lizenz: MIT (siehe LICENSE).
 

@@ -258,7 +258,7 @@
           throw new SqlError(where + ': Der Text ist zu lang (' + length + ' Zeichen, erlaubt sind ' + type.length + ').', pos);
         }
         if (length > LIMITS.maxString) {
-          throw new SqlError(where + ': Texte dürfen in diesem Simulator höchstens ' + LIMITS.maxString + ' Zeichen lang sein.', pos);
+          throw new SqlError(where + ': Texte dürfen in der SQL Sandbox höchstens ' + LIMITS.maxString + ' Zeichen lang sein.', pos);
         }
         return text;
       }
@@ -526,7 +526,7 @@
      */
     insertRows(table, rows, positions) {
       if (this.rowCount() + rows.length > LIMITS.maxRows) {
-        throw new SqlError('Die Datenbank darf in diesem Simulator höchstens ' + LIMITS.maxRows + ' Datensätze enthalten.', positions[0] || null);
+        throw new SqlError('Die Datenbank darf in der SQL Sandbox höchstens ' + LIMITS.maxRows + ' Datensätze enthalten.', positions[0] || null);
       }
       const keys = table.keys();
       if (!table.keySets) {
@@ -1013,7 +1013,7 @@
   /**
    * Erzeugt den CREATE-TABLE-Befehl, der den aktuellen Aufbau einer Tabelle
    * ergibt (ähnlich SHOW CREATE TABLE). Normale Indizes und Tabellenoptionen
-   * haben im Simulator keine Wirkung und erscheinen daher nicht.
+   * haben in der SQL Sandbox keine Wirkung und erscheinen daher nicht.
    *
    * @param {Table} table - Tabelle.
    * @returns {string} SQL-Befehl (mehrzeilig).

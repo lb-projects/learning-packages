@@ -136,7 +136,7 @@
         details.push(result.encodingNote);
       }
       if (result.skipped.size > 0) {
-        details.push('Übersprungen (für den Simulator ohne Bedeutung): ' +
+        details.push('Übersprungen (für die SQL Sandbox ohne Bedeutung): ' +
           Array.from(result.skipped.entries()).map(([k, n]) => n + '× ' + k).join(', ') + '.');
       }
       for (const notice of result.notices.slice(0, 5)) {

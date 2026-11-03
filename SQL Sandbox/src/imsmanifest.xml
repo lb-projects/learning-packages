@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  SCORM-1.2-Manifest des SQL-Simulators.
+  SCORM-1.2-Manifest der SQL Sandbox.
   - Ein einzelnes SCO (index.html), das alle vier Seiten als Registerkarten enthält.
   - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
   - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
 -->
-<manifest identifier="SQL-SIMULATOR-1" version="1.0"
+<manifest identifier="SQL-SANDBOX-1" version="1.0"
           xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
           xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
   <metadata>

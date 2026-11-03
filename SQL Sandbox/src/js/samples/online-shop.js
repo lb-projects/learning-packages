@@ -1,6 +1,6 @@
 /**
  * @file samples/online-shop.js
- * @description Beispieldatenbank „Online-Shop“ für den SQL-Simulator.
+ * @description Beispieldatenbank „Online-Shop“ für die SQL Sandbox.
  *
  * Der SQL-Text ist identisch mit testdata/online_shop.sql (der Build prüft das).
  * Alle Daten sind frei erfunden. Lizenz: MIT (siehe LICENSE.txt).
@@ -16,7 +16,7 @@
     sql: `-- Titel: Online-Shop
 -- Beschreibung: Kategorien, Artikel mit Preisen, Kundinnen und Kunden, Bestellungen und Bestellpositionen.
 --
--- Beispieldatenbank für den SQL-Simulator.
+-- Beispieldatenbank für die SQL Sandbox.
 -- Alle Namen, Artikel und Werte sind frei erfunden; Ähnlichkeiten mit realen
 -- Personen, Firmen oder Produkten wären zufällig. Lizenz: MIT (siehe LICENSE).
 

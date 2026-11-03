@@ -1,7 +1,7 @@
 -- Titel: Online-Shop
 -- Beschreibung: Kategorien, Artikel mit Preisen, Kundinnen und Kunden, Bestellungen und Bestellpositionen.
 --
--- Beispieldatenbank für den SQL-Simulator.
+-- Beispieldatenbank für die SQL Sandbox.
 -- Alle Namen, Artikel und Werte sind frei erfunden; Ähnlichkeiten mit realen
 -- Personen, Firmen oder Produkten wären zufällig. Lizenz: MIT (siehe LICENSE).
 

@@ -1,7 +1,7 @@
 -- Titel: Bibliothek
 -- Beschreibung: Autorinnen und Autoren, Bücher, Leserinnen und Leser sowie Ausleihen (auch noch nicht zurückgegebene).
 --
--- Beispieldatenbank für den SQL-Simulator.
+-- Beispieldatenbank für die SQL Sandbox.
 -- Alle Namen, Buchtitel und Werte sind frei erfunden; Ähnlichkeiten mit realen
 -- Personen oder Werken wären zufällig. Lizenz: MIT (siehe LICENSE).
 

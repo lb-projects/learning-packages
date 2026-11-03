@@ -14,7 +14,7 @@ Davon abweichend oder ergänzend gilt Folgendes.
 
 Darüber hinaus enthält das Projekt **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder.
 
-Das gilt ausdrücklich auch für den **SQL-Simulator** (`SQL simulator/`): Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
+Das gilt ausdrücklich auch für die **SQL Sandbox** (`SQL Sandbox/`): Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
 
 ## Daten
 
@@ -43,11 +43,11 @@ Alle übrigen Daten wurden für dieses Projekt frei erfunden und stehen unter de
 
 Es handelt sich nicht um Messungen realer Personen.
 
-### SQL-Simulator: Beispieldatenbanken
+### SQL Sandbox: Beispieldatenbanken
 
 - **Betrifft:**
-  - `SQL simulator/testdata/*.sql`
-  - die inhaltsgleichen eingebauten Beispieldatenbanken `SQL simulator/src/js/samples/*.js`
+  - `SQL Sandbox/testdata/*.sql`
+  - die inhaltsgleichen eingebauten Beispieldatenbanken `SQL Sandbox/src/js/samples/*.js`
 - **Inhalt:** Schule, Bibliothek, Online-Shop, Sportverein, ein Beispiel im Stil eines Datenbank-Exports (Musikschule) und eine absichtlich fehlerhafte Übungsdatei.
 - **Herkunft:** frei erfunden für dieses Projekt, MIT-Lizenz:
   - Namen sind frei kombinierte, gängige Vor- und Nachnamen.
@@ -74,9 +74,9 @@ Das Projekt implementiert offene Formate und Schnittstellen mit eigenem Code. We
 | Office Open XML | ECMA-376 |
 | OpenDocument | OASIS/ISO/IEC 26300 |
 | SCORM-1.2-Laufzeitschnittstelle und IMS Content Packaging | Namensraum-URIs im Manifest sind nur Bezeichner |
-| SQL (SQL-Simulator) | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
-| UML-Klassendiagramm (SQL-Simulator) | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
-| SVG (SQL-Simulator) | W3C Scalable Vector Graphics; die Namensraum-URI im Code ist nur ein Bezeichner, es wird nichts geladen |
+| SQL (SQL Sandbox) | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
+| UML-Klassendiagramm (SQL Sandbox) | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
+| SVG (SQL Sandbox) | W3C Scalable Vector Graphics; die Namensraum-URI im Code ist nur ein Bezeichner, es wird nichts geladen |
 
 ## Marken
 

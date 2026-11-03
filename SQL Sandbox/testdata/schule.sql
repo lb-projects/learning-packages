@@ -1,22 +1,7 @@
-/**
- * @file samples/schule.js
- * @description Beispieldatenbank „Schule“ für den SQL-Simulator.
- *
- * Der SQL-Text ist identisch mit testdata/schule.sql (der Build prüft das).
- * Alle Daten sind frei erfunden. Lizenz: MIT (siehe LICENSE.txt).
- */
-(function (ns) {
-  'use strict';
-
-  ns.samples = ns.samples || [];
-  ns.samples.push({
-    id: 'schule',
-    title: 'Schule',
-    description: 'Schulen, Lehrkräfte, Klassen, Schülerinnen und Schüler, Fächer und Noten.',
-    sql: `-- Titel: Schule
+-- Titel: Schule
 -- Beschreibung: Schulen, Lehrkräfte, Klassen, Schülerinnen und Schüler, Fächer und Noten.
 --
--- Beispieldatenbank für den SQL-Simulator.
+-- Beispieldatenbank für die SQL Sandbox.
 -- Alle Namen, Adressen und Werte sind frei erfunden; Ähnlichkeiten mit realen
 -- Personen oder Schulen wären zufällig. Lizenz: MIT (siehe LICENSE).
 
@@ -260,6 +245,3 @@ INSERT INTO note (schueler_id, fach_id, Note, Art, Datum) VALUES
 (28, 5, 1, 'Referat', '2025-02-11'),
 (29, 5, 3, 'Referat', '2025-02-11'),
 (30, 5, 2, 'Referat', '2025-02-11');
-`
-  });
-})(window.SQLSIM = window.SQLSIM || {});
