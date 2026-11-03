@@ -109,12 +109,48 @@
   /**
    * Berechnet das Layout.
    *
+   * „In die Tiefe“ (vertical): referenzierte Klassen oben, abhängige darunter.
+   * „In die Breite“ (horizontal): referenzierte Klassen links, abhängige rechts. Dafür wird
+   * das Layout mit vertauschten Kartenmaßen berechnet und anschließend gespiegelt (x ↔ y);
+   * rechtwinklige Linien bleiben dabei rechtwinklig.
+   *
    * @param {Array<{id:string, w:number, h:number}>} nodes - Karten (Klassen und Assoziationsklassen).
    * @param {Array<{id:string, from:string, to:string, kind:string, assocClass:string|null, labelW:number}>} edges - Beziehungen.
-   * @returns {{positions:Map<string,{x:number,y:number}>, routes:Map<string,Array>, connectors:Map<string,Array>, width:number, height:number}}
+   * @param {{direction:string}} [options] - direction: 'vertical' (Standard) oder 'horizontal'.
+   * @returns {{positions:Map<string,{x:number,y:number}>, routes:Map<string,Array>, connectors:Map<string,Array>, width:number, height:number, direction:string}}
    *   Linke obere Ecke je Karte, Eckpunkte je Beziehung (vom from- zum to-Ende) und je Anbindung einer Assoziationsklasse.
    */
-  function layout(nodes, edges) {
+  function layout(nodes, edges, options) {
+    if (!(options && options.direction === 'horizontal')) {
+      return Object.assign(layoutCore(nodes, edges, { minChannel: MIN_CHANNEL, labelGap: true }), { direction: 'vertical' });
+    }
+    // Bezeichner stehen auf den waagerechten Abschnitten zwischen den Spalten: Kanäle so breit
+    // wie nötig, Knicke nahe der linken Spalte (das lange Stück trägt den Bezeichner).
+    const t = layoutCore(nodes.map((n) => ({ id: n.id, w: n.h, h: n.w })), edges,
+      { minChannel: MIN_CHANNEL, labelGap: false, channelLabels: true });
+    const swap = (p) => pt(p.y, p.x);
+    const mapAll = (m) => new Map(Array.from(m, ([k, pts]) => [k, pts.map(swap)]));
+    return {
+      positions: new Map(Array.from(t.positions, ([k, p]) => [k, swap(p)])),
+      routes: mapAll(t.routes),
+      connectors: mapAll(t.connectors),
+      width: t.height,
+      height: t.width,
+      direction: 'horizontal'
+    };
+  }
+
+  /**
+   * Kern des Layouts (immer „in die Tiefe“ gerechnet).
+   *
+   * @param {Array} nodes - Karten.
+   * @param {Array} edges - Beziehungen.
+   * @param {{minChannel:number, labelGap:boolean, channelLabels:boolean}} opts - Mindesthöhe der
+   *   Kanäle; Platz für Bezeichner zwischen n:m-Nachbarn derselben Ebene; Bezeichner laufen
+   *   entlang der Kanäle (nach dem Spiegeln waagerecht), Spuren dann am Kanalanfang.
+   * @returns {Object} Ergebnis wie {@link layout} (ohne direction).
+   */
+  function layoutCore(nodes, edges, opts) {
     const nodeById = new Map(nodes.map((n) => [n.id, n]));
     const order = new Map(nodes.map((n, i) => [n.id, i]));
 
@@ -363,7 +399,7 @@
       if (Math.abs(pos.get(a) - pos.get(b)) === 1) {
         info.type = 'adjacent';
         const left = pos.get(a) < pos.get(b) ? a : b;
-        adjacentGap.set(left, Math.max(adjacentGap.get(left) || GAP_NM, (e.labelW || 0) + 40));
+        adjacentGap.set(left, Math.max(adjacentGap.get(left) || GAP_NM, opts.labelGap ? (e.labelW || 0) + 40 : 0));
       } else {
         info.type = 'over';
       }
@@ -539,6 +575,19 @@
       }
     }
     const trackCount = channels.map((pieces) => assignTracks(pieces));
+    // Platzbedarf der Bezeichner je Kanal (nur wenn sie entlang des Kanals stehen).
+    const labelNeed = new Array(layerCount + 1).fill(0);
+    if (opts.channelLabels) {
+      for (const e of edges) {
+        const info = routeInfo.get(e.id);
+        if (info.type === 'inter' && info.chain.length === 2 && e.labelW) {
+          const step = info.steps[0];
+          const t = trackCount[step.channel];
+          const need = e.labelW + 30 + (step.piece ? PAD + Math.max(0, t - 1) * TRACK + 10 : 0);
+          labelNeed[step.channel] = Math.max(labelNeed[step.channel], need);
+        }
+      }
+    }
 
     // ---- 7) Senkrechte Lage ---------------------------------------------
     const rowTop = [];
@@ -555,7 +604,7 @@
       } else if (l === layerCount) {
         h = 0;
       } else {
-        h = Math.max(MIN_CHANNEL, 2 * PAD + Math.max(0, t - 1) * TRACK);
+        h = Math.max(opts.minChannel, labelNeed[l], 2 * PAD + Math.max(0, t - 1) * TRACK);
       }
       chTop[l] = y;
       chH[l] = h;
@@ -568,6 +617,9 @@
     const height = y + MARGIN;
     const trackY = (l, piece) => {
       const t = trackCount[l];
+      if (opts.channelLabels && l > 0) {
+        return chTop[l] + PAD + piece.track * TRACK;
+      }
       return chTop[l] + (chH[l] - (t - 1) * TRACK) / 2 + piece.track * TRACK;
     };
     const top = (it) => rowTop[it.layer];

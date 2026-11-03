@@ -8,14 +8,14 @@
  *   - Attribute sind die Spalten, ganz klein geschrieben (Adresse → adresse), ohne Datentyp.
  *     Es entfallen alle Spalten von Fremdschlüsseln und künstliche Primärschlüssel
  *     (AUTO_INCREMENT oder „id“ als eigener Namensteil: id, kunde_id, id_kunde, KundenID).
- *     Natürliche Primärschlüssel werden als Schlüssel markiert.
+ *     Natürliche Primärschlüssel erscheinen als normale Attribute (ohne Markierung).
  *   - Jeder Fremdschlüssel (Tabelle A → Tabelle B) wird eine Assoziation:
  *       Seite B: 1 (alle Spalten NOT NULL) bzw. 0..1;
- *       Seite A: 0..1, wenn die Spalten eindeutig sind (1:1), sonst *.
+ *       Seite A: 0..1, wenn die Spalten eindeutig sind (1:1), sonst n.
  *     Bezeichner: Name aus CONSTRAINT name, sonst die Spalte(n) des Fremdschlüssels.
  *   - Verbindungstabellen (genau zwei Fremdschlüssel auf zwei verschiedene Tabellen, alle
  *     Spalten NOT NULL, nicht eindeutig, von keiner Tabelle referenziert, kein natürlicher
- *     Schlüssel) werden zur n:m-Assoziation (* zu *). Hat die Tabelle eigene
+ *     Schlüssel) werden zur n:m-Assoziation (n zu m). Hat die Tabelle eigene
  *     Attribute, wird sie Assoziationsklasse, sonst trägt die Linie den Tabellennamen.
  *   - Fremdschlüssel auf nicht vorhandene Tabellen oder Spalten ergeben Hinweise.
  *
@@ -105,7 +105,7 @@
    *
    * @param {Object} db - Datenbank.
    * @returns {{classes:Array<Object>, associations:Array<Object>, warnings:Array<string>}} Modell.
-   *   Klasse: {id, table, name, attributes:[{name, key}], associationClass}.
+   *   Klasse: {id, table, name, attributes:[{name}], associationClass}.
    *   Assoziation: {id, kind:'fk'|'nm', from, to, fromMult, toMult, label, assocClass, parallelIndex, parallelCount}
    *   (bei 'fk' ist from die Tabelle mit dem Fremdschlüssel, to die referenzierte Tabelle).
    */
@@ -168,7 +168,7 @@
         if (fkCols.has(idx) || isArtificialKey(table, idx)) {
           return;
         }
-        attrs.push({ name: attributeName(column.name), key: Boolean(table.primaryKey && table.primaryKey.includes(idx)) });
+        attrs.push({ name: attributeName(column.name) });
       });
       return attrs;
     }
@@ -225,7 +225,7 @@
         associations.push({
           id: 'a' + associations.length, kind: 'fk',
           from: classOf.get(table.key).id, to: classOf.get(r.target.key).id,
-          fromMult: isUniqueSet(table, r.fk.columns) ? '0..1' : '*',
+          fromMult: isUniqueSet(table, r.fk.columns) ? '0..1' : 'n',
           toMult: allNotNull ? '1' : '0..1',
           label: r.label, assocClass: null
         });
@@ -244,7 +244,7 @@
       associations.push({
         id: 'a' + associations.length, kind: 'nm',
         from: classOf.get(ra.target.key).id, to: classOf.get(rb.target.key).id,
-        fromMult: '*', toMult: '*',
+        fromMult: 'n', toMult: 'm',
         label: assocClass ? '' : table.name, assocClass, junction: table.name
       });
     }

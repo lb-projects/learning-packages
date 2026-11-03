@@ -8,6 +8,8 @@
  * Maus (bzw. per Touch) und mit den Pfeiltasten verschieben; die betroffenen Linien werden
  * dabei rechtwinklig neu geführt. „Anordnung zurücksetzen“ stellt das Ebenenlayout wieder her.
  * Beim Laden einer anderen Datenbank wird neu angeordnet.
+ * Ausrichtung: automatisch (in die Breite, wenn es in den Bereich passt, sonst in die Tiefe)
+ * oder fest gewählt.
  *
  * Sicherheit:
  *   Alle Namen werden über dom.svg/dom.el als Textknoten eingefügt (nach cleanCellText).
@@ -38,6 +40,8 @@
   let signature = '';
   /** Aktueller Zustand: Modell, Karten, Linien. */
   let view = null;
+  /** Gewählte Ausrichtung: 'auto', 'horizontal' (in die Breite) oder 'vertical' (in die Tiefe). */
+  let direction = 'auto';
 
   /** Kürzt lange Namen für die Anzeige. */
   function shorten(text) {
@@ -95,7 +99,7 @@
       const attrs = cls.attributes.map((a) => {
         const full = ns.text.cleanCellText(a.name);
         const text = shorten(full);
-        return { text, full, key: a.key, w: m.width(text, 'uml-attr') };
+        return { text, full, w: m.width(text, 'uml-attr') };
       });
       const nameW = m.width(name, 'uml-name');
       const w = Math.ceil(Math.max(MIN_W, nameW + 2 * PAD_X, ...attrs.map((a) => a.w + 2 * PAD_X)));
@@ -129,7 +133,8 @@
     if (dy !== 0) {
       return { x: p.x + 5, y: p.y + (dy > 0 ? 14 : -6), anchor: 'start' };
     }
-    return { x: p.x + (dx > 0 ? 6 : -6), y: p.y - 5, anchor: dx > 0 ? 'start' : 'end' };
+    // Waagerecht: unter der Linie, damit der Bezeichner darüber Platz hat.
+    return { x: p.x + (dx > 0 ? 6 : -6), y: p.y + 14, anchor: dx > 0 ? 'start' : 'end' };
   }
 
   /** Position des Beziehungsbezeichners am längsten Abschnitt. */
@@ -273,7 +278,7 @@
 
   /** Erzeugt die SVG-Gruppe einer Klassenkarte. */
   function cardElement(card) {
-    const attrList = card.attrs.map((a) => a.full + (a.key ? ' (Schlüssel)' : '')).join(', ');
+    const attrList = card.attrs.map((a) => a.full).join(', ');
     const label = (card.cls.associationClass ? 'Assoziationsklasse ' : 'Klasse ') + card.fullName +
       (card.attrs.length ? ', Attribute: ' + attrList : ', ohne Attribute');
     const children = [
@@ -284,9 +289,6 @@
     card.attrs.forEach((a, i) => {
       const y = NAME_H + 4 + (i + 1) * ATTR_H - 4;
       children.push(dom.svg('text', { class: 'uml-attr', x: String(PAD_X), y: String(y) }, a.text));
-      if (a.key) {
-        children.push(dom.svg('line', { class: 'uml-key', x1: String(PAD_X), y1: String(y + 3), x2: String(PAD_X + a.w), y2: String(y + 3) }));
-      }
     });
     const truncated = card.name !== card.fullName || card.attrs.some((a) => a.text !== a.full);
     if (truncated) {
@@ -349,11 +351,22 @@
     resize();
   }
 
-  /** Berechnet die Standardanordnung. */
+  /**
+   * Berechnet die Standardanordnung. Automatisch: in die Breite, wenn das Diagramm so in
+   * den verfügbaren Bereich passt, sonst in die Tiefe.
+   */
   function arrange() {
     const nodes = Array.from(view.cards.values()).map((c) => ({ id: c.cls.id, w: c.w, h: c.h }));
     const edges = view.model.associations.map((a) => ({ id: a.id, from: a.from, to: a.to, kind: a.kind, assocClass: a.assocClass, labelW: a.labelW }));
-    const result = ns.uml.layout(nodes, edges);
+    let result;
+    if (direction === 'auto') {
+      const wide = ns.uml.layout(nodes, edges, { direction: 'horizontal' });
+      const available = ui.canvas.clientWidth - 2;
+      result = available > 0 && wide.width <= available ? wide : ns.uml.layout(nodes, edges, { direction: 'vertical' });
+    } else {
+      result = ns.uml.layout(nodes, edges, { direction });
+    }
+    view.direction = result.direction;
     for (const card of view.cards.values()) {
       const p = result.positions.get(card.cls.id);
       card.x = p.x;
@@ -369,14 +382,14 @@
     const nameOf = new Map(model.classes.map((c) => [c.id, ns.text.cleanCellText(c.name)]));
     const classItems = model.classes.map((c) => dom.el('li', null, [
       dom.el('strong', null, nameOf.get(c.id)), c.associationClass ? ' (Assoziationsklasse)' : '', ': ',
-      c.attributes.length ? c.attributes.map((a) => ns.text.cleanCellText(a.name) + (a.key ? ' (Schlüssel)' : '')).join(', ') : 'keine Attribute'
+      c.attributes.length ? c.attributes.map((a) => ns.text.cleanCellText(a.name)).join(', ') : 'keine Attribute'
     ]));
     const assocItems = model.associations.map((a) => {
       let textLine;
       if (a.kind === 'fk') {
         textLine = nameOf.get(a.to) + ' ' + a.toMult + ' – ' + a.fromMult + ' ' + nameOf.get(a.from) + ' (' + ns.text.cleanCellText(a.label) + ')';
       } else {
-        textLine = nameOf.get(a.from) + ' * – * ' + nameOf.get(a.to) +
+        textLine = nameOf.get(a.from) + ' ' + a.fromMult + ' – ' + a.toMult + ' ' + nameOf.get(a.to) +
           (a.assocClass ? ' mit der Assoziationsklasse ' + nameOf.get(a.assocClass) : ' (' + ns.text.cleanCellText(a.label) + ')');
       }
       return dom.el('li', null, textLine);
@@ -431,16 +444,15 @@
       model.classes.map((c) => [c.id, c.name, c.attributes]),
       model.associations.map((a) => [a.id, a.from, a.to, a.fromMult, a.toMult, a.label, a.assocClass])
     ]);
-    if (view && sig === signature && !relayout) {
-      // Schema unverändert (z. B. nach INSERT): Anordnung und verschobene Karten bleiben erhalten.
-      draw();
-      return;
+    if (!(view && sig === signature && !relayout)) {
+      view = { model, cards: prepareCards(model) };
+      arrange();
+      signature = sig;
+      relayout = false;
     }
-    view = { model, cards: prepareCards(model) };
-    arrange();
-    signature = sig;
-    relayout = false;
+    // Bei unverändertem Schema (z. B. nach INSERT) bleiben Anordnung und verschobene Karten erhalten.
     draw();
+    ui.info.textContent += ' Anordnung: ' + (view.direction === 'horizontal' ? 'in die Breite' : 'in die Tiefe') + '.';
   }
 
   ns.pages.diagram = {
@@ -451,10 +463,16 @@
       ui.body = dom.byId('diagram-body');
       ui.canvas = dom.byId('diagram-canvas');
       ui.text = dom.byId('diagram-text');
-      dom.byId('btn-diagram-reset').addEventListener('click', () => {
+      const rebuild = () => {
         relayout = true;
         stale = false;
         build();
+      };
+      dom.byId('btn-diagram-reset').addEventListener('click', rebuild);
+      const select = dom.byId('diagram-direction');
+      select.addEventListener('change', () => {
+        direction = ['horizontal', 'vertical'].includes(select.value) ? select.value : 'auto';
+        rebuild();
       });
     },
     render() {

@@ -284,7 +284,22 @@ input[type="file"] {
   display: none;
 }
 
+.select {
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text);
+}
+
+.inline-label {
+  margin-left: 0.5rem;
+}
+
 input:focus-visible,
+select:focus-visible,
 textarea:focus-visible,
 button:focus-visible,
 summary:focus-visible,
@@ -622,11 +637,6 @@ body > .status {
 .uml-attr {
   font-size: 13px;
   fill: var(--text);
-}
-
-.uml-key {
-  stroke: var(--text);
-  stroke-width: 1;
 }
 
 .uml-line {
