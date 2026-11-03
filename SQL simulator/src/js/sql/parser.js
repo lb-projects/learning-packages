@@ -437,6 +437,7 @@
      * @returns {Object} SELECT-Knoten; bei Mengenoperationen mit Eigenschaft "compound".
      */
     parseSetExpr() {
+      // Lange UNION-Ketten begrenzt checkTreeDepth nach dem Parsen (MAX_TREE_DEPTH).
       let left = this.parseIntersectExpr();
       while (this.isKw('UNION') || this.isKw('EXCEPT')) {
         left = this.parseSetOp(left, () => this.parseIntersectExpr());
@@ -848,6 +849,7 @@
     }
 
     parseAdditive() {
+      // Ketten wie a + b + c werden links-tief aufgebaut; ihre Tiefe begrenzt checkTreeDepth nach dem Parsen.
       let left = this.parseMultiplicative();
       while (this.isSym('+') || this.isSym('-')) {
         const op = this.next();

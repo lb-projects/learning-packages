@@ -33,7 +33,8 @@
     ui.status.className = kind === 'box' ? '' : 'status' + (kind === 'success' ? ' status-success' : '');
     ui.status.appendChild(typeof content === 'string' ? dom.el('p', null, content) : content);
     if (details && details.length) {
-      ui.status.appendChild(dom.el('ul', null, details.map((d) => dom.el('li', null, d))));
+      // Hinweise können Namen aus der Datei enthalten.
+      ui.status.appendChild(dom.el('ul', null, details.map((d) => dom.el('li', null, ns.text.cleanCellText(d)))));
     }
     ui.status.hidden = false;
   }

@@ -113,13 +113,14 @@
    * @param {Object} db - Datenbank.
    * @param {Object} view - Sicht {name, columns, text}.
    * @param {number} i - Laufende Nummer (für die Überschrift-ID).
+   * @param {Object} budget - Gemeinsames Zeitbudget aller Sichten (ns.sql.timeBudget).
    * @returns {{card:HTMLElement, heading:HTMLElement}} Karte und Überschrift.
    */
-  function viewCard(db, view, i) {
+  function viewCard(db, view, i, budget) {
     let result = null;
     let error = null;
     try {
-      result = ns.sql.runQueries(db, 'SELECT * FROM ' + ns.sql.quoteName(view.name)).results[0];
+      result = ns.sql.runQueries(db, 'SELECT * FROM ' + ns.sql.quoteName(view.name), { total: budget }).results[0];
     } catch (e) {
       error = e;
     }
@@ -209,8 +210,10 @@
     if (views.length) {
       ui.list.appendChild(dom.el('h3', { class: 'section-heading' }, 'Sichten (Views)'));
       ui.list.appendChild(dom.el('p', { class: 'hint' }, 'Eine Sicht ist eine gespeicherte Abfrage. Ihr Inhalt wird bei jedem Aufruf aus den aktuellen Tabellen berechnet.'));
+      // Alle Sichten zusammen haben ein gemeinsames Zeitbudget; danach erscheint bei den übrigen eine Meldung.
+      const budget = ns.sql.timeBudget(ns.sql.EXEC_LIMITS.totalTimeMs);
       views.forEach((view, i) => {
-        const v = viewCard(db, view, i);
+        const v = viewCard(db, view, i, budget);
         addJump(ns.text.cleanCellText(view.name) + ' (Sicht)', v.heading);
         ui.list.appendChild(v.card);
       });

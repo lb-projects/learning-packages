@@ -19,8 +19,9 @@
  * Hash-Tabelle verwendet (schneller, gleiches Ergebnis).
  *
  * Schutz vor Hängern (die Ausführung läuft im Browser-Tab der Lernenden):
- *   - Zeitbudget je Anweisung (EXEC_LIMITS.timeMs), regelmäßig geprüft.
- *   - Zwischenergebnisse von Verknüpfungen höchstens EXEC_LIMITS.maxJoinRows Zeilen.
+ *   - Zeitbudget je Anweisung (EXEC_LIMITS.timeMs), regelmäßig geprüft, und
+ *     ein Gesamtbudget für alle Anweisungen eines Aufrufs bzw. Imports.
+ *   - Zwischenergebnisse von Verknüpfungen und Mengenoperationen höchstens EXEC_LIMITS.maxJoinRows Zeilen.
  *   - Endergebnis höchstens EXEC_LIMITS.maxResultRows Zeilen und EXEC_LIMITS.maxResultColumns Spalten.
  *   - Rekursionstiefe ist bereits im Parser begrenzt.
  *   - LIKE wird ohne reguläre Ausdrücke ausgewertet (kein ReDoS) und prüft dabei das Zeitbudget.
@@ -42,7 +43,10 @@
     maxResultRows: 25000,
     maxResultColumns: 250,
     timeMs: 3000,
-    importTimeMs: 10000
+    importTimeMs: 10000,
+    /** Gesamtbudget für alle Befehle einer Eingabe (Seite 3) bzw. einer Datei (Import). */
+    totalTimeMs: 10000,
+    importTotalMs: 30000
   });
 
   const AGGREGATES = new Set(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']);
@@ -70,9 +74,23 @@
   function tick() {
     rt.steps++;
     if ((rt.steps & 1023) === 0 && performance.now() > rt.deadline) {
+      if (rt.totalMs) {
+        throw totalTimeError(rt.totalMs);
+      }
       throw new SqlError('Abbruch: Die Ausführung hat länger als ' + Math.round(rt.timeMs / 1000) + ' Sekunden gedauert.', null,
         'Prüfen Sie die Verknüpfungsbedingungen (ON …) oder grenzen Sie die Abfrage mit WHERE ein.');
     }
+  }
+
+  /**
+   * Fehler, wenn alle Befehle zusammen das Gesamtbudget überschreiten.
+   *
+   * @param {number} totalMs - Gesamtbudget in Millisekunden.
+   * @returns {SqlError} Fehler.
+   */
+  function totalTimeError(totalMs) {
+    return new SqlError('Abbruch: Alle Befehle zusammen haben länger als ' + Math.round(totalMs / 1000) + ' Sekunden gedauert.', null,
+      'Verringern Sie die Zahl der aufwendigen Befehle.');
   }
 
   // ---------------------------------------------------------------------------
@@ -2063,6 +2081,10 @@
     const c = q.compound;
     const L = runSelect(c.left, outerCtx, false).rows;
     const R = runSelect(c.right, outerCtx, false).rows;
+    if (L.length + R.length > EXEC_LIMITS.maxJoinRows) {
+      throw new SqlError('Das Zwischenergebnis der Mengenoperation ' + c.op + ' hat mehr als ' + EXEC_LIMITS.maxJoinRows.toLocaleString('de-DE') + ' Zeilen.',
+        q.opPos || null, 'Grenzen Sie die Teilabfragen mit WHERE oder LIMIT ein.');
+    }
     const key = (row) => row.map(V.valueKey).join('\u0001');
     let rows = [];
     if (c.op === 'UNION') {
@@ -2624,13 +2646,23 @@
    *
    * @param {Object} db - Datenbank (wird verändert).
    * @param {Object} stmt - Anweisung.
-   * @param {Object} [options] - {timeMs, notices}.
+   * @param {Object} [options] - {timeMs, notices, total: {deadline, ms} – Gesamtbudget mehrerer Befehle}.
    * @returns {Object} Ergebnis, z. B. {kind:'select', columns, types, rows} oder {kind:'insert', count}.
    */
   function executeStatement(db, stmt, options) {
     const opts = options || {};
     const timeMs = opts.timeMs || EXEC_LIMITS.timeMs;
-    rt = { db, deadline: performance.now() + timeMs, timeMs, steps: 0, warnings: [], literalChecks: [], topQuery: null, viewDepth: 0 };
+    const now = performance.now();
+    const total = opts.total || null;
+    if (total && now > total.deadline) {
+      throw totalTimeError(total.ms);
+    }
+    // Endet das Gesamtbudget vor dem Budget dieses Befehls, gilt seine Meldung.
+    const totalFirst = total !== null && total.deadline < now + timeMs;
+    rt = {
+      db, deadline: totalFirst ? total.deadline : now + timeMs, timeMs, totalMs: totalFirst ? total.ms : 0,
+      steps: 0, warnings: [], literalChecks: [], topQuery: null, viewDepth: 0
+    };
     try {
       let result;
       switch (stmt.type) {
@@ -2691,17 +2723,28 @@
   }
 
   /**
+   * Legt ein Gesamtbudget für mehrere Befehle an (ab jetzt).
+   *
+   * @param {number} ms - Dauer in Millisekunden.
+   * @returns {{deadline:number, ms:number}} Budget für die Option "total".
+   */
+  function timeBudget(ms) {
+    return { deadline: performance.now() + ms, ms };
+  }
+
+  /**
    * Führt die Eingabe von Seite 3 aus: SELECT, INSERT, UPDATE, DELETE.
    * Mehrere Befehle werden atomar ausgeführt: auf einer Kopie der Datenbank,
    * die nur zurückgegeben wird, wenn alle Befehle fehlerfrei waren.
    *
    * @param {Object} db - Aktuelle Datenbank (wird nicht verändert).
    * @param {string} source - Eingabe.
+   * @param {Object} [options] - {total: gemeinsames Gesamtbudget aus timeBudget(), z. B. für alle Sichten einer Seite}.
    * @returns {{db:Object, changed:boolean, results:Array<Object>, statementCount:number, keywordCase:Array<Object>}} Ergebnis
    *   (jedes Ergebnis mit warnings: Hinweise wie fehlende Verknüpfung oder falsche Schreibung).
    * @throws {SqlError} Bei Fehlern (mit statementIndex).
    */
-  function runQueries(db, source) {
+  function runQueries(db, source, options) {
     const statements = ns.sql.parse(source);
     if (statements.length === 0) {
       throw new SqlError('Bitte geben Sie einen SQL-Befehl ein.', null);
@@ -2717,9 +2760,10 @@
     const changed = statements.some((s) => s.type !== 'select');
     const work = changed ? db.clone() : db;
     const results = [];
+    const total = (options && options.total) || timeBudget(EXEC_LIMITS.totalTimeMs);
     for (const s of statements) {
       try {
-        const result = executeStatement(work, s);
+        const result = executeStatement(work, s, { total });
         result.statementIndex = s.statementIndex;
         result.text = s.text;
         results.push(result);
@@ -2744,6 +2788,7 @@
     const db = new ns.sql.Database();
     const notices = [];
     const skipped = new Map();
+    const total = timeBudget(EXEC_LIMITS.importTotalMs);
     for (const s of statements) {
       if (!IMPORT_TYPES.has(s.type)) {
         const err = new SqlError('In einer SQL-Datei zum Laden sind nur DROP TABLE, CREATE TABLE, INSERT INTO (auch INSERT INTO … SELECT bzw. WITH …) sowie CREATE VIEW und DROP VIEW erlaubt (gefunden: ' + (TYPE_NAMES.get(s.type) || s.type) + ').', s.pos,
@@ -2755,7 +2800,7 @@
         continue;
       }
       try {
-        executeStatement(db, s, { timeMs: EXEC_LIMITS.importTimeMs, notices });
+        executeStatement(db, s, { timeMs: EXEC_LIMITS.importTimeMs, notices, total });
       } catch (error) {
         throw withIndex(error, s.statementIndex);
       }
@@ -2769,6 +2814,7 @@
   ns.sql.EXEC_LIMITS = EXEC_LIMITS;
   ns.sql.executeStatement = executeStatement;
   ns.sql.runQueries = runQueries;
+  ns.sql.timeBudget = timeBudget;
   ns.sql.buildDatabase = buildDatabase;
   ns.sql.likeMatch = likeMatch;
 })(window.SQLSIM = window.SQLSIM || {});

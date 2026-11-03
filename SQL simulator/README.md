@@ -168,16 +168,16 @@ So wird das Paket in Moodle eingebunden:
 **Keine Codeausführung über Eingaben oder Uploads**
 - SQL wird von einem eigenen Interpreter ausgewertet, nie als JavaScript. `innerHTML`, `eval`, `new Function` und `document.write` kommen nicht vor; das wird beim Bauen geprüft (siehe „Qualitätssicherung“).
 - Alle Inhalte (Werte, Tabellen- und Spaltennamen, Dateinamen, SQL-Ausschnitte) werden nur als Text eingefügt. Eingeschleuster HTML-Code wie `<img onerror=…>` erscheint als Text.
-- Unsichtbare Steuer-, Nullbreiten- und Richtungszeichen (z. B. U+202E) werden vor der Anzeige entfernt bzw. sichtbar ersetzt (Schutz vor optischer Täuschung).
+- Unsichtbare Steuer-, Nullbreiten- und Richtungszeichen (z. B. U+202E) werden vor der Anzeige entfernt bzw. sichtbar ersetzt (Schutz vor optischer Täuschung) – auch in Tabellen- und Sichtnamen in Hinweisen und Statuszeilen.
 - Event-Handler- und `style`-Attribute sowie `javascript:`-/`data:`-Adressen können über die DOM-Hilfsfunktionen gar nicht gesetzt werden.
 - Tabellen, Spalten, Aliase und Gruppen liegen nur in `Map`/`Set`. Namen wie `__proto__` oder `constructor` sind daher harmlos (kein Prototype Pollution).
 
 **Schutz vor Hängern und Speicherüberlauf im Browser**
 - Verschachtelungstiefe höchstens 32 (Klammern, Unterabfragen, `NOT`); lange Ketten wie `a + b + …`, `… OR …` oder `… UNION …` ergeben höchstens 300 Ebenen im Syntaxbaum.
 - SELECT-, GROUP-BY- und ORDER-BY-Listen höchstens 250 Einträge; Ergebnisse höchstens 250 Spalten (auch bei `*`).
-- Zwischenergebnisse von Verknüpfungen höchstens 200.000 Zeilen. Ein vergessenes `ON` führt zu einer erklärenden Meldung zum kartesischen Produkt statt zum Absturz.
+- Zwischenergebnisse von Verknüpfungen und Mengenoperationen (`UNION ALL` usw., auch über verschachtelte `WITH`-Abfragen) höchstens 200.000 Zeilen. Ein vergessenes `ON` führt zu einer erklärenden Meldung zum kartesischen Produkt statt zum Absturz.
 - Ergebnisse höchstens 25.000 Zeilen; angezeigt werden höchstens 1.000 Zeilen je Tabelle (mit Hinweis).
-- Zeitbudget 3 Sekunden je Befehl (Upload: 10 Sekunden), danach Abbruch mit Meldung.
+- Zeitbudget 3 Sekunden je Befehl (Upload: 10 Sekunden), danach Abbruch mit Meldung. Zusätzlich gilt ein Gesamtbudget: 10 Sekunden für alle Befehle einer Eingabe auf Seite 3 bzw. für alle Sichten auf Seite 2, 30 Sekunden für einen ganzen Upload.
 - `LIKE` wird ohne reguläre Ausdrücke ausgewertet (kein ReDoS) und hält das Zeitbudget auch innerhalb eines einzelnen Vergleichs ein.
 - Bei sehr vielen Beziehungen (über 300 Linienabschnitte) verzichtet das Klassendiagramm auf die Kreuzungsoptimierung, damit die Seite nicht hängt.
 

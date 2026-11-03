@@ -51,8 +51,10 @@
       return;
     }
     const info = ns.state.info();
-    const views = Array.from(db.views.values()).map((v) => v.name);
-    ui.dbInfo.textContent = 'Datenbank: „' + info.name + '“ – Tabellen: ' + db.tableList().map((t) => t.name).join(', ') +
+    // Namen stammen ggf. aus einer hochgeladenen Datei: unsichtbare Richtungszeichen sichtbar machen.
+    const clean = ns.text.cleanCellText;
+    const views = Array.from(db.views.values()).map((v) => clean(v.name));
+    ui.dbInfo.textContent = 'Datenbank: „' + clean(info.name) + '“ – Tabellen: ' + db.tableList().map((t) => clean(t.name)).join(', ') +
       (views.length ? '; Sichten: ' + views.join(', ') : '') +
       (info.dirty ? ' (mit Änderungen)' : '') + '.';
     ui.reset.disabled = !info.dirty;
@@ -62,14 +64,14 @@
    * Beschreibt das Ergebnis eines ändernden Befehls.
    *
    * @param {Object} r - Ergebnis {kind, count, table}.
-   * @returns {string} Text.
+   * @returns {string} Text (Namen bereinigt).
    */
   function changeText(r) {
     if (r.kind === 'ddl') {
-      return r.message;
+      return ns.text.cleanCellText(r.message);
     }
     const verb = r.kind === 'insert' ? 'eingefügt' : (r.kind === 'update' ? 'geändert' : 'gelöscht');
-    return dom.plural(r.count, 'Datensatz', 'Datensätze') + ' in „' + r.table + '“ ' + verb + '.';
+    return dom.plural(r.count, 'Datensatz', 'Datensätze') + ' in „' + ns.text.cleanCellText(r.table) + '“ ' + verb + '.';
   }
 
   const warningBox = (text) => ns.ui.warningBox(text);
