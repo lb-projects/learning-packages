@@ -75,6 +75,8 @@ Das Projekt implementiert offene Formate und Schnittstellen mit eigenem Code. We
 | OpenDocument | OASIS/ISO/IEC 26300 |
 | SCORM-1.2-Laufzeitschnittstelle und IMS Content Packaging | Namensraum-URIs im Manifest sind nur Bezeichner |
 | SQL (SQL-Simulator) | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
+| UML-Klassendiagramm (SQL-Simulator) | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
+| SVG (SQL-Simulator) | W3C Scalable Vector Graphics; die Namensraum-URI im Code ist nur ein Bezeichner, es wird nichts geladen |
 
 ## Marken
 
@@ -89,6 +91,7 @@ Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu
 - **PostgreSQL** und **Postgres** sind Marken oder eingetragene Marken der PostgreSQL Community Association of Canada.
 - **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy.
 - **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc.
+- **UML®** und **Unified Modeling Language™** sind Marken der Object Management Group, Inc.
 - **Chrome** ist eine Marke von Google LLC, **Firefox** von der Mozilla Foundation, **Safari** von Apple Inc.
 
 Dieses Projekt steht in keiner Verbindung zu den Markeninhabern und wird von ihnen weder unterstützt noch empfohlen.

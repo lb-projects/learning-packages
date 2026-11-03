@@ -5,8 +5,8 @@
   Einstiegsseite des Lernpakets (im Manifest als SCO eingetragen).
 
   Aufbau:
-    - Kopfbereich mit Registerkarten (Tabs) für die drei Seiten
-    - drei <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Kopfbereich mit Registerkarten (Tabs) für die vier Seiten
+    - vier <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
     - Fußzeile mit Fortschrittsanzeige
 
   Sicherheit:
@@ -49,6 +49,9 @@
   <script src="js/pages/load.js" defer></script>
   <script src="js/pages/tables.js" defer></script>
   <script src="js/pages/query.js" defer></script>
+  <script src="js/uml-model.js" defer></script>
+  <script src="js/uml-layout.js" defer></script>
+  <script src="js/pages/diagram.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -58,6 +61,7 @@
       <button type="button" role="tab" id="tab-load" aria-controls="page-load" aria-selected="true"><span class="tab-no">1</span> Datenbank laden</button>
       <button type="button" role="tab" id="tab-tables" aria-controls="page-tables" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Tabellen</button>
       <button type="button" role="tab" id="tab-query" aria-controls="page-query" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> SQL-Befehle</button>
+      <button type="button" role="tab" id="tab-diagram" aria-controls="page-diagram" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Klassendiagramm</button>
     </nav>
   </header>
 
@@ -159,6 +163,24 @@ DROP VIEW teure_artikel;</pre>
           <p class="hint">„Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her.</p>
         </div>
       </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 4: Klassendiagramm
+         =================================================================== -->
+    <section id="page-diagram" class="page" role="tabpanel" aria-labelledby="tab-diagram" hidden>
+      <h2>Klassendiagramm</h2>
+      <p class="intro">Hier sehen Sie das Tabellenschema der geladenen Datenbank als UML-Klassendiagramm. Jede Tabelle wird zu einer Klasse, ihre Spalten werden zu Attributen. Fremdschlüssel erscheinen nicht als Attribute, sondern als Beziehungen (Assoziationen) mit Multiplizitäten; künstliche Schlüssel wie <code>id</code> entfallen, natürliche Schlüssel sind unterstrichen. Verbindungstabellen werden als n:m-Beziehung gezeigt, mit eigenen Spalten als Assoziationsklasse (gestrichelt angebunden). Sie können die Klassenkarten mit der Maus verschieben oder eine Karte mit der Tabulatortaste auswählen und mit den Pfeiltasten bewegen (mit Umschalt in größeren Schritten).</p>
+      <div id="diagram-notice" class="notice" hidden></div>
+      <p id="diagram-info" class="hint"></p>
+      <div id="diagram-warnings"></div>
+      <div id="diagram-body" hidden>
+        <div class="button-row">
+          <button type="button" id="btn-diagram-reset" class="btn">Anordnung zurücksetzen</button>
+        </div>
+        <div id="diagram-canvas" class="diagram-wrap" role="region" tabindex="0" aria-label="Klassendiagramm"></div>
+        <details id="diagram-text" class="card reference"></details>
+      </div>
     </section>
   </main>
 

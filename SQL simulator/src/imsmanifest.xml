@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   SCORM-1.2-Manifest des SQL-Simulators.
-  - Ein einzelnes SCO (index.html), das alle drei Seiten als Registerkarten enthält.
+  - Ein einzelnes SCO (index.html), das alle vier Seiten als Registerkarten enthält.
   - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
   - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
 -->
@@ -44,6 +44,9 @@
       <file href="js/pages/load.js"/>
       <file href="js/pages/tables.js"/>
       <file href="js/pages/query.js"/>
+      <file href="js/uml-model.js"/>
+      <file href="js/uml-layout.js"/>
+      <file href="js/pages/diagram.js"/>
       <file href="js/app.js"/>
     </resource>
   </resources>

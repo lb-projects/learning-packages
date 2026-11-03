@@ -327,7 +327,7 @@
       this.primaryKey = null;
       /** @type {Array<Array<number>>} UNIQUE-Schlüssel (Spaltenindizes). */
       this.uniques = [];
-      /** @type {Array<{columns:Array<number>, refTable:string, refColumns:Array<string>}>} Fremdschlüssel. */
+      /** @type {Array<{columns:Array<number>, refTable:string, refColumns:Array<string>, name:string|null}>} Fremdschlüssel (name aus CONSTRAINT name). */
       this.foreignKeys = [];
       /** @type {Array<Object>} CHECK-Bedingungen {name, text, expr, column, enforced, pos, bound}. */
       this.checks = [];
@@ -701,7 +701,11 @@
         if (c.refColumns.length && c.refColumns.length !== cols.length) {
           throw new SqlError('Der Fremdschlüssel hat ' + cols.length + ' Spalte(n), verweist aber auf ' + c.refColumns.length + '.', c.pos);
         }
-        table.foreignKeys.push({ columns: cols, refTable: c.refTable, refColumns: c.refColumns.slice() });
+        const name = c.name || null;
+        if (name !== null && table.foreignKeys.some((f) => f.name !== null && f.name.toLowerCase() === name.toLowerCase())) {
+          throw new SqlError('Es gibt bereits einen Fremdschlüssel namens „' + name + '“ in der Tabelle „' + table.name + '“.', c.pos);
+        }
+        table.foreignKeys.push({ columns: cols, refTable: c.refTable, refColumns: c.refColumns.slice(), name });
         break;
       }
       case 'index':
@@ -768,7 +772,7 @@
         addUnique(table, [idx], def.pos);
       }
       if (def.references) {
-        table.foreignKeys.push({ columns: [idx], refTable: def.references.refTable, refColumns: def.references.refColumns.slice() });
+        table.foreignKeys.push({ columns: [idx], refTable: def.references.refTable, refColumns: def.references.refColumns.slice(), name: null });
       }
       for (const c of def.checks) {
         addCheck(table, c, idx);
@@ -1035,7 +1039,7 @@
       }
     }
     for (const fk of table.foreignKeys) {
-      lines.push('FOREIGN KEY (' + names(fk.columns) + ') REFERENCES ' + quoteName(fk.refTable) +
+      lines.push((fk.name ? 'CONSTRAINT ' + quoteName(fk.name) + ' ' : '') + 'FOREIGN KEY (' + names(fk.columns) + ') REFERENCES ' + quoteName(fk.refTable) +
         (fk.refColumns.length ? ' (' + fk.refColumns.map(quoteName).join(', ') + ')' : ''));
     }
     for (const check of table.checks) {

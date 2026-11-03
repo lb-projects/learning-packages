@@ -289,6 +289,7 @@ textarea:focus-visible,
 button:focus-visible,
 summary:focus-visible,
 .table-wrap:focus-visible,
+.diagram-wrap:focus-visible,
 h3:focus-visible {
   outline: 3px solid #ffbf47;
   outline-offset: 1px;
@@ -575,6 +576,101 @@ body > .status {
   color: var(--muted);
   font-style: italic;
   font-size: 0.85rem;
+}
+
+/* ---------- Klassendiagramm (Seite 4) ---------- */
+
+.diagram-wrap {
+  overflow-x: auto;
+  margin-top: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.uml {
+  display: block;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.uml-measure {
+  position: absolute;
+  visibility: hidden;
+}
+
+.uml-box {
+  fill: var(--surface);
+  stroke: var(--text);
+  stroke-width: 1.5;
+}
+
+.uml-assoc-class .uml-box {
+  fill: var(--head-bg);
+}
+
+.uml-sep {
+  stroke: var(--text);
+  stroke-width: 1;
+}
+
+.uml-name {
+  font-size: 14px;
+  font-weight: 700;
+  fill: var(--text);
+}
+
+.uml-attr {
+  font-size: 13px;
+  fill: var(--text);
+}
+
+.uml-key {
+  stroke: var(--text);
+  stroke-width: 1;
+}
+
+.uml-line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-linejoin: miter;
+}
+
+.uml-connector {
+  stroke-dasharray: 6 4;
+}
+
+.uml-mult,
+.uml-label {
+  font-size: 12px;
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
+
+.uml-label {
+  font-style: italic;
+  fill: var(--primary-dark);
+}
+
+.uml-class {
+  cursor: grab;
+  touch-action: none;
+}
+
+.uml-class.dragging {
+  cursor: grabbing;
+}
+
+.uml-class:focus {
+  outline: none;
+}
+
+.uml-class:focus-visible .uml-box {
+  stroke: #b7791f;
+  stroke-width: 3;
 }
 
 /* ---------- Sonstiges ---------- */

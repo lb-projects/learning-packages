@@ -10,9 +10,35 @@ Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausfüh
 | 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO` auch mit `SELECT`/`WITH`, `CREATE VIEW`) |
 | 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL, CHECK-Bedingungen) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen. Unter jeder Tabelle lässt sich der `CREATE TABLE`-Befehl aufklappen (anfangs zugeklappt). Sichten (Views) stehen in einem eigenen Abschnitt mit ihrem aktuellen Ergebnis und dem aufklappbaren `CREATE VIEW`-Befehl |
 | 3 SQL-Befehle | Eingabemaske (anfangs leer) mit „Ausführen“ (auch Strg + Enter) für Abfragen, Datenänderungen und `CREATE/DROP VIEW`; Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
+| 4 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm: Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten, Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien; Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten.
-Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her.
+Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her. Wird eine andere Datenbank geladen, zeigt Seite 4 sofort deren Klassendiagramm.
+
+### Klassendiagramm (Seite 4)
+
+Das Diagramm wird aus den Tabellendefinitionen abgeleitet:
+
+- **Klassen:** Jede Tabelle wird eine Klasse. Der Klassenname beginnt mit einem Großbuchstaben und ist sonst klein geschrieben, unabhängig von der Schreibung der Tabelle (`schule` → `Schule`, `SCHUL_klasse` → `Schul_klasse`).
+- **Attribute:** die Spalten, ganz klein geschrieben (`Adresse` → `adresse`), ohne Datentyp und ohne Methoden.
+  - Spalten von Fremdschlüsseln erscheinen nicht; sie werden durch die Beziehung ausgedrückt.
+  - Künstliche Primärschlüssel entfallen: Spalten mit `AUTO_INCREMENT` und Spalten, deren Name „id“ als eigenen Namensteil enthält (`id`, `ID`, `kunde_id`, `id_kunde`, `KundenID`, `kundeId`). Wörter wie `Video` zählen nicht.
+  - Natürliche Primärschlüssel (z. B. `Kuerzel CHAR(3) PRIMARY KEY`) werden angezeigt und unterstrichen.
+- **Beziehungen:** Jeder Fremdschlüssel von Tabelle A auf Tabelle B wird eine Assoziation.
+  - Multiplizität bei B: `1`, wenn alle Spalten des Fremdschlüssels `NOT NULL` sind, sonst `0..1`.
+  - Multiplizität bei A: `0..1`, wenn die Spalten eindeutig sind (`UNIQUE` oder Primärschlüssel, also 1:1), sonst `*`.
+  - Bezeichner ist der Name aus `CONSTRAINT name FOREIGN KEY …`, sonst die Spalte des Fremdschlüssels (z. B. `schule_id`).
+  - Ein Selbstbezug (z. B. `vorgesetzter_id`) erscheint als Schleife. Mehrere Fremdschlüssel zwischen denselben Tabellen (z. B. `heim_id` und `gast_id`) laufen parallel.
+- **Verbindungstabellen** werden als n:m-Beziehung (`*` zu `*`) dargestellt. Als Verbindungstabelle gilt eine Tabelle mit genau zwei Fremdschlüsseln auf zwei verschiedene Tabellen, deren Fremdschlüssel-Spalten `NOT NULL` und für sich nicht eindeutig sind, auf die kein anderer Fremdschlüssel verweist und die keinen natürlichen Primärschlüssel hat.
+  - Mit eigenen Spalten (z. B. `Menge` in `bestellposition`) wird sie zur **Assoziationsklasse**, gestrichelt an die n:m-Linie angebunden.
+  - Ohne eigene Spalten trägt die Linie den Tabellennamen.
+- **Hinweise** erscheinen, wenn ein Fremdschlüssel auf eine Tabelle verweist, die es nicht gibt (die Beziehung fehlt dann), auf eine Sicht oder auf eine nicht vorhandene Spalte, oder wenn sich die Schreibung unterscheidet.
+- **Anordnung:**
+  - Referenzierte Klassen stehen oben, abhängige darunter (Ebenenlayout). Die Reihenfolge wird so gewählt, dass sich möglichst wenige Linien kreuzen.
+  - Alle Linien bestehen nur aus waagerechten und senkrechten Abschnitten.
+  - Die Karten lassen sich mit Maus oder Touch verschieben, oder nach Auswahl mit der Tabulatortaste mit den Pfeiltasten (mit Umschalt in größeren Schritten). Die Linien werden dabei rechtwinklig neu geführt.
+  - „Anordnung zurücksetzen“ stellt die Standardanordnung wieder her. Datenänderungen auf Seite 3 lassen die Anordnung unverändert.
+- **Sichten** erscheinen nicht im Klassendiagramm.
 
 ### Unterstützter SQL-Umfang
 
@@ -50,7 +76,7 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält 
 - Aliase aus der SELECT-Liste sind in `GROUP BY`, `HAVING` und `ORDER BY` erlaubt, in `WHERE` nicht (mit Hinweis).
 - `UPDATE`: Alle Ausdrücke in `SET` verwenden die Werte **vor** der Änderung (wie im SQL-Standard).
 - **Datentypen** werden geprüft: `INT` (mit Wertebereich je Typ, auch `UNSIGNED`), `DECIMAL(p,s)`, `FLOAT/DOUBLE`, `CHAR/VARCHAR(n)` (Länge), `TEXT`, `ENUM(…)`, `DATE`, `DATETIME/TIMESTAMP`, `TIME`, `YEAR`, `BOOLEAN` (als 0/1).
-- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT`, `AUTO_INCREMENT` und `CHECK` werden durchgesetzt. **Fremdschlüssel** werden gespeichert und auf Seite 2 angezeigt, aber **nicht erzwungen**.
+- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT`, `AUTO_INCREMENT` und `CHECK` werden durchgesetzt. **Fremdschlüssel** werden gespeichert und auf Seite 2 und 4 angezeigt, aber **nicht erzwungen**. Ihr Name aus `CONSTRAINT name FOREIGN KEY …` bleibt erhalten; doppelte Namen in einer Tabelle sind nicht erlaubt.
 - **CHECK-Bedingungen**:
   - Sie stehen an einer Spalte (`Preis DECIMAL(8,2) CHECK (Preis >= 0)`) oder als Tabellenbedingung, auch mit Namen (`CONSTRAINT chk_rueckgabe CHECK (Rueckgabedatum IS NULL OR Rueckgabedatum >= Ausleihdatum)`). `ALTER TABLE … ADD [CONSTRAINT name] CHECK (…)` ist ebenfalls möglich.
   - Geprüft wird bei `INSERT` und `UPDATE`; beim Anlegen mit `ALTER TABLE` auch an den vorhandenen Datensätzen.
@@ -90,7 +116,7 @@ Die ersten vier Dateien sind identisch mit den eingebauten Beispieldatenbanken a
 SQL simulator/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
-│  ├─ index.html             Gerüst der drei Seiten, Content-Security-Policy
+│  ├─ index.html             Gerüst der vier Seiten, Content-Security-Policy
 │  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert)
 │  ├─ css/style.css          Gestaltung (Systemschriften, feste Zeilenhöhen für die Scrollbereiche)
 │  └─ js/
@@ -106,7 +132,9 @@ SQL simulator/
 │     ├─ sql-import.js       Upload-Prüfung und Aufbau einer neuen Datenbank
 │     ├─ state.js            aktuelle Datenbank, Zurücksetzen, Änderungsereignisse
 │     ├─ samples/*.js        die vier Beispieldatenbanken (Inhalt = testdata/*.sql)
-│     ├─ pages/*.js          die drei Seiten (+ gemeinsame Bausteine)
+│     ├─ uml-model.js        Klassendiagramm: Ableitung aus dem Tabellenschema
+│     ├─ uml-layout.js       Klassendiagramm: Ebenenlayout mit rechtwinkligen Linien
+│     ├─ pages/*.js          die vier Seiten (+ gemeinsame Bausteine)
 │     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Fortschritt
 ├─ testdata/                 SQL-Dateien für den Unterricht (siehe oben)
 ├─ preview/                  Vorschau
@@ -125,7 +153,7 @@ Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsma
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. ZIP-Datei hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle drei Seiten besucht wurden. Ein bereits gemeldeter Abschluss bleibt erhalten.
+3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle vier Seiten besucht wurden. Ein bereits gemeldeter Abschluss bleibt erhalten; der Fortschritt älterer Versuche (drei Seiten) wird weiter gelesen.
 
 ## Sicherheits- und Datenschutzkonzept
 
@@ -164,7 +192,7 @@ So wird das Paket in Moodle eingebunden:
 
 **Datenschutz**
 - Datenbanken, SQL-Eingaben und Ergebnisse verlassen den Browser nicht.
-- An Moodle gehen nur `cmi.core.lesson_status`, `cmi.core.exit` und die besuchten Seiten (`cmi.suspend_data`, z. B. `v=101`). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
+- An Moodle gehen nur `cmi.core.lesson_status`, `cmi.core.exit` und die besuchten Seiten (`cmi.suspend_data`, z. B. `v=1011`). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
 - Der Name der Lernenden wird nicht gelesen.
 - Kein `localStorage`, keine Cookies.
 - **Hinweis:** Nach dem Neuladen sind Datenbank, Eingaben und Änderungen weg – das ist bewusst so (Datensparsamkeit).
@@ -190,7 +218,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (über 160) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (über 180) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
 - jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;
@@ -200,6 +228,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - `WITH`-Abfragen, `INSERT … SELECT` und Sichten (Anlegen, Ersetzen, Löschen, ungültige und zirkuläre Sichten, Import im Export-Stil);
 - erzeugter `CREATE TABLE`-Befehl: Er lässt sich für alle Beispieltabellen wieder einlesen und ergibt denselben Aufbau;
 - Import der Beispieldateien, eines Exports im phpMyAdmin-Stil und fehlerhafter Dateien; Grenzwerte;
+- Klassendiagramm: Ableitungsregeln (Namen, ausgeblendete und künstliche Schlüssel, Multiplizitäten, 1:1, Selbstbezug, parallele Beziehungen, Verbindungstabellen, Constraint-Namen, Hinweise) sowie das Layout aller Beispiele: keine überlappenden Karten, nur waagerechte und senkrechte Linien, keine Kreuzungen, keine Linie durch fremde Karten; 50 Tabellen; Verschieben mit Maus und Tastatur;
 - präparierte Angriffe: HTML-/Skript-Einschleusung in Werten und Namen, `__proto__` als Name, Richtungszeichen, kartesisches Produkt, tiefe Verschachtelung, langsame `LIKE`-Muster, getarnte Binärdateien, übergroße Dateien, schneller Doppel-Upload;
 - Klickpfade aller Seiten: Erhalt der Eingaben beim Seitenwechsel, Höhe der Scrollbereiche (5 bzw. 10 Zeilen), Strg + Enter, Zurücksetzen, Tastaturbedienung;
 - SCORM-Meldungen;
@@ -208,6 +237,6 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 ## Lizenz
 
 - **Projekt:** MIT-Lizenz. Der Lizenztext liegt als `src/LICENSE.txt` im Paket und ist identisch mit der `LICENSE` im Stamm des Repositorys.
-- **Code von Dritten:** keiner. Lexer, Parser, `LIKE`-Abgleich und Editierabstand sind Standardverfahren in eigener Umsetzung.
+- **Code von Dritten:** keiner. Lexer, Parser, `LIKE`-Abgleich, Editierabstand und das Ebenenlayout des Klassendiagramms (angelehnt an das Verfahren von Sugiyama) sind Standardverfahren in eigener Umsetzung.
 - **Daten:** alle Beispieldaten sind frei erfunden (MIT-Lizenz).
-- **Weitere Hinweise:** Marken (Moodle™, SCORM®, MySQL® u. a.) stehen in `THIRD_PARTY_NOTICES.md` im Stamm des Repositorys.
+- **Weitere Hinweise:** Marken (Moodle™, SCORM®, MySQL®, UML® u. a.) stehen in `THIRD_PARTY_NOTICES.md` im Stamm des Repositorys.

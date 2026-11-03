@@ -4,7 +4,7 @@
  *              Datenbankänderungen an alle Seiten und SCORM-Fortschritt.
  *
  * Navigation:
- *   Die drei Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
+ *   Die vier Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
  *   frei anwählbar. Beim Wechsel bleibt der Zustand jeder Seite erhalten
  *   (Eingaben, Ergebnisse, Scrollpositionen in Tabellen), weil die Seiten nur
  *   aus- und eingeblendet werden. Bedienung per Maus, Tastatur (Pfeiltasten,
@@ -17,8 +17,10 @@
  * SCORM-Fortschritt (Datensparsamkeit):
  *   - Übertragen werden nur cmi.core.lesson_status ("incomplete"/"completed"),
  *     cmi.core.exit und in cmi.suspend_data die besuchten Seiten als
- *     Bitmaske (z. B. "v=101"). Datenbanken und SQL-Eingaben verlassen den Browser nicht.
- *   - "completed", sobald alle drei Seiten besucht wurden.
+ *     Bitmaske (z. B. "v=1011"). Datenbanken und SQL-Eingaben verlassen den Browser nicht.
+ *     Ältere Versuche mit drei Stellen (vor Seite 4) werden weiterhin gelesen.
+ *   - "completed", sobald alle vier Seiten besucht wurden. Ein bereits gemeldeter
+ *     Abschluss bleibt erhalten.
  *
  * Abhängigkeiten:
  *   alle übrigen Module (werden in index.html vorher geladen).
@@ -33,8 +35,23 @@
   const PAGES = [
     { id: 'load', title: 'Datenbank laden' },
     { id: 'tables', title: 'Tabellen' },
-    { id: 'query', title: 'SQL-Befehle' }
+    { id: 'query', title: 'SQL-Befehle' },
+    { id: 'diagram', title: 'Klassendiagramm' }
   ];
+
+  /**
+   * Liest die besuchten Seiten aus cmi.suspend_data (striktes Format "v=" + 3 oder 4 Stellen).
+   *
+   * @param {string} data - Inhalt von cmi.suspend_data.
+   * @returns {Array<number>} Indizes der besuchten Seiten (leer bei unbekanntem Format).
+   */
+  function parseVisited(data) {
+    const match = /^v=([01]{3,4})$/.exec(String(data));
+    if (!match) {
+      return [];
+    }
+    return match[1].split('').map((bit, i) => (bit === '1' ? i : -1)).filter((i) => i >= 0 && i < PAGES.length);
+  }
 
   /** ID der sichtbaren Seite. */
   let activeId = null;
@@ -162,14 +179,9 @@
       scorm.setValue('cmi.core.lesson_status', 'incomplete');
     }
     // Besuchte Seiten aus dem letzten Versuch wiederherstellen (striktes Format).
-    const match = /^v=([01]{3})$/.exec(scorm.getValue('cmi.suspend_data'));
-    if (match) {
-      match[1].split('').forEach((bit, i) => {
-        if (bit === '1') {
-          visited.add(i);
-          tabOf(PAGES[i].id).classList.add('visited');
-        }
-      });
+    for (const i of parseVisited(scorm.getValue('cmi.suspend_data'))) {
+      visited.add(i);
+      tabOf(PAGES[i].id).classList.add('visited');
     }
     scorm.commit();
   }
@@ -218,7 +230,7 @@
     }
   }
 
-  ns.app = { showPage, PAGES };
+  ns.app = { showPage, PAGES, parseVisited };
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', start);

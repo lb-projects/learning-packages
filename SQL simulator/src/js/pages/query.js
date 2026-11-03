@@ -72,17 +72,7 @@
     return dom.plural(r.count, 'Datensatz', 'Datensätze') + ' in „' + r.table + '“ ' + verb + '.';
   }
 
-  /**
-   * Erzeugt einen Hinweis (kein Fehler) zu einem Ergebnis.
-   *
-   * @param {string} text - Hinweistext.
-   * @returns {HTMLElement} Hinweisbox.
-   */
-  function warningBox(text) {
-    return dom.el('p', { class: 'status notice result-warning', role: 'note' }, [
-      dom.el('strong', { class: 'note-title' }, 'Hinweis:'), ns.text.cleanCellText(text)
-    ]);
-  }
+  const warningBox = (text) => ns.ui.warningBox(text);
 
   /**
    * Stellt die Ergebnisse dar.

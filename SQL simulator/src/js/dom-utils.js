@@ -115,6 +115,25 @@
     return element;
   }
 
+  /** Namensraum für SVG-Elemente (nur ein Bezeichner, es wird nichts geladen). */
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  /**
+   * Erzeugt ein SVG-Element (z. B. für das Klassendiagramm).
+   * Es gelten dieselben Attributprüfungen wie bei {@link el}; Texte werden als Textknoten eingefügt.
+   *
+   * @param {string} tag - Tag-Name, z. B. "rect".
+   * @param {Object<string, *>} [attrs] - Attribute.
+   * @param {Array|Node|string|number} [children] - Kindelemente oder Text.
+   * @returns {SVGElement} Das neue Element.
+   */
+  function svg(tag, attrs, children) {
+    const element = document.createElementNS(SVG_NS, tag);
+    setAttributes(element, attrs);
+    appendChildren(element, children);
+    return element;
+  }
+
   /**
    * Entfernt alle Kindknoten eines Elements.
    *
@@ -169,5 +188,5 @@
     return formatCount(count) + ' ' + (count === 1 ? singular : plural);
   }
 
-  ns.dom = { el, clear, byId, appendChildren, setAttributes, formatCount, plural };
+  ns.dom = { el, svg, clear, byId, appendChildren, setAttributes, formatCount, plural };
 })(window.SQLSIM = window.SQLSIM || {});

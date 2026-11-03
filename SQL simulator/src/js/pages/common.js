@@ -123,6 +123,18 @@
     return wrap;
   }
 
+  /**
+   * Erzeugt einen Hinweis (kein Fehler), z. B. zu einem Ergebnis oder zum Klassendiagramm.
+   *
+   * @param {string} message - Hinweistext.
+   * @returns {HTMLElement} Hinweisbox.
+   */
+  function warningBox(message) {
+    return dom.el('p', { class: 'status notice result-warning', role: 'note' }, [
+      dom.el('strong', { class: 'note-title' }, 'Hinweis:'), text.cleanCellText(message)
+    ]);
+  }
+
   ns.pages = ns.pages || {};
-  ns.ui = { errorBox, dataTable, MAX_RENDERED_ROWS };
+  ns.ui = { errorBox, dataTable, warningBox, MAX_RENDERED_ROWS };
 })(window.SQLSIM = window.SQLSIM || {});
