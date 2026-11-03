@@ -8,13 +8,13 @@ keine externen Bibliotheken.
 
 | Seite | Inhalt |
 |---|---|
-| 1 Training | Trainingsdaten per Datei (CSV, XLSX, ODS) oder Eingabemaske erfassen, anzeigen und einzeln entfernen |
+| 1 Training | Trainingsdaten per Datei (CSV, XLSX, ODS), Beispieldaten oder Eingabemaske erfassen, anzeigen und einzeln entfernen |
 | 2 Klassifizierung neuer Datenpunkte | Neuen Punkt eingeben oder ins Diagramm klicken; k und Metrik wählen; Kreis bzw. Raute, Nachbarn und Rechenweg werden angezeigt |
 | 3 Auswirkungen des Parameters k | Für einen Trainingspunkt zeigt eine Tabelle über alle k, ob er korrekt (grün) oder falsch (rot) klassifiziert wird; bei Fehlern steht das berechnete Label dabei |
 | 4 Auswahl eines passenden Wertes für k | Ein wählbarer Anteil der Daten (1–90 %, Standard 20 %) wird zufällig zu Validierungsdaten; die Schülerinnen und Schüler tragen für k = 1 … 10 ein „x“ ein, die Prozentzeile wird berechnet, „Eintragungen prüfen“ markiert jede Zelle |
 | 5 Leave One Out – Verfahren | Wie Seite 4, aber jeder Punkt wird einmal weggelassen |
-| 6 Leave One Out – automatisiert | Trefferquote für alle k = 1 … n−1 als Balkendiagramm und Tabelle, beste k hervorgehoben, Detailmatrix |
-| 7 Test und Konfusionsmatrix | Testdaten per Datei oder Eingabemaske erfassen und einzeln entfernen; jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert (k und Metrik wählbar). Die Konfusionsmatrix (Zeilen = tatsächliches, Spalten = vorhergesagtes Label) passt ihre Größe an die Labels der Trainingsdaten an; dazu Trefferquote und Ergebnis je Testpunkt |
+| 6 Leave One Out – automatisiert | Genauigkeit für alle k = 1 … n−1 als Balkendiagramm und Tabelle, beste k hervorgehoben, Detailmatrix |
+| 7 Test und Konfusionsmatrix | Testdaten per Datei oder Eingabemaske erfassen und einzeln entfernen; jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert (k und Metrik wählbar). Die Konfusionsmatrix (Zeilen = tatsächliches, Spalten = vorhergesagtes Label) passt ihre Größe an die Labels der Trainingsdaten an; dazu Genauigkeit und Ergebnis je Testpunkt |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsdaten wirken sofort auf alle Seiten:
 
@@ -173,7 +173,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (58) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (60) im Browser, mit simulierter SCORM-Schnittstelle:
 - Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung;
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario-Dateien sowie von XLSX- und ODS-Dateien;

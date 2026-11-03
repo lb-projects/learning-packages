@@ -5,7 +5,7 @@
  * Funktionen der Seite:
  *   - Führt das Leave-One-Out-Verfahren für alle möglichen k (1 … n−1) und die
  *     gewählte Metrik automatisch durch.
- *   - Zeigt die Trefferquote je k als Balkendiagramm und als Tabelle; die
+ *   - Zeigt die Genauigkeit je k als Balkendiagramm und als Tabelle; die
  *     besten k-Werte werden hervorgehoben.
  *   - Aufklappbare Detailmatrix (Punkt × k) mit ✓/✗; aus Gründen der
  *     Übersichtlichkeit für höchstens die ersten 20 k-Werte.
@@ -30,8 +30,8 @@
   let metricSelector = null;
 
   /**
-   * Baut die Ergebnistabelle (k, korrekt/gesamt, Trefferquote).
-   * @param {Array<{k:number, correct:number, total:number, rate:number}>} accuracy - Trefferquoten.
+   * Baut die Ergebnistabelle (k, korrekt/gesamt, Genauigkeit).
+   * @param {Array<{k:number, correct:number, total:number, rate:number}>} accuracy - Genauigkeit je k.
    * @param {Set<number>} bestKs - Beste k-Werte.
    * @returns {HTMLElement} Tabelle (in Scroll-Container).
    */
@@ -45,11 +45,11 @@
       ]));
     }
     return dom.el('div', { class: 'table-wrap table-scroll' }, dom.el('table', { class: 'data-table' }, [
-      dom.el('caption', null, 'Trefferquote je k (★ = beste Trefferquote)'),
+      dom.el('caption', null, 'Genauigkeit je k (★ = beste Genauigkeit)'),
       dom.el('thead', null, dom.el('tr', null, [
         dom.el('th', { scope: 'col' }, 'k'),
         dom.el('th', { scope: 'col' }, 'korrekt / gesamt'),
-        dom.el('th', { scope: 'col' }, 'Trefferquote')
+        dom.el('th', { scope: 'col' }, 'Genauigkeit')
       ])),
       tbody
     ]));
@@ -106,7 +106,7 @@
     const bestKs = new Set(result.accuracy.filter((a) => a.correct === bestCorrect).map((a) => a.k));
 
     ui.summary.appendChild(dom.el('p', null, 'Leave One Out mit ' + points.length + ' Datenpunkten für k = 1 … ' + kMax + '.'));
-    ui.summary.appendChild(dom.el('p', { class: 'result-main' }, 'Beste Trefferquote: ' +
+    ui.summary.appendChild(dom.el('p', { class: 'result-main' }, 'Beste Genauigkeit: ' +
       dom.formatPercent(bestCorrect / points.length) + ' bei k = ' + Array.from(bestKs).join(', ') + '.'));
 
     ns.chart.renderBarChart(ui.bars, result.accuracy, bestKs);

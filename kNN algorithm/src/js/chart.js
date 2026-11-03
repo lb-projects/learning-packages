@@ -1,7 +1,7 @@
 /**
  * @file chart.js
  * @description Selbst implementierte SVG-Diagramme: Streudiagramm der Datenpunkte
- *              (mit Metrik-Visualisierung) und Balkendiagramm der Trefferquoten.
+ *              (mit Metrik-Visualisierung) und Balkendiagramm der Genauigkeit je k.
  *
  * Streudiagramm – Eigenschaften:
  *   - x- und y-Achse sind gleich skaliert (eine Einheit ist in beiden Richtungen
@@ -480,11 +480,11 @@
   }
 
   /**
-   * Zeichnet ein Balkendiagramm der Trefferquote je k (Seite 6).
+   * Zeichnet ein Balkendiagramm der Genauigkeit je k (Seite 6).
    *
    * @param {HTMLElement} container - Zielelement (wird geleert).
-   * @param {Array<{k:number, rate:number}>} data - Trefferquote je k (0 … 1).
-   * @param {Set<number>} bestKs - k-Werte mit der höchsten Trefferquote (hervorgehoben).
+   * @param {Array<{k:number, rate:number}>} data - Genauigkeit je k (0 … 1).
+   * @param {Set<number>} bestKs - k-Werte mit der höchsten Genauigkeit (hervorgehoben).
    */
   function renderBarChart(container, data, bestKs) {
     dom.clear(container);
@@ -499,7 +499,7 @@
     const svg = dom.svgEl('svg', {
       class: 'bars', role: 'img',
       viewBox: '0 0 ' + (m.left + plotW + m.right) + ' ' + (m.top + plotH + m.bottom),
-      'aria-label': 'Balkendiagramm der Trefferquote je k'
+      'aria-label': 'Balkendiagramm der Genauigkeit je k'
     });
     // Waagerechte Hilfslinien bei 0, 25, 50, 75, 100 %.
     for (let pct = 0; pct <= 100; pct += 25) {

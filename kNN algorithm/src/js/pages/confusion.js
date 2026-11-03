@@ -18,7 +18,7 @@
  *   - Einstellung von k und Metrik.
  *   - Konfusionsmatrix: Zeilen und Spalten sind die Labels der aktuellen
  *     Trainingsdaten; ihre Größe passt sich bei jeder Änderung der
- *     Trainingsdaten an. Dazu Zeilen-/Spaltensummen und die Trefferquote.
+ *     Trainingsdaten an. Dazu Zeilen-/Spaltensummen und die Genauigkeit.
  *   - Testpunkte, deren Label in den Trainingsdaten nicht vorkommt, bleiben
  *     gespeichert, werden aber als "nicht auswertbar" gekennzeichnet und
  *     nicht gezählt.
@@ -315,7 +315,7 @@
       summary.appendChild(dom.el('p', null, 'Keiner der Testpunkte ist auswertbar.'));
     } else {
       summary.appendChild(dom.el('p', { class: 'result-main' }, m.correct + ' von ' + m.total +
-        ' auswertbaren Testpunkten korrekt klassifiziert (Trefferquote ' + dom.formatPercent(m.correct / m.total) + ').'));
+        ' auswertbaren Testpunkten korrekt klassifiziert (Genauigkeit ' + dom.formatPercent(m.correct / m.total) + ').'));
     }
     if (excluded > 0) {
       summary.appendChild(dom.el('p', { class: 'hint-tie' }, excluded + ' Testpunkt(e) sind nicht auswertbar, weil ihr Label in den ' +

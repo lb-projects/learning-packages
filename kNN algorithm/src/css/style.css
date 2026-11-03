@@ -145,7 +145,6 @@ main {
 }
 
 .intro {
-  max-width: 75ch;
   color: var(--muted);
 }
 
@@ -279,6 +278,10 @@ summary:focus-visible {
 
 input[type="file"] {
   max-width: 100%;
+}
+
+.sample-row {
+  margin-top: 0.75rem;
 }
 
 .metric-selector {

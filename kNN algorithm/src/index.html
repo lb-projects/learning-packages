@@ -77,14 +77,17 @@
          =================================================================== -->
     <section id="page-training" class="page" role="tabpanel" aria-labelledby="tab-training">
       <h2>Training</h2>
-      <p class="intro">Trainingsdaten sind Datenpunkte, deren Label (Klasse) bekannt ist. Laden Sie eine Datei hoch oder geben Sie einzelne Punkte ein. Änderungen wirken sich sofort auf alle anderen Seiten aus.</p>
+      <p class="intro">Trainingsdaten sind Datenpunkte, deren Label (Klasse) bekannt ist. Laden Sie eine Datei oder die Beispieldaten, oder geben Sie einzelne Punkte ein. Änderungen wirken sich sofort auf alle anderen Seiten aus.</p>
       <div class="layout">
         <div class="controls">
           <div class="card">
-            <h3>Datei hochladen</h3>
+            <h3>Trainingsdaten laden</h3>
             <p class="hint">Erlaubt: <strong>.csv</strong>, <strong>.xlsx</strong> oder <strong>.ods</strong> (höchstens 2&nbsp;MB) mit drei Spalten: x-Wert, y-Wert, Label. Stehen in der ersten Zeile Bezeichner statt Zahlen, werden sie als Achsenbeschriftung verwendet. Die Datei ersetzt die vorhandenen Daten.</p>
             <label class="file-label" for="file-input">Datei auswählen</label>
             <input type="file" id="file-input" accept=".csv,.xlsx,.ods,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet">
+            <div class="sample-row">
+              <button type="button" id="btn-sample" class="btn">Beispieldaten laden</button>
+            </div>
             <div id="import-status" class="status" role="status" aria-live="polite" hidden></div>
           </div>
 
@@ -125,7 +128,6 @@
           </form>
 
           <div class="card button-row">
-            <button type="button" id="btn-sample" class="btn">Beispieldaten laden</button>
             <button type="button" id="btn-clear" class="btn btn-danger">Alle Daten löschen</button>
           </div>
         </div>
@@ -299,7 +301,7 @@
          =================================================================== -->
     <section id="page-loo-auto" class="page" role="tabpanel" aria-labelledby="tab-loo-auto" hidden>
       <h2>Leave One Out – automatisiert</h2>
-      <p class="intro">Das Leave-One-Out-Verfahren wird hier für alle möglichen k (1 bis Anzahl der Punkte − 1) automatisch durchgeführt. Die Trefferquote gibt an, wie viel Prozent der Punkte korrekt klassifiziert werden.</p>
+      <p class="intro">Das Leave-One-Out-Verfahren wird hier für alle möglichen k (1 bis Anzahl der Punkte − 1) automatisch durchgeführt. Die Genauigkeit gibt an, wie viel Prozent der Punkte korrekt klassifiziert werden.</p>
       <div id="notice-loo-auto" class="notice" hidden></div>
       <div class="card">
         <div id="metric-loo-auto"></div>

@@ -179,7 +179,7 @@
    * @param {string} metric - Metrik.
    * @returns {{perPoint: Array<{point:Object, results:Array}>,
    *            accuracy: Array<{k:number, correct:number, total:number, rate:number}>}}
-   *          Ergebnisse je Punkt und Trefferquote je k.
+   *          Ergebnisse je Punkt und Genauigkeit je k.
    */
   function evaluate(referencePoints, testPoints, kMax, metric) {
     const perPoint = testPoints.map((point) => ({
