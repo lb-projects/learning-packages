@@ -3,22 +3,54 @@
 Der Quelltext dieses Repositorys steht unter der **MIT-Lizenz** (siehe [LICENSE](LICENSE)).
 Davon abweichend oder ergänzend gilt Folgendes.
 
-## Code
+Das Repository enthält zwei Pakete. Die Hinweise sind danach gegliedert, für wen sie gelten:
 
-### puff – DEFLATE-Referenzdekoder (zlib-Lizenz)
+- [Allgemein](#allgemein-beide-pakete): gilt für beide Pakete.
+- [kNN algorithm](#knn-algorithm): gilt nur für das kNN-Paket (`kNN algorithm/`).
+- [SQL Sandbox](#sql-sandbox): gilt nur für das SQL-Paket (`SQL Sandbox/`).
+
+## Allgemein (beide Pakete)
+
+### Code
+
+Das Projekt enthält **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder. Einzige Ausnahme ist eine Datei im kNN-Paket (siehe [kNN algorithm](#knn-algorithm)).
+
+### Gestaltung
+
+- **Farbpalette:** Die Klassenfarben basieren auf der farbenblindfreundlichen Palette von Masataka Okabe und Kei Ito, *Color Universal Design* (2008). Das kNN-Paket verwendet sie für die Labels, das SQL-Paket für die Farben der Oberfläche. Die Nennung ist eine Würdigung. Farbwerte als solche sind nicht urheberrechtlich geschützt.
+
+### Standards
+
+Das Projekt implementiert offene Formate und Schnittstellen mit eigenem Code. Weder Spezifikationstexte noch Schemadateien (XSD) sind enthalten.
+
+| Bereich | Standard |
+|---|---|
+| SCORM-1.2-Laufzeitschnittstelle und IMS Content Packaging | Namensraum-URIs im Manifest sind nur Bezeichner |
+| SVG | W3C Scalable Vector Graphics; die Namensraum-URI im Code ist nur ein Bezeichner, es wird nichts geladen |
+
+### Marken
+
+Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu benennen:
+
+- **Moodle™** ist eine Marke der Moodle Pty Ltd.
+- **SCORM®** ist eine eingetragene Marke des U.S. Department of Defense (Advanced Distributed Learning Initiative).
+- **Microsoft Windows und Edge** sind Marken der Microsoft Corporation.
+- **Chrome** ist eine Marke von Google LLC, **Firefox** von der Mozilla Foundation, **Safari** von Apple Inc.
+
+Weitere Marken, die nur ein Paket betreffen, stehen in den Abschnitten zum jeweiligen Paket.
+
+## kNN algorithm
+
+### Code: puff – DEFLATE-Referenzdekoder (zlib-Lizenz)
 
 - **Betrifft:** `kNN algorithm/src/js/inflate.js`
 - **Herkunft:** Die Huffman-Dekodierung und der Ablauf der Blockverarbeitung sind eine veränderte JavaScript-Übertragung von `puff.c` von Mark Adler (zlib-Distribution, `contrib/puff`).
 - **Lizenz:** zlib-Lizenz, Copyright (C) 2002-2013 Mark Adler. Die zlib-Lizenz ist mit der MIT-Lizenz vereinbar.
 - **Kennzeichnung:** Der vollständige Lizenzhinweis und die Kennzeichnung als veränderte Fassung stehen im Kopf der Datei. Sie dürfen nicht entfernt werden.
 
-Darüber hinaus enthält das Projekt **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder.
+Darüber hinaus enthält das kNN-Paket keinen Code von Dritten.
 
-Das gilt ausdrücklich auch für die **SQL Sandbox** (`SQL Sandbox/`): Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
-
-## Daten
-
-### Iris-Datensatz (Szenario „Schwertlilien“)
+### Daten: Iris-Datensatz (Szenario „Schwertlilien“)
 
 - **Betrifft:**
   - `kNN algorithm/testdata/szenario_1_schwertlilien.csv` (Trainingsdaten)
@@ -35,15 +67,35 @@ Das gilt ausdrücklich auch für die **SQL Sandbox** (`SQL Sandbox/`): Lexer, Pa
   - Teilmengen der Datensätze, aufgeteilt in Trainings- und Testdaten.
   - Deutsche Spaltenbezeichnungen, Dezimalkomma, Semikolon als Trennzeichen.
 
-### Übrige Daten
+### Daten: übrige Daten
 
-Alle übrigen Daten wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
+Alle übrigen Daten des kNN-Pakets wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
 - die eingebauten Beispieldaten im kNN-Paket (Früchte);
 - die Szenarien Wetter, Spam, Lernerfolg und Musik, jeweils Trainings- und Testdaten (`szenario_2_…` bis `szenario_5_…`, auch `*_test.csv`).
 
 Es handelt sich nicht um Messungen realer Personen.
 
-### SQL Sandbox: Beispieldatenbanken
+### Standards
+
+| Bereich | Standard |
+|---|---|
+| DEFLATE | RFC 1951 |
+| ZIP | PKWARE APPNOTE |
+| Office Open XML | ECMA-376 |
+| OpenDocument | OASIS/ISO/IEC 26300 |
+
+### Marken
+
+- **Microsoft Excel** ist eine Marke der Microsoft Corporation.
+- **LibreOffice** ist eine Marke der The Document Foundation.
+
+## SQL Sandbox
+
+### Code
+
+Das SQL-Paket enthält keinen Code von Dritten: Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
+
+### Daten: Beispieldatenbanken
 
 - **Betrifft:**
   - `SQL Sandbox/testdata/*.sql`
@@ -59,39 +111,22 @@ Es handelt sich nicht um Messungen realer Personen.
   - Sie bildet nur den üblichen Aufbau solcher Exporte und deren funktionale SQL-Befehle nach (z. B. `SET SQL_MODE = …`, `START TRANSACTION`, `/*!40101 SET NAMES … */`).
   - Kommentare und Daten sind eigene Formulierungen. Texte oder Übersetzungen aus phpMyAdmin werden nicht übernommen.
 
-## Gestaltung
-
-- **Farbpalette:** Die Klassenfarben basieren auf der farbenblindfreundlichen Palette von Masataka Okabe und Kei Ito, *Color Universal Design* (2008). Die Nennung ist eine Würdigung. Farbwerte als solche sind nicht urheberrechtlich geschützt.
-
-## Standards
-
-Das Projekt implementiert offene Formate und Schnittstellen mit eigenem Code. Weder Spezifikationstexte noch Schemadateien (XSD) sind enthalten.
+### Standards
 
 | Bereich | Standard |
 |---|---|
-| DEFLATE | RFC 1951 |
-| ZIP | PKWARE APPNOTE |
-| Office Open XML | ECMA-376 |
-| OpenDocument | OASIS/ISO/IEC 26300 |
-| SCORM-1.2-Laufzeitschnittstelle und IMS Content Packaging | Namensraum-URIs im Manifest sind nur Bezeichner |
-| SQL (SQL Sandbox) | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
-| UML-Klassendiagramm (SQL Sandbox) | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
-| SVG (SQL Sandbox) | W3C Scalable Vector Graphics; die Namensraum-URI im Code ist nur ein Bezeichner, es wird nichts geladen |
+| SQL | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
+| UML-Klassendiagramm | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
 
-## Marken
+### Marken
 
-Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu benennen:
-
-- **Moodle™** ist eine Marke der Moodle Pty Ltd.
-- **SCORM®** ist eine eingetragene Marke des U.S. Department of Defense (Advanced Distributed Learning Initiative).
-- **Microsoft Excel, Windows, Edge, PowerShell und .NET** sind Marken der Microsoft Corporation.
-- **LibreOffice** ist eine Marke der The Document Foundation.
 - **MySQL** ist eine eingetragene Marke der Oracle Corporation und/oder ihrer verbundenen Unternehmen.
 - **MariaDB®** ist eine eingetragene Marke der MariaDB plc.
 - **PostgreSQL** und **Postgres** sind Marken oder eingetragene Marken der PostgreSQL Community Association of Canada.
 - **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy.
 - **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc.
 - **UML®** und **Unified Modeling Language™** sind Marken der Object Management Group, Inc.
-- **Chrome** ist eine Marke von Google LLC, **Firefox** von der Mozilla Foundation, **Safari** von Apple Inc.
 
-Dieses Projekt steht in keiner Verbindung zu den Markeninhabern und wird von ihnen weder unterstützt noch empfohlen.
+---
+
+Dieses Projekt steht in keiner Verbindung zu den Inhabern der genannten Marken und wird von ihnen weder unterstützt noch empfohlen.
