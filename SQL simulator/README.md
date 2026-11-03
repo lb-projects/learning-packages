@@ -10,7 +10,7 @@ Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausfüh
 | 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO` auch mit `SELECT`/`WITH`, `CREATE VIEW`) |
 | 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL, CHECK-Bedingungen) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen. Unter jeder Tabelle lässt sich der `CREATE TABLE`-Befehl aufklappen (anfangs zugeklappt). Sichten (Views) stehen in einem eigenen Abschnitt mit ihrem aktuellen Ergebnis und dem aufklappbaren `CREATE VIEW`-Befehl |
 | 3 SQL-Befehle | Eingabemaske (anfangs leer) mit „Ausführen“ (auch Strg + Enter) für Abfragen, Datenänderungen und `CREATE/DROP VIEW`; Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
-| 4 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm: Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten (`1`, `0..1`, `n`, bei n:m `n` und `m`), Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien, bei genügend Platz in die Breite, sonst in die Tiefe (auch fest wählbar); Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
+| 4 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm: Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten (`1`, `0..1`, `n`, bei n:m `n` und `m`), Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien, bei genügend Platz in die Breite, sonst in die Tiefe (auch fest wählbar); Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Einzelne Klassen lassen sich samt ihren Beziehungen aus- und einblenden. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten.
 Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her. Wird eine andere Datenbank geladen, zeigt Seite 4 sofort deren Klassendiagramm.
@@ -39,7 +39,14 @@ Das Diagramm wird aus den Tabellendefinitionen abgeleitet:
   - Alle Linien bestehen nur aus waagerechten und senkrechten Abschnitten.
   - Die Karten lassen sich mit Maus oder Touch verschieben, oder nach Auswahl mit der Tabulatortaste mit den Pfeiltasten (mit Umschalt in größeren Schritten). Die Linien werden dabei rechtwinklig neu geführt.
   - „Anordnung zurücksetzen“ stellt die Standardanordnung wieder her. Datenänderungen auf Seite 3 lassen die Anordnung unverändert.
+- **Auswahl der Klassen** („Angezeigte Klassen“ über dem Diagramm):
+  - Standardmäßig werden alle Klassen gezeigt. Jede Klasse lässt sich per Kontrollkästchen aus- und wieder einblenden; „Alle anzeigen“ und „Alle ausblenden“ schalten alle auf einmal.
+  - Mit einer Klasse verschwinden ihre Beziehungen und erscheinen mit ihr wieder. Die sichtbaren Klassen werden nach jeder Änderung neu angeordnet.
+  - Assoziationsklassen sind eigenständig wählbar. Ist nur die Assoziationsklasse ausgeblendet, bleibt die n:m-Linie und trägt den Namen der Verbindungstabelle. Ist ein Ende der n:m-Beziehung ausgeblendet, verschwinden Linie und Assoziationsklasse; ihr Kontrollkästchen ist dann gesperrt, mit Hinweis auf das fehlende Ende.
+  - Die Auswahl bleibt bei Datenänderungen auf Seite 3 erhalten. Beim Laden einer Datenbank werden wieder alle Klassen gezeigt.
+  - Hinweise zu Fremdschlüsseln gelten immer für das ganze Schema. Infozeile und Textfassung nennen, wie viele Klassen und Beziehungen angezeigt sind und welche Klassen ausgeblendet sind.
 - **Sichten** erscheinen nicht im Klassendiagramm.
+- **Aufbau der Seite:** Unter der Überschrift stehen die Bedienelemente (Anordnung, Ausrichtung, Auswahl der Klassen), danach das Diagramm mit Infozeile und Textfassung, die Erläuterung am Ende.
 
 ### Unterstützter SQL-Umfang
 
@@ -219,7 +226,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (über 180) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (über 190) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
 - jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;
@@ -229,7 +236,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - `WITH`-Abfragen, `INSERT … SELECT` und Sichten (Anlegen, Ersetzen, Löschen, ungültige und zirkuläre Sichten, Import im Export-Stil);
 - erzeugter `CREATE TABLE`-Befehl: Er lässt sich für alle Beispieltabellen wieder einlesen und ergibt denselben Aufbau;
 - Import der Beispieldateien, eines Exports im phpMyAdmin-Stil und fehlerhafter Dateien; Grenzwerte;
-- Klassendiagramm: Ableitungsregeln (Namen, ausgeblendete und künstliche Schlüssel, Multiplizitäten, 1:1, Selbstbezug, parallele Beziehungen, Verbindungstabellen, Constraint-Namen, Hinweise) sowie das Layout aller Beispiele in beiden Ausrichtungen: keine überlappenden Karten, nur waagerechte und senkrechte Linien, keine Kreuzungen, keine Linie durch fremde Karten; 50 Tabellen; Verschieben mit Maus und Tastatur;
+- Klassendiagramm: Ableitungsregeln (Namen, ausgeblendete und künstliche Schlüssel, Multiplizitäten, 1:1, Selbstbezug, parallele Beziehungen, Verbindungstabellen, Constraint-Namen, Hinweise) sowie das Layout aller Beispiele in beiden Ausrichtungen: keine überlappenden Karten, nur waagerechte und senkrechte Linien, keine Kreuzungen, keine Linie durch fremde Karten; 50 Tabellen; Verschieben mit Maus und Tastatur; Aus- und Einblenden von Klassen samt Beziehungen und Assoziationsklassen;
 - präparierte Angriffe: HTML-/Skript-Einschleusung in Werten und Namen, `__proto__` als Name, Richtungszeichen, kartesisches Produkt, tiefe Verschachtelung, langsame `LIKE`-Muster, getarnte Binärdateien, übergroße Dateien, schneller Doppel-Upload;
 - Klickpfade aller Seiten: Erhalt der Eingaben beim Seitenwechsel, Höhe der Scrollbereiche (5 bzw. 10 Zeilen), Strg + Enter, Zurücksetzen, Tastaturbedienung;
 - SCORM-Meldungen;

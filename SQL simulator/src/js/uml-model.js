@@ -250,6 +250,17 @@
     }
 
     // 3) Parallele Beziehungen zwischen demselben Klassenpaar durchnummerieren.
+    numberParallel(associations);
+
+    return { classes, associations, warnings };
+  }
+
+  /**
+   * Nummeriert Beziehungen zwischen demselben Klassenpaar (für den parallelen Versatz).
+   *
+   * @param {Array<Object>} associations - Beziehungen (bekommen parallelIndex/parallelCount).
+   */
+  function numberParallel(associations) {
     const groups = new Map();
     for (const a of associations) {
       const key = [a.from, a.to].sort().join('|');
@@ -264,10 +275,58 @@
         a.parallelCount = group.length;
       });
     }
+  }
 
-    return { classes, associations, warnings };
+  /**
+   * Blendet Klassen aus (Auswahl auf Seite 4). Mit einer Klasse entfallen ihre Beziehungen.
+   * Eine Assoziationsklasse erscheint nur, wenn sie selbst gewählt ist und beide Enden ihrer
+   * n:m-Beziehung sichtbar sind. Ist nur die Assoziationsklasse abgewählt, bleibt die
+   * n:m-Linie und trägt den Namen der Verbindungstabelle.
+   *
+   * @param {Object} model - Vollständiges Modell aus {@link buildModel}.
+   * @param {Set<string>} hiddenTables - Abgewählte Tabellen (Namen in Kleinbuchstaben).
+   * @returns {{classes:Array, associations:Array, warnings:Array<string>, blockedBy:Map<string, Array<string>>}}
+   *   Gefiltertes Modell (Beziehungen als Kopien); blockedBy: Assoziationsklasse → Namen der
+   *   verborgenen Enden, wegen derer sie nicht erscheinen kann.
+   */
+  function filterModel(model, hiddenTables) {
+    const byId = new Map(model.classes.map((c) => [c.id, c]));
+    const chosen = (c) => !hiddenTables.has(c.table.toLowerCase());
+    const visible = new Set();
+    for (const c of model.classes) {
+      if (!c.associationClass && chosen(c)) {
+        visible.add(c.id);
+      }
+    }
+    const blockedBy = new Map();
+    const associations = [];
+    for (const a of model.associations) {
+      if (!visible.has(a.from) || !visible.has(a.to)) {
+        if (a.assocClass) {
+          blockedBy.set(a.assocClass, [a.from, a.to].filter((id) => !visible.has(id)).map((id) => byId.get(id).name));
+        }
+        continue;
+      }
+      const copy = Object.assign({}, a);
+      if (a.assocClass) {
+        if (chosen(byId.get(a.assocClass))) {
+          visible.add(a.assocClass);
+        } else {
+          copy.assocClass = null;
+          copy.label = a.junction;
+        }
+      }
+      associations.push(copy);
+    }
+    numberParallel(associations);
+    return {
+      classes: model.classes.filter((c) => visible.has(c.id)),
+      associations,
+      warnings: model.warnings.slice(),
+      blockedBy
+    };
   }
 
   ns.uml = ns.uml || {};
-  Object.assign(ns.uml, { buildModel, className, attributeName, isIdName });
+  Object.assign(ns.uml, { buildModel, filterModel, className, attributeName, isIdName });
 })(window.SQLSIM = window.SQLSIM || {});

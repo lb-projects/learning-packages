@@ -42,6 +42,14 @@
   let view = null;
   /** Gewählte Ausrichtung: 'auto', 'horizontal' (in die Breite) oder 'vertical' (in die Tiefe). */
   let direction = 'auto';
+  /** Abgewählte Tabellen (Namen in Kleinbuchstaben); beim Laden einer Datenbank geleert. */
+  const hiddenTables = new Set();
+  /** Kennung des vollständigen Schemas, für das die Auswahlliste aufgebaut ist. */
+  let filterSignature = '';
+  /** Kontrollkästchen je Klassen-ID: {key, box, label, note}. */
+  let filterBoxes = new Map();
+  /** Vollständiges Modell der aktuellen Datenbank (für „Alle ausblenden“). */
+  let currentFull = null;
 
   /** Kürzt lange Namen für die Anzeige. */
   function shorten(text) {
@@ -402,6 +410,57 @@
     ];
   }
 
+  /** Ordnet nach einer Änderung der Auswahl oder Ausrichtung neu an. */
+  function rebuild() {
+    relayout = true;
+    stale = false;
+    build();
+  }
+
+  /**
+   * Baut die Auswahlliste der Klassen auf (nur bei geändertem Schema, damit der
+   * Tastaturfokus beim Umschalten erhalten bleibt).
+   *
+   * @param {Object} full - Vollständiges Modell.
+   */
+  function buildFilter(full) {
+    dom.clear(ui.filterList);
+    filterBoxes = new Map();
+    full.classes.forEach((c, i) => {
+      const key = c.table.toLowerCase();
+      const box = dom.el('input', { type: 'checkbox', id: 'diagram-filter-' + i, 'data-class': c.id });
+      box.addEventListener('change', () => {
+        if (box.checked) {
+          hiddenTables.delete(key);
+        } else {
+          hiddenTables.add(key);
+        }
+        rebuild();
+      });
+      const note = dom.el('span', { class: 'hint' });
+      const label = dom.el('label', { class: 'class-filter-item', for: 'diagram-filter-' + i },
+        [box, ns.text.cleanCellText(c.name) + (c.associationClass ? ' (Assoziationsklasse)' : ''), note]);
+      filterBoxes.set(c.id, { key, box, label, note });
+      ui.filterList.appendChild(label);
+    });
+  }
+
+  /**
+   * Gleicht die Kontrollkästchen mit der Auswahl ab; Assoziationsklassen, deren Enden
+   * ausgeblendet sind, werden gesperrt.
+   *
+   * @param {Object} shown - Gefiltertes Modell (mit blockedBy).
+   */
+  function updateFilter(shown) {
+    for (const [id, f] of filterBoxes) {
+      const blocked = shown.blockedBy.get(id);
+      f.box.checked = !hiddenTables.has(f.key);
+      f.box.disabled = Boolean(blocked);
+      f.label.classList.toggle('disabled', Boolean(blocked));
+      f.note.textContent = blocked ? '(erscheint nur zusammen mit ' + blocked.map((n) => ns.text.cleanCellText(n)).join(' und ') + ')' : '';
+    }
+  }
+
   /** Baut die Seite neu auf. */
   function build() {
     const db = ns.state.db();
@@ -422,20 +481,39 @@
     }
     ui.notice.hidden = true;
     ui.body.hidden = false;
-    const model = ns.uml.buildModel(db);
+    const full = ns.uml.buildModel(db);
+    const schemaSig = JSON.stringify([
+      full.classes.map((c) => [c.id, c.table, c.name, c.attributes]),
+      full.associations.map((a) => [a.id, a.from, a.to, a.fromMult, a.toMult, a.label, a.assocClass])
+    ]);
+    if (schemaSig !== filterSignature) {
+      buildFilter(full);
+      filterSignature = schemaSig;
+    }
+    currentFull = full;
+    const model = ns.uml.filterModel(full, hiddenTables);
+    updateFilter(model);
     const info = ns.state.info();
-    ui.info.textContent = 'Datenbank „' + info.name + '“: ' + dom.plural(model.classes.length, 'Klasse', 'Klassen') + ', ' +
-      dom.plural(model.associations.length, 'Beziehung', 'Beziehungen') + '.' +
+    const partial = (all, shown) => (shown < all ? ' (' + dom.formatCount(shown) + ' angezeigt)' : '');
+    ui.info.textContent = 'Datenbank „' + info.name + '“: ' +
+      dom.plural(full.classes.length, 'Klasse', 'Klassen') + partial(full.classes.length, model.classes.length) + ', ' +
+      dom.plural(full.associations.length, 'Beziehung', 'Beziehungen') + partial(full.associations.length, model.associations.length) + '.' +
       (db.views.size ? ' Sichten (Views) erscheinen nicht im Klassendiagramm.' : '');
-    for (const w of model.warnings) {
+    for (const w of full.warnings) {
       ui.warnings.appendChild(ns.ui.warningBox(w));
     }
+    const shownIds = new Set(model.classes.map((c) => c.id));
+    const hiddenNames = full.classes.filter((c) => !shownIds.has(c.id)).map((c) => ns.text.cleanCellText(c.name));
     dom.clear(ui.text);
     ui.text.appendChild(dom.el('summary', null, 'Klassendiagramm als Text'));
-    ui.text.appendChild(dom.el('div', { class: 'reference-body' }, textVersion(model)));
+    ui.text.appendChild(dom.el('div', { class: 'reference-body' }, textVersion(model).concat(
+      hiddenNames.length ? [dom.el('p', { class: 'hint' }, 'Ausgeblendet: ' + hiddenNames.join(', '))] : [])));
+    ui.filter.hidden = full.classes.length === 0;
     if (model.classes.length === 0) {
       dom.clear(ui.canvas);
-      ui.canvas.appendChild(dom.el('p', { class: 'hint' }, 'Die Datenbank enthält keine Tabellen.'));
+      ui.canvas.appendChild(dom.el('p', { class: 'hint diagram-empty' }, full.classes.length === 0
+        ? 'Die Datenbank enthält keine Tabellen.'
+        : 'Es ist keine Klasse ausgewählt. Wählen Sie oben mindestens eine Klasse aus.'));
       view = null;
       signature = '';
       return;
@@ -463,12 +541,19 @@
       ui.body = dom.byId('diagram-body');
       ui.canvas = dom.byId('diagram-canvas');
       ui.text = dom.byId('diagram-text');
-      const rebuild = () => {
-        relayout = true;
-        stale = false;
-        build();
-      };
+      ui.filter = dom.byId('diagram-filter');
+      ui.filterList = dom.byId('diagram-filter-list');
       dom.byId('btn-diagram-reset').addEventListener('click', rebuild);
+      dom.byId('btn-diagram-all').addEventListener('click', () => {
+        hiddenTables.clear();
+        rebuild();
+      });
+      dom.byId('btn-diagram-none').addEventListener('click', () => {
+        if (currentFull) {
+          currentFull.classes.forEach((c) => hiddenTables.add(c.table.toLowerCase()));
+        }
+        rebuild();
+      });
       const select = dom.byId('diagram-direction');
       select.addEventListener('change', () => {
         direction = ['horizontal', 'vertical'].includes(select.value) ? select.value : 'auto';
@@ -484,7 +569,9 @@
     onDbChange(event) {
       stale = true;
       if (event && event.type === 'load') {
+        // Neue Datenbank: neu anordnen und wieder alle Klassen zeigen.
         relayout = true;
+        hiddenTables.clear();
       }
     }
   };
