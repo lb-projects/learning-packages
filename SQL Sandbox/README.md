@@ -202,7 +202,7 @@ So wird das Paket in Moodle eingebunden:
 
 **Datenschutz**
 - Datenbanken, SQL-Eingaben und Ergebnisse verlassen den Browser nicht.
-- An Moodle gehen nur `cmi.core.lesson_status` (`completed`) und `cmi.core.exit`. Besuchte Seiten werden nicht erfasst; Schreibzugriffe auf andere Datenelemente (auch `cmi.suspend_data`) sind im Code gesperrt.
+- An Moodle gehen nur `cmi.core.lesson_status` (`completed`) und `cmi.core.exit`. Besuchte Seiten werden nicht erfasst; `cmi.suspend_data` wird nicht verwendet; Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
 - Der Name der Lernenden wird nicht gelesen.
 - Kein `localStorage`, keine Cookies.
 - **Hinweis:** Nach dem Neuladen sind Datenbank, Eingaben und Änderungen weg – das ist bewusst so (Datensparsamkeit).

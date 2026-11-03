@@ -167,6 +167,23 @@
     }
   });
 
+  /** @returns {number} Anteil der aktuellen Validierungsauswahl in Prozent (zum Speichern). */
+  page.getPercent = () => Math.round(appliedFraction * 100);
+
+  /**
+   * Setzt den Anteil (Wiederherstellung); ungültige Werte werden ignoriert.
+   * @param {number} percent - Anteil in Prozent.
+   */
+  page.setPercent = (percent) => {
+    if (!Number.isInteger(percent) || percent < MIN_PERCENT || percent > MAX_PERCENT) {
+      return;
+    }
+    appliedFraction = percent / 100;
+    if (ui) {
+      ui.fraction.value = String(percent);
+    }
+  };
+
   ns.pages = ns.pages || {};
   ns.pages['k-selection'] = page;
 })(window.KNN = window.KNN || {});

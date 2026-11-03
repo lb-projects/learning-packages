@@ -19,9 +19,13 @@
  * Datenschutz / Sicherheit:
  *   - Schreibzugriffe sind auf eine feste Liste von Datenelementen beschränkt
  *     (WRITABLE_ELEMENTS). So kann kein Programmteil versehentlich
- *     Trainingsdaten oder andere Inhalte an das LMS übertragen.
- *   - Lesend wird nur der bisherige Status (cmi.core.lesson_status) abgefragt;
- *     insbesondere wird der Name der Lernenden nicht gelesen.
+ *     Trainingsdaten oder andere Inhalte an das LMS übertragen (Ausnahme: der bewusst
+ *     gespeicherte Bearbeitungsstand in cmi.suspend_data, siehe progress.js).
+ *   - cmi.suspend_data (gespeicherter Bearbeitungsstand) ist nur schreibbar,
+ *     wenn ein Paket es beim Start ausdrücklich freigibt (init({suspendData: true}));
+ *     die Länge ist auf SUSPEND_DATA_MAX Zeichen begrenzt (SCORM 1.2).
+ *   - Lesend werden nur der bisherige Status (cmi.core.lesson_status) und ggf.
+ *     cmi.suspend_data abgefragt; insbesondere wird der Name der Lernenden nicht gelesen.
  *   - Zugriffe auf fremde Fenster (andere Herkunft) werfen Ausnahmen; diese
  *     werden abgefangen, damit die Suche sauber endet.
  */
@@ -31,7 +35,10 @@
   /** Maximale Anzahl an Elternfenstern, die bei der Suche durchlaufen werden. */
   const MAX_SEARCH_DEPTH = 10;
 
-  /** Datenelemente, die dieses Paket schreiben darf (Whitelist). */
+  /** Maximale Länge von cmi.suspend_data in SCORM 1.2. */
+  const SUSPEND_DATA_MAX = 4096;
+
+  /** Datenelemente, die dieses Paket schreiben darf (Whitelist; cmi.suspend_data nur nach Freigabe in init). */
   const WRITABLE_ELEMENTS = new Set([
     'cmi.core.lesson_status',
     'cmi.core.exit'
@@ -92,9 +99,13 @@
   /**
    * Startet die SCORM-Sitzung.
    *
+   * @param {{suspendData?: boolean}} [options] - suspendData: cmi.suspend_data zum Schreiben freigeben.
    * @returns {boolean} true, wenn eine Verbindung zum LMS besteht.
    */
-  function init() {
+  function init(options) {
+    if (options && options.suspendData === true) {
+      WRITABLE_ELEMENTS.add('cmi.suspend_data');
+    }
     if (initialized) {
       return true;
     }
@@ -148,6 +159,9 @@
       throw new Error('Schreibzugriff auf ' + element + ' ist nicht vorgesehen.');
     }
     const text = String(value);
+    if (element === 'cmi.suspend_data' && text.length > SUSPEND_DATA_MAX) {
+      return false;
+    }
     if (!isConnected()) {
       return false;
     }
@@ -191,5 +205,5 @@
     }
   }
 
-  ns.scorm = { init, isConnected, getValue, setValue, commit, finish };
+  ns.scorm = { init, isConnected, getValue, setValue, commit, finish, SUSPEND_DATA_MAX };
 })(window.KNN = window.KNN || {});

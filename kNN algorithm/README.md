@@ -81,6 +81,7 @@ kNN algorithm/
 │     ├─ knn.js              kNN, Abstimmung, Leave One Out, Regression
 │     ├─ chart.js            SVG-Diagramme (gleiche Skalierung, 1er-Gitter)
 │     ├─ pages/*.js          die acht Seiten (+ gemeinsame Bausteine)
+│     ├─ progress.js         Speichern/Wiederherstellen der Eintragungen (Seiten 4 und 5) in Moodle
 │     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
 ├─ testdata/                 Szenario-Dateien für den Unterricht (Training: szenario_*.csv, Test: szenario_*_test.csv)
 ├─ preview/                  Vorschau
@@ -100,6 +101,15 @@ So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. `knn-algorithmus.zip` hochladen.
 3. Bewertung: „Abschluss“ bzw. Status „completed“ wird bereits beim Öffnen des Lernpakets gemeldet. Ein bereits gemeldeter Abschluss (auch „passed“) bleibt unverändert.
+4. Damit die Eintragungen der Seiten 4 und 5 in der nächsten Stunde wieder da sind, muss Moodle denselben Versuch fortsetzen: Einstellung **„Neuen Versuch erzwingen“ = „Nein“** (Standard). Sonst beginnt jeder Aufruf mit leerer Tabelle.
+
+### Speicherung der Eintragungen (Seiten 4 und 5)
+
+- Nach **jeder** Eintragung („x“ setzen oder löschen), nach „zurücksetzen“, nach einer neuen Validierungsauswahl und nach Änderungen der Trainingsdaten wird der Bearbeitungsstand sofort in Moodle gespeichert (`cmi.suspend_data`, mit `LMSCommit`). Wird der Browser unerwartet geschlossen, geht nichts verloren.
+- Gespeichert werden die Kreuze beider Tabellen, die Validierungsauswahl und ihr Anteil sowie – wenn der Platz reicht – die Trainingsdaten mit Achsenbeschriftung. SCORM 1.2 erlaubt 4.096 Zeichen; das reicht für die Beispieldaten und alle Szenarien.
+- Beim nächsten Öffnen ist alles wieder da; die Fußzeile meldet „Gespeicherte Eintragungen wurden wiederhergestellt“.
+- Sind die Trainingsdaten zu groß, wird statt der Daten ein Prüfwert gespeichert. Die Fußzeile weist dann darauf hin, dass dieselbe Datei erneut geladen werden muss; danach werden Validierungsauswahl und Kreuze übernommen. Werden andere Daten geladen, bleibt der gespeicherte Stand erhalten, bis wieder etwas eingetragen wird.
+- Ohne Lernplattform (Offline-Modus) wird nichts gespeichert. Prüfmarkierungen (✓/✗) werden nicht gespeichert; „Eintragungen prüfen“ stellt sie wieder her.
 
 ## Sicherheits- und Datenschutzkonzept
 
@@ -137,11 +147,12 @@ So wird das Paket in Moodle eingebunden:
 - Kein CDN, keine Webfonts (Systemschriften), keine Bibliotheken von Drittanbietern.
 
 **Datenschutz**
-- Trainings-, Testdaten und Eintragungen verlassen den Browser nicht.
-- An Moodle gehen nur `cmi.core.lesson_status` (`completed`) und `cmi.core.exit`. Besuchte Seiten werden nicht erfasst; Schreibzugriffe auf andere Datenelemente (auch `cmi.suspend_data`) sind im Code gesperrt.
+- An Moodle gehen nur `cmi.core.lesson_status` (`completed`), `cmi.core.exit` und in `cmi.suspend_data` der Bearbeitungsstand der Seiten 4 und 5: Kreuze, Validierungsauswahl und – wenn Platz ist – die Trainingsdaten (siehe „Speicherung der Eintragungen“). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
+- Testdaten (Seite 7), Eingaben der übrigen Seiten und besuchte Seiten verlassen den Browser nicht.
+- Der gespeicherte Stand wird beim Öffnen streng geprüft; ungültige Inhalte werden ignoriert.
 - Der Name der Lernenden wird nicht gelesen.
 - Kein `localStorage`, keine Cookies.
-- **Hinweis:** Nach dem Neuladen sind die Daten weg – das ist bewusst so (Datensparsamkeit).
+- **Hinweis:** Ohne Lernplattform sind die Daten nach dem Neuladen weg.
 
 ## Szenario-Dateien für den Unterricht
 
@@ -180,13 +191,13 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (64) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (71) im Browser, mit simulierter SCORM-Schnittstelle:
 - Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario-Dateien sowie von XLSX- und ODS-Dateien;
 - präparierte Angriffsdateien (Skript-Einschleusung, Zip-Bombe, „Billion Laughs“, getarnte Dateitypen, übergroße Dateien);
 - Klickpfade aller Seiten und seitenübergreifende Änderungen;
-- SCORM-Meldungen;
+- SCORM-Meldungen; Speichern nach jeder Eintragung, Wiederherstellen (mit und ohne gespeicherte Daten), ungültige gespeicherte Stände, Größengrenze, Offline-Modus;
 - Härtung: keine externen Anfragen, keine CSP-Verstöße, Trusted-Types-Sperre, URL-Attribute, unsichtbare Zeichen, Wettlauf beim Import.
 
 ## Lizenz

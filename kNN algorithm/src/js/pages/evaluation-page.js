@@ -23,6 +23,11 @@
  *   - Wird der Datensatz ersetzt (Upload, Beispieldaten), werden alle
  *     Eintragungen gelöscht.
  *
+ * Speicherung:
+ *   getEntryRows()/setEntryRows() lesen und setzen die Eintragungen in der
+ *   Reihenfolge der Tabellenzeilen; onUserChange() meldet jede Bearbeitung
+ *   (siehe progress.js, Speicherung in der Lernplattform).
+ *
  * Abhängigkeiten:
  *   dom-utils.js, dataset.js, knn.js, chart.js, pages/common.js
  */
@@ -66,6 +71,15 @@
     let metricSelector = null;
     let kControl = null;
     let table = null;
+    /** Rückrufe nach Bearbeitungen durch die Lernenden (Eintragung, Zurücksetzen). */
+    const userChangeListeners = [];
+
+    /** Meldet eine Bearbeitung an alle Rückrufe (z. B. zum Speichern). */
+    function notifyUserChange() {
+      for (const listener of userChangeListeners) {
+        listener();
+      }
+    }
 
     /**
      * Größtes sinnvolles k: höchstens 10 und höchstens so viele, wie Nachbarn verfügbar sind.
@@ -116,6 +130,7 @@
       state.dataChanged = false;
       ui.checkStatus.textContent = '';
       render();
+      notifyUserChange();
     }
 
     /** Zeigt oder verbirgt den Hinweis "Daten wurden geändert". */
@@ -201,6 +216,7 @@
         onSelect: select,
         onEdit: () => {
           ui.checkStatus.textContent = '';
+          notifyUserChange();
         }
       });
       ui.select.addEventListener('change', () => select(ui.select.value === '' ? null : Number(ui.select.value)));
@@ -240,7 +256,42 @@
       }
     }
 
-    return { id: config.id, init, render, onDataChange };
+    /**
+     * Eintragungen in der Reihenfolge der Tabellenzeilen (zum Speichern).
+     * @returns {Array<number[]>} Je Zeile die k-Werte mit "x" (aufsteigend).
+     */
+    function getEntryRows() {
+      return config.getRows().map((point) => Array.from(table.entries.get(point.id) || []).sort((a, b) => a - b));
+    }
+
+    /**
+     * Setzt Eintragungen in der Reihenfolge der Tabellenzeilen (Wiederherstellung).
+     * Prüfmarkierungen werden entfernt.
+     * @param {Array<number[]>} rows - Je Zeile die k-Werte mit "x".
+     */
+    function setEntryRows(rows) {
+      const points = config.getRows();
+      table.resetEntries();
+      points.forEach((point, i) => {
+        const ks = (rows[i] || []).filter((k) => Number.isInteger(k) && k >= 1 && k <= TABLE_K_MAX);
+        if (ks.length > 0) {
+          table.entries.set(point.id, new Set(ks));
+        }
+      });
+      state.dataChanged = false;
+      ui.checkStatus.textContent = '';
+      render();
+    }
+
+    /**
+     * Registriert einen Rückruf für Bearbeitungen durch die Lernenden.
+     * @param {function(): void} listener - Rückruf.
+     */
+    function onUserChange(listener) {
+      userChangeListeners.push(listener);
+    }
+
+    return { id: config.id, init, render, onDataChange, getEntryRows, setEntryRows, onUserChange, TABLE_K_MAX };
   }
 
   ns.createEvaluationPage = createEvaluationPage;

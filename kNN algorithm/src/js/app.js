@@ -21,8 +21,13 @@
  *   - Das Lernpaket gilt mit dem Öffnen als abgeschlossen: Beim Start wird
  *     cmi.core.lesson_status = "completed" gemeldet (ein bereits gemeldeter
  *     Abschluss bzw. "passed" bleibt unverändert).
- *   - Übertragen werden nur cmi.core.lesson_status und cmi.core.exit. Besuchte
- *     Seiten, Trainings-, Testdaten und Eintragungen verlassen den Browser nicht.
+ *   - Übertragen werden cmi.core.lesson_status, cmi.core.exit und in
+ *     cmi.suspend_data der Bearbeitungsstand der Seiten 4 und 5 (Eintragungen,
+ *     Validierungsauswahl und – wenn Platz ist – die Trainingsdaten; siehe
+ *     progress.js). Besuchte Seiten, Testdaten und alle übrigen Eingaben
+ *     verlassen den Browser nicht.
+ *   - Ist ein Stand gespeichert, endet die Sitzung mit cmi.core.exit = "suspend",
+ *     damit die Lernplattform den Versuch beim nächsten Öffnen fortsetzt.
  *
  * Abhängigkeiten:
  *   alle übrigen Module (werden in index.html vorher geladen).
@@ -60,8 +65,9 @@
   /** Zeigt in der Fußzeile, ob eine Verbindung zur Lernplattform besteht. */
   function renderProgress() {
     dom.byId('progress').textContent = scorm.isConnected()
-      ? 'Verbunden mit der Lernplattform – das Lernpaket ist als abgeschlossen gemeldet.'
-      : 'Offline-Modus (keine Lernplattform gefunden).';
+      ? 'Verbunden mit der Lernplattform – das Lernpaket ist als abgeschlossen gemeldet. ' +
+        'Eintragungen auf den Seiten 4 und 5 werden gespeichert.' + ns.progress.statusText()
+      : 'Offline-Modus (keine Lernplattform gefunden, Eintragungen werden nicht gespeichert).';
   }
 
   /**
@@ -136,7 +142,7 @@
 
   /** Stellt die SCORM-Verbindung her und meldet den Abschluss (bereits beim Öffnen). */
   function initScorm() {
-    if (!scorm.init()) {
+    if (!scorm.init({ suspendData: true })) {
       return;
     }
     const status = scorm.getValue('cmi.core.lesson_status');
@@ -151,8 +157,8 @@
     if (!scorm.isConnected()) {
       return;
     }
-    // Reguläres Ende (kein "suspend"): Es gibt keinen Zwischenstand, der fortgesetzt werden müsste.
-    scorm.setValue('cmi.core.exit', '');
+    // "suspend": Die Lernplattform setzt den Versuch mit dem gespeicherten Stand fort.
+    scorm.setValue('cmi.core.exit', ns.progress.hasSaved() ? 'suspend' : '');
     scorm.commit();
     scorm.finish();
   }
@@ -184,6 +190,7 @@
         }
       });
       initScorm();
+      ns.progress.init({ onStatus: renderProgress });
       window.addEventListener('pagehide', finishScorm);
       window.addEventListener('beforeunload', finishScorm);
       showPage(PAGES[0].id);

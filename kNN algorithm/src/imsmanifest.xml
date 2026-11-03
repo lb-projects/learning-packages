@@ -47,6 +47,7 @@
       <file href="js/pages/loo-auto.js"/>
       <file href="js/pages/confusion.js"/>
       <file href="js/pages/regression.js"/>
+      <file href="js/progress.js"/>
       <file href="js/app.js"/>
     </resource>
   </resources>

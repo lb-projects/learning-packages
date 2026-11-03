@@ -367,6 +367,45 @@
   }
 
   /**
+   * Setzt eine bestimmte Auswahl von Validierungspunkten (Wiederherstellung eines
+   * gespeicherten Bearbeitungsstands). Unbekannte IDs werden ignoriert; es bleibt
+   * immer mindestens ein Trainingspunkt übrig.
+   *
+   * @param {Iterable<number>} ids - IDs der Validierungspunkte.
+   * @returns {number} Anzahl der gesetzten Validierungspunkte.
+   */
+  function setValidationIds(ids) {
+    const known = new Set(points.map((p) => p.id));
+    const chosen = [];
+    for (const id of ids) {
+      if (known.has(id) && !chosen.includes(id) && chosen.length < points.length - 1) {
+        chosen.push(id);
+      }
+    }
+    validationIds = new Set(chosen);
+    emit({ type: 'validation' });
+    return validationIds.size;
+  }
+
+  /**
+   * Prüfwert der Trainingsdaten (FNV-1a, 32 Bit) über die Punkte in ihrer
+   * Reihenfolge (x, y, Label) und die Achsenbeschriftung. Dient dazu, einen
+   * gespeicherten Bearbeitungsstand denselben Daten zuzuordnen.
+   *
+   * @returns {string} Prüfwert als 8-stellige Hexadezimalzahl.
+   */
+  function fingerprint() {
+    const text = axisLabels.x + '\u0001' + axisLabels.y + '\u0002' +
+      points.map((p) => p.x + '\u0001' + p.y + '\u0001' + p.label).join('\u0002');
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) {
+      hash ^= text.charCodeAt(i);
+      hash = Math.imul(hash, 0x01000193) >>> 0;
+    }
+    return ('0000000' + hash.toString(16)).slice(-8);
+  }
+
+  /**
    * Registriert einen Beobachter für Datenänderungen.
    * @param {function({type: string, ids?: number[]}): void} listener - Rückruffunktion.
    */
@@ -514,6 +553,8 @@
     clearAll,
     setAxisLabels,
     selectRandomValidation,
+    setValidationIds,
+    fingerprint,
     onChange,
     getLabels,
     addTestPoint,
