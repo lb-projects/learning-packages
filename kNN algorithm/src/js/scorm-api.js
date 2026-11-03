@@ -20,7 +20,7 @@
  *   - Schreibzugriffe sind auf eine feste Liste von Datenelementen beschränkt
  *     (WRITABLE_ELEMENTS). So kann kein Programmteil versehentlich
  *     Trainingsdaten oder andere Inhalte an das LMS übertragen.
- *   - Lesend wird nur abgefragt, was für die Fortschrittsanzeige nötig ist;
+ *   - Lesend wird nur der bisherige Status (cmi.core.lesson_status) abgefragt;
  *     insbesondere wird der Name der Lernenden nicht gelesen.
  *   - Zugriffe auf fremde Fenster (andere Herkunft) werfen Ausnahmen; diese
  *     werden abgefangen, damit die Suche sauber endet.
@@ -31,14 +31,10 @@
   /** Maximale Anzahl an Elternfenstern, die bei der Suche durchlaufen werden. */
   const MAX_SEARCH_DEPTH = 10;
 
-  /** Maximale Länge von cmi.suspend_data in SCORM 1.2. */
-  const SUSPEND_DATA_MAX = 4096;
-
   /** Datenelemente, die dieses Paket schreiben darf (Whitelist). */
   const WRITABLE_ELEMENTS = new Set([
     'cmi.core.lesson_status',
-    'cmi.core.exit',
-    'cmi.suspend_data'
+    'cmi.core.exit'
   ]);
 
   /** Gefundenes API-Objekt oder null (Offline-Modus). */
@@ -152,9 +148,6 @@
       throw new Error('Schreibzugriff auf ' + element + ' ist nicht vorgesehen.');
     }
     const text = String(value);
-    if (element === 'cmi.suspend_data' && text.length > SUSPEND_DATA_MAX) {
-      return false;
-    }
     if (!isConnected()) {
       return false;
     }
@@ -198,5 +191,5 @@
     }
   }
 
-  ns.scorm = { init, isConnected, getValue, setValue, commit, finish, SUSPEND_DATA_MAX };
+  ns.scorm = { init, isConnected, getValue, setValue, commit, finish };
 })(window.KNN = window.KNN || {});

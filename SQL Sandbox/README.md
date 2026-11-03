@@ -12,7 +12,7 @@ Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausfüh
 | 3 SQL-Befehle | Eingabemaske (anfangs leer) mit „Ausführen“ (auch Strg + Enter) für Abfragen, Datenänderungen und `CREATE/DROP VIEW`; Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
 | 4 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm, zur Veranschaulichung (ein Hinweis über dem Diagramm stellt klar, dass es nicht den in Unterricht und Leistungsnachweisen geforderten Zeichenkonventionen entspricht): Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten (`1`, `0..1`, `n`, bei n:m `n` und `m`), Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien, bei genügend Platz in die Breite, sonst in die Tiefe (auch fest wählbar); Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Einzelne Klassen lassen sich samt ihren Beziehungen aus- und einblenden. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
 
-Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten. Die Registerkarten tragen keine Abschlussmarkierung; wie viele Seiten besucht wurden, zeigt die Fußzeile („Besuchte Seiten: x von 4“).
+Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten. Die Registerkarten tragen keine Abschlussmarkierung; die Fußzeile zeigt, ob eine Verbindung zur Lernplattform besteht.
 Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her. Wird eine andere Datenbank geladen, zeigt Seite 4 sofort deren Klassendiagramm.
 
 ### Klassendiagramm (Seite 4)
@@ -143,7 +143,7 @@ SQL Sandbox/
 │     ├─ uml-model.js        Klassendiagramm: Ableitung aus dem Tabellenschema
 │     ├─ uml-layout.js       Klassendiagramm: Ebenenlayout mit rechtwinkligen Linien
 │     ├─ pages/*.js          die vier Seiten (+ gemeinsame Bausteine)
-│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Fortschritt
+│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
 ├─ testdata/                 SQL-Dateien für den Unterricht (siehe oben)
 ├─ preview/                  Vorschau
 └─ README.md                 diese Datei
@@ -161,7 +161,7 @@ Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsma
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. `sql-sandbox.zip` hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle vier Seiten besucht wurden (die Fußzeile zeigt den Stand, die Registerkarten tragen kein Häkchen). Ein bereits gemeldeter Abschluss bleibt erhalten; der Fortschritt älterer Versuche (drei Seiten) wird weiter gelesen.
+3. Bewertung: „Abschluss“ bzw. Status „completed“ wird bereits beim Öffnen des Lernpakets gemeldet. Ein bereits gemeldeter Abschluss (auch „passed“) bleibt unverändert.
 
 ## Sicherheits- und Datenschutzkonzept
 
@@ -202,7 +202,7 @@ So wird das Paket in Moodle eingebunden:
 
 **Datenschutz**
 - Datenbanken, SQL-Eingaben und Ergebnisse verlassen den Browser nicht.
-- An Moodle gehen nur `cmi.core.lesson_status`, `cmi.core.exit` und die besuchten Seiten (`cmi.suspend_data`, z. B. `v=1011`). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
+- An Moodle gehen nur `cmi.core.lesson_status` (`completed`) und `cmi.core.exit`. Besuchte Seiten werden nicht erfasst; Schreibzugriffe auf andere Datenelemente (auch `cmi.suspend_data`) sind im Code gesperrt.
 - Der Name der Lernenden wird nicht gelesen.
 - Kein `localStorage`, keine Cookies.
 - **Hinweis:** Nach dem Neuladen sind Datenbank, Eingaben und Änderungen weg – das ist bewusst so (Datensparsamkeit).

@@ -74,7 +74,7 @@ kNN algorithm/
 │     ├─ knn.js              kNN, Abstimmung, Leave One Out
 │     ├─ chart.js            SVG-Diagramme (gleiche Skalierung, 1er-Gitter)
 │     ├─ pages/*.js          die sieben Seiten (+ gemeinsame Bausteine)
-│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Fortschritt
+│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
 ├─ testdata/                 Szenario-Dateien für den Unterricht (Training: szenario_*.csv, Test: szenario_*_test.csv)
 ├─ preview/                  Vorschau
 └─ README.md                 diese Datei
@@ -92,7 +92,7 @@ Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsma
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. `knn-algorithmus.zip` hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle sieben Seiten besucht wurden. Ein bereits gemeldeter Abschluss bleibt erhalten. Gespeicherte Fortschritte der früheren Fassung mit sechs Seiten werden weiter gelesen.
+3. Bewertung: „Abschluss“ bzw. Status „completed“ wird bereits beim Öffnen des Lernpakets gemeldet. Ein bereits gemeldeter Abschluss (auch „passed“) bleibt unverändert.
 
 ## Sicherheits- und Datenschutzkonzept
 
@@ -131,7 +131,7 @@ So wird das Paket in Moodle eingebunden:
 
 **Datenschutz**
 - Trainings-, Testdaten und Eintragungen verlassen den Browser nicht.
-- An Moodle gehen nur `cmi.core.lesson_status`, `cmi.core.exit` und die besuchten Seiten (`cmi.suspend_data`, z. B. `v=1101001`). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
+- An Moodle gehen nur `cmi.core.lesson_status` (`completed`) und `cmi.core.exit`. Besuchte Seiten werden nicht erfasst; Schreibzugriffe auf andere Datenelemente (auch `cmi.suspend_data`) sind im Code gesperrt.
 - Der Name der Lernenden wird nicht gelesen.
 - Kein `localStorage`, keine Cookies.
 - **Hinweis:** Nach dem Neuladen sind die Daten weg – das ist bewusst so (Datensparsamkeit).
@@ -173,7 +173,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (57) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (58) im Browser, mit simulierter SCORM-Schnittstelle:
 - Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung;
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario-Dateien sowie von XLSX- und ODS-Dateien;

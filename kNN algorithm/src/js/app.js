@@ -1,7 +1,7 @@
 /**
  * @file app.js
  * @description Einstiegspunkt der Anwendung: Seitennavigation, Verteilung von
- *              Datenänderungen an alle Seiten und SCORM-Fortschritt.
+ *              Datenänderungen an alle Seiten und SCORM-Abschluss.
  *
  * Navigation:
  *   Die sieben Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
@@ -17,14 +17,12 @@
  *   nächsten Aufruf mit den aktuellen Daten neu. Änderungen der Testdaten
  *   (Seite 7) laufen über einen eigenen Kanal und betreffen nur diese Seite.
  *
- * SCORM-Fortschritt (Datensparsamkeit):
- *   - Übertragen werden nur cmi.core.lesson_status ("incomplete"/"completed"),
- *     cmi.core.exit und in cmi.suspend_data die besuchten Seiten als
- *     Bitmaske (z. B. "v=1101001"). Trainings-, Testdaten und Eintragungen
- *     verlassen den Browser nicht.
- *   - "completed", sobald alle sieben Seiten besucht wurden.
- *   - Gespeicherte Masken der früheren Fassung mit sechs Seiten werden
- *     weiterhin gelesen (die siebte Seite gilt dann als nicht besucht).
+ * SCORM-Abschluss (Datensparsamkeit):
+ *   - Das Lernpaket gilt mit dem Öffnen als abgeschlossen: Beim Start wird
+ *     cmi.core.lesson_status = "completed" gemeldet (ein bereits gemeldeter
+ *     Abschluss bzw. "passed" bleibt unverändert).
+ *   - Übertragen werden nur cmi.core.lesson_status und cmi.core.exit. Besuchte
+ *     Seiten, Trainings-, Testdaten und Eintragungen verlassen den Browser nicht.
  *
  * Abhängigkeiten:
  *   alle übrigen Module (werden in index.html vorher geladen).
@@ -48,10 +46,6 @@
 
   /** ID der sichtbaren Seite. */
   let activeId = null;
-  /** Bereits besuchte Seiten (Indizes). */
-  const visited = new Set();
-  /** true, wenn der Status "completed" bereits gemeldet wurde. */
-  let completed = false;
 
   /**
    * Liefert das Tab-Element einer Seite.
@@ -62,33 +56,11 @@
     return dom.byId('tab-' + id);
   }
 
-  /** Aktualisiert die Fortschrittsanzeige in der Fußzeile. */
+  /** Zeigt in der Fußzeile, ob eine Verbindung zur Lernplattform besteht. */
   function renderProgress() {
-    const text = 'Besuchte Seiten: ' + visited.size + ' von ' + PAGES.length +
-      (scorm.isConnected() ? ' – Fortschritt wird an die Lernplattform gemeldet.' : ' – Offline-Modus (keine Lernplattform gefunden, Fortschritt wird nicht gespeichert).');
-    dom.byId('progress').textContent = text;
-  }
-
-  /**
-   * Merkt eine Seite als besucht und meldet den Fortschritt an das LMS.
-   * @param {number} index - Index der Seite.
-   */
-  function markVisited(index) {
-    if (visited.has(index)) {
-      return;
-    }
-    visited.add(index);
-    tabOf(PAGES[index].id).classList.add('visited');
-    if (scorm.isConnected()) {
-      const mask = PAGES.map((page, i) => (visited.has(i) ? '1' : '0')).join('');
-      scorm.setValue('cmi.suspend_data', 'v=' + mask);
-      if (visited.size === PAGES.length && !completed) {
-        scorm.setValue('cmi.core.lesson_status', 'completed');
-        completed = true;
-      }
-      scorm.commit();
-    }
-    renderProgress();
+    dom.byId('progress').textContent = scorm.isConnected()
+      ? 'Verbunden mit der Lernplattform – das Lernpaket ist als abgeschlossen gemeldet.'
+      : 'Offline-Modus (keine Lernplattform gefunden).';
   }
 
   /**
@@ -113,7 +85,6 @@
       dom.byId('page-' + page.id).hidden = !isActive;
     }
     ns.pages[id].render();
-    markVisited(index);
     if (opts.focusTab) {
       tabOf(id).focus();
     }
@@ -162,26 +133,14 @@
     });
   }
 
-  /** Stellt die SCORM-Verbindung her und liest den bisherigen Fortschritt. */
+  /** Stellt die SCORM-Verbindung her und meldet den Abschluss (bereits beim Öffnen). */
   function initScorm() {
     if (!scorm.init()) {
       return;
     }
     const status = scorm.getValue('cmi.core.lesson_status');
-    completed = status === 'completed' || status === 'passed';
-    if (status === '' || status === 'not attempted') {
-      scorm.setValue('cmi.core.lesson_status', 'incomplete');
-    }
-    // Besuchte Seiten aus dem letzten Versuch wiederherstellen (striktes Format).
-    // Erlaubt sind genau so viele Stellen wie Seiten oder 6 (frühere Fassung ohne Seite 7).
-    const match = /^v=([01]{6,7})$/.exec(scorm.getValue('cmi.suspend_data'));
-    if (match) {
-      match[1].split('').forEach((bit, i) => {
-        if (bit === '1' && i < PAGES.length) {
-          visited.add(i);
-          tabOf(PAGES[i].id).classList.add('visited');
-        }
-      });
+    if (status !== 'completed' && status !== 'passed') {
+      scorm.setValue('cmi.core.lesson_status', 'completed');
     }
     scorm.commit();
   }
@@ -191,8 +150,8 @@
     if (!scorm.isConnected()) {
       return;
     }
-    // "suspend": Wiedereinstieg mit gespeichertem Fortschritt; nach Abschluss regulär beenden.
-    scorm.setValue('cmi.core.exit', completed ? '' : 'suspend');
+    // Reguläres Ende (kein "suspend"): Es gibt keinen Zwischenstand, der fortgesetzt werden müsste.
+    scorm.setValue('cmi.core.exit', '');
     scorm.commit();
     scorm.finish();
   }
