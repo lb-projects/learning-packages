@@ -4,6 +4,7 @@
  *
  * Inhalt:
  *   - baseView():          Grunddaten für ein Streudiagramm (Punkte, Achsen, Farben).
+ *   - ChoiceSelector:      allgemeine Optionsfeld-Gruppe (z. B. Berechnung der Regression).
  *   - MetricSelector:      Auswahl euklidische / Manhattan-Metrik (Optionsfelder).
  *   - KControl:            Eingabe von k als Zahlenfeld mit gekoppeltem Schieberegler.
  *   - showNotice():        Hinweisfeld, optional mit Schaltfläche "Zur Seite Training".
@@ -77,6 +78,40 @@
       box.appendChild(button);
     }
     box.hidden = false;
+  }
+
+  /**
+   * Allgemeine Optionsfeld-Gruppe (z. B. Berechnungsart der Regression).
+   */
+  class ChoiceSelector {
+    /**
+     * @param {HTMLElement} container - Zielelement.
+     * @param {string} legend - Überschrift der Gruppe.
+     * @param {Array<{id:string, name:string}>} options - Auswahlmöglichkeiten.
+     * @param {string} initial - ID der anfangs gewählten Möglichkeit.
+     * @param {function(string): void} onChange - Wird bei Änderung mit der gewählten ID aufgerufen.
+     */
+    constructor(container, legend, options, initial, onChange) {
+      this.value = initial;
+      const name = 'choice-' + (++groupCounter);
+      const fieldset = dom.el('fieldset', { class: 'metric-selector' }, [dom.el('legend', null, legend)]);
+      for (const option of options) {
+        const input = dom.el('input', { type: 'radio', name, value: option.id, checked: option.id === initial });
+        input.addEventListener('change', () => {
+          if (input.checked) {
+            this.value = option.id;
+            onChange(option.id);
+          }
+        });
+        fieldset.appendChild(dom.el('label', { class: 'radio' }, [input, ' ' + option.name]));
+      }
+      container.appendChild(fieldset);
+    }
+
+    /** @returns {string} Gewählte ID. */
+    get() {
+      return this.value;
+    }
   }
 
   /**
@@ -434,5 +469,5 @@
     }
   }
 
-  ns.common = { baseView, labelBadge, showNotice, MetricSelector, KControl, EntryTable };
+  ns.common = { baseView, labelBadge, showNotice, ChoiceSelector, MetricSelector, KControl, EntryTable };
 })(window.KNN = window.KNN || {});

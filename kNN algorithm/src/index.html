@@ -5,8 +5,8 @@
   Einstiegsseite des Lernpakets (im Manifest als SCO eingetragen).
 
   Aufbau:
-    - Kopfbereich mit Registerkarten (Tabs) für die sieben Seiten
-    - sieben <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Kopfbereich mit Registerkarten (Tabs) für die acht Seiten
+    - acht <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
     - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
 
   Sicherheit:
@@ -52,6 +52,7 @@
   <script src="js/pages/loo-manual.js" defer></script>
   <script src="js/pages/loo-auto.js" defer></script>
   <script src="js/pages/confusion.js" defer></script>
+  <script src="js/pages/regression.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
 <body>
@@ -65,6 +66,7 @@
       <button type="button" role="tab" id="tab-loo-manual" aria-controls="page-loo-manual" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Leave One Out – Verfahren</button>
       <button type="button" role="tab" id="tab-loo-auto" aria-controls="page-loo-auto" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Leave One Out – automatisiert</button>
       <button type="button" role="tab" id="tab-confusion" aria-controls="page-confusion" aria-selected="false" tabindex="-1"><span class="tab-no">7</span> Test und Konfusionsmatrix</button>
+      <button type="button" role="tab" id="tab-regression" aria-controls="page-regression" aria-selected="false" tabindex="-1"><span class="tab-no">8</span> Regression</button>
     </nav>
   </header>
 
@@ -389,6 +391,42 @@
         </table>
       </div>
       <p id="test-empty" class="hint">Noch keine Testpunkte vorhanden.</p>
+    </section>
+
+    <!-- ===================================================================
+         Seite 8: Regression
+         =================================================================== -->
+    <section id="page-regression" class="page" role="tabpanel" aria-labelledby="tab-regression" hidden>
+      <h2>Regression</h2>
+      <p class="intro">Bei der <strong>Regression</strong> wird kein Label, sondern ein Zahlenwert vorhergesagt: Für einen neuen x-Wert wird der y-Wert prognostiziert. Dazu werden die k Trainingspunkte gesucht, deren x-Wert am nächsten liegt (Abstand |Δx|). Die Prognose ist der Mittelwert ihrer y-Werte – oder ein gewichteter Mittelwert, bei dem nähere Nachbarn stärker zählen. Der Streifen im Diagramm zeigt den Abstand zum k-ten Nachbarn. Das Label der Trainingspunkte spielt hier keine Rolle.</p>
+      <div id="notice-regression" class="notice" hidden></div>
+      <div class="layout">
+        <div class="controls">
+          <form id="regression-form" class="card" novalidate autocomplete="off">
+            <h3>Neuer Datenpunkt</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="r-x">x-Wert</label>
+                <input type="text" id="r-x" inputmode="decimal" maxlength="12">
+              </div>
+            </div>
+            <p class="hint">Oder: in das Diagramm klicken.</p>
+            <p id="r-error" class="error" role="alert"></p>
+          </form>
+          <div class="card">
+            <h3>Einstellungen</h3>
+            <div id="k-regression"></div>
+            <div id="weighting-regression"></div>
+            <div class="regression-options">
+              <label class="radio"><input type="checkbox" id="r-curve"> Regressionskurve anzeigen</label>
+            </div>
+          </div>
+          <div id="regression-result" class="card result" role="status" aria-live="polite"></div>
+        </div>
+        <div class="visual">
+          <div id="chart-regression"></div>
+        </div>
+      </div>
     </section>
   </main>
 

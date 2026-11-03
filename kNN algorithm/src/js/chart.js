@@ -12,6 +12,8 @@
  *     Gitterlinien gezeichnet.
  *   - Jedes Label erhält eine eigene Farbe UND eine eigene Markerform, damit
  *     die Klassen auch bei Farbsehschwäche unterscheidbar sind.
+ *   - Regression (Seite 8): einheitliche Punkte, Streifen x ± |Δx| zum k-ten
+ *     Nachbarn, prognostizierter Punkt, optional die Regressionskurve.
  *   - Optionale Ebenen: Metrik-Form (Kreis bei euklidischer, Raute bei
  *     Manhattan-Metrik; Radius = Abstand zum k-ten Nachbarn), Linien zu den
  *     Nachbarn (bei Manhattan als Weg entlang der Achsen), Rangnummern,
@@ -120,6 +122,17 @@
         d: markerPath(index, 10, 10, 6),
         class: 'pt label-' + index + (hollow ? ' is-validation' : '') + (labelIndex < 0 ? ' unknown' : '')
       })
+    ]);
+  }
+
+  /**
+   * Mini-SVG für die einheitliche Darstellung (Regression).
+   * @param {boolean} prediction - true: Raute des prognostizierten Punkts, sonst Kreis.
+   * @returns {SVGElement} Mini-SVG.
+   */
+  function neutralIcon(prediction) {
+    return dom.svgEl('svg', { class: 'marker-icon', viewBox: '0 0 20 20', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, [
+      dom.svgEl('path', { d: markerPath(prediction ? 3 : 0, 10, 10, 6), class: 'pt ' + (prediction ? 'prediction' : 'neutral') })
     ]);
   }
 
@@ -292,19 +305,29 @@
      * @param {Array<{point:Object, distance:number}>} [view.neighbors] - Nächste Nachbarn.
      * @param {string} [view.metric] - "euclidean" oder "manhattan".
      * @param {number} [view.radius] - Radius der Metrik-Form (Abstand zum k-ten Nachbarn).
+     * @param {boolean} [view.uniform] - Alle Punkte einheitlich (ohne Label-Farben/-Formen), z. B. Regression.
+     * @param {{x:number, radius:number}|null} [view.band] - Senkrechter Streifen x ± radius (Regression:
+     *        Abstand |Δx| zum k-ten Nachbarn) statt Kreis/Raute.
+     * @param {{x:number, y:number}|null} [view.prediction] - Prognostizierter Punkt (Regression).
+     * @param {Array<{x:number, y:(number|null)}>} [view.curve] - Stützstellen der Regressionskurve.
      */
     render(view) {
       const svg = dom.clear(this.svg);
       const points = view.points || [];
       const validationIds = view.validationIds || new Set();
       const neighbors = view.neighbors || [];
-      const origin = view.origin || view.query || null;
+      const origin = view.origin || view.query || view.prediction || null;
       const hollowName = view.hollowName || 'Validierungspunkt';
 
       // --- Layout: gleiche Skalierung in x und y -----------------------------
       const coords = points.slice();
       if (view.query) {
         coords.push(view.query);
+      }
+      if (view.prediction) {
+        coords.push(view.prediction);
+      } else if (view.band) {
+        coords.push({ x: view.band.x, y: points.length > 0 ? points[0].y : 0 });
       }
       const b = computeBounds(coords);
       const xSpan = b.xMax - b.xMin;
@@ -377,7 +400,29 @@
 
       // --- Metrik-Form und Nachbarlinien --------------------------------------
       const overlay = dom.svgEl('g', { 'clip-path': 'url(#' + this.clipId + ')' });
-      if (origin && neighbors.length > 0 && view.radius > 0) {
+      // Regression: Streifen x ± |Δx| des k-ten Nachbarn, senkrechte Linie beim x-Wert.
+      if (view.band) {
+        const bx = this.toSvg(view.band.x, 0).sx;
+        const half = Math.max(0, view.band.radius) * unit;
+        if (half > 0) {
+          overlay.appendChild(dom.svgEl('rect', { class: 'x-band', x: fmt(bx - half), y: fmt(top), width: fmt(2 * half), height: fmt(height) }));
+        }
+        overlay.appendChild(dom.svgEl('line', { class: 'x-line', x1: fmt(bx), y1: fmt(top), x2: fmt(bx), y2: fmt(bottom) }));
+      }
+      if (view.curve && view.curve.length > 1) {
+        const pts = view.curve.filter((c) => c.y !== null && Number.isFinite(c.y)).map((c) => {
+          const s = this.toSvg(c.x, c.y);
+          return fmt(s.sx) + ',' + fmt(s.sy);
+        });
+        if (pts.length > 1) {
+          overlay.appendChild(dom.svgEl('polyline', { class: 'reg-curve', points: pts.join(' ') }));
+        }
+      }
+      if (view.prediction) {
+        const ps = this.toSvg(view.prediction.x, view.prediction.y);
+        overlay.appendChild(dom.svgEl('line', { class: 'pred-line', x1: fmt(left), y1: fmt(ps.sy), x2: fmt(ps.sx), y2: fmt(ps.sy) }));
+      }
+      if (!view.band && origin && neighbors.length > 0 && view.radius > 0) {
         const o = this.toSvg(origin.x, origin.y);
         const r = view.radius * unit;
         if (view.metric === 'manhattan') {
@@ -407,6 +452,11 @@
       const pointLayer = dom.svgEl('g', { class: 'points' });
       for (const p of points) {
         const s = this.toSvg(p.x, p.y);
+        if (view.uniform) {
+          pointLayer.appendChild(dom.svgEl('path', { class: 'pt neutral', d: markerPath(0, s.sx, s.sy, MARKER_R) },
+            [dom.svgEl('title', null, '#' + p.id + ' (' + dom.formatNumber(p.x) + ' | ' + dom.formatNumber(p.y) + ')')]));
+          continue;
+        }
         const index = view.labelIndex(p.label);
         const isVal = validationIds.has(p.id);
         pointLayer.appendChild(dom.svgEl('path', {
@@ -445,6 +495,11 @@
           marks.appendChild(dom.svgEl('text', { class: 'query-unknown', x: fmt(s.sx), y: fmt(s.sy + 4), 'text-anchor': 'middle' }, '?'));
         }
       }
+      if (view.prediction) {
+        const s = this.toSvg(view.prediction.x, view.prediction.y);
+        marks.appendChild(dom.svgEl('circle', { class: 'query-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 9 }));
+        marks.appendChild(dom.svgEl('path', { class: 'pt prediction', d: markerPath(3, s.sx, s.sy, MARKER_R + 2) }));
+      }
       svg.appendChild(marks);
 
       this.renderLegend(view, points, validationIds, neighbors);
@@ -459,6 +514,24 @@
      */
     renderLegend(view, points, validationIds, neighbors) {
       const legend = dom.clear(this.legend);
+      if (view.uniform) {
+        if (points.length > 0) {
+          legend.appendChild(dom.el('li', null, [neutralIcon(false), 'Trainingspunkt']));
+        }
+        if (view.prediction) {
+          legend.appendChild(dom.el('li', { class: 'legend-query' }, [neutralIcon(true), 'prognostizierter Punkt (Raute, gestrichelter Ring)']));
+        }
+        if (neighbors.length > 0) {
+          legend.appendChild(dom.el('li', { class: 'legend-neighbor' }, [
+            'k = ' + neighbors.length + ' nächste Nachbarn (Ring, Nummer = Rang); Streifen = Abstand |Δx| zum k-ten Nachbarn'
+          ]));
+        }
+        if (view.curve && view.curve.length > 1) {
+          legend.appendChild(dom.el('li', { class: 'legend-curve' }, 'Linie = Regressionskurve (Prognose für jeden x-Wert)'));
+        }
+        legend.hidden = legend.childNodes.length === 0;
+        return;
+      }
       const labels = (view.labels || []).filter((label) => view.labelIndex(label) >= 0);
       for (const label of labels) {
         legend.appendChild(dom.el('li', null, [markerIcon(view.labelIndex(label)), label]));

@@ -15,6 +15,7 @@ keine externen Bibliotheken.
 | 5 Leave One Out – Verfahren | Wie Seite 4, aber jeder Punkt wird einmal weggelassen |
 | 6 Leave One Out – automatisiert | Genauigkeit für alle k = 1 … n−1 als Balkendiagramm und Tabelle, beste k hervorgehoben, Detailmatrix |
 | 7 Test und Konfusionsmatrix | Testdaten per Datei oder Eingabemaske erfassen und einzeln entfernen; jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert (k und Metrik wählbar). Die Konfusionsmatrix (Zeilen = tatsächliches, Spalten = vorhergesagtes Label) passt ihre Größe an die Labels der Trainingsdaten an; dazu Genauigkeit und Ergebnis je Testpunkt |
+| 8 Regression | Für einen neuen x-Wert wird der y-Wert aus den k Trainingspunkten mit dem nächsten x-Wert prognostiziert (Mittelwert oder gewichteter Mittelwert, umschaltbar); Streifen = Abstand zum k-ten Nachbarn, Nachbarn und prognostizierter Punkt hervorgehoben, Rechenweg und Nachbartabelle; Regressionskurve zuschaltbar. Die Punkte erscheinen einheitlich, das Label spielt keine Rolle |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsdaten wirken sofort auf alle Seiten:
 
@@ -24,7 +25,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 **Testdaten (Seite 7)** werden getrennt von den Trainingsdaten gespeichert:
 
 - Sie fließen nie als Nachbarn in eine Klassifizierung ein.
-- Änderungen der Testdaten wirken sich nicht auf die Seiten 1–6 aus. Änderungen der Trainingsdaten lassen die Testdaten unverändert; die Matrix wird neu berechnet.
+- Änderungen der Testdaten wirken sich nicht auf die übrigen Seiten aus. Änderungen der Trainingsdaten lassen die Testdaten unverändert; die Matrix wird neu berechnet.
 - Testpunkte mit einem Label, das in den Trainingsdaten nicht vorkommt, bleiben erhalten. Sie gelten als „nicht auswertbar“ und werden in der Matrix nicht gezählt.
 
 ### Dateiformat für den Upload
@@ -50,6 +51,12 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 - **Seite 3:** Der betrachtete Punkt wird bei seiner eigenen Klassifizierung ausgeschlossen.
 - **Seite 4:** Es bleiben immer mindestens ein Validierungs- und ein Trainingspunkt; die Anzahl ist der gerundete Anteil.
 - **Seite 7:** Nachbarn sind alle Trainingspunkte (auch die auf Seite 4 als Validierungsdaten markierten).
+- **Seite 8 (Regression):**
+  - Merkmal ist x, vorhergesagt wird y. Der Abstand ist |Δx|; eine Metrik-Auswahl gibt es deshalb nicht. Nachbarn sind alle Trainingspunkte.
+  - **Mittelwert:** ŷ = (y₁ + … + yₖ) / k.
+  - **Gewichteter Mittelwert:** ŷ = Σ(wᵢ·yᵢ) / Σwᵢ mit wᵢ = 1 / |Δxᵢ|. Haben Nachbarn denselben x-Wert (|Δx| = 0), zählen nur diese, jeweils mit gleichem Gewicht.
+  - Bei gleichem Abstand zählt die Reihenfolge der Eingabe (mit Hinweis an der Grenze des k-ten Nachbarn).
+  - Die Regressionskurve zeigt die Prognose für jeden x-Wert des Diagramms (beim Mittelwert eine Treppenfunktion).
 
 ## Aufbau
 
@@ -57,7 +64,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 kNN algorithm/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
-│  ├─ index.html             Gerüst der sieben Seiten, Content-Security-Policy
+│  ├─ index.html             Gerüst der acht Seiten, Content-Security-Policy
 │  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert)
 │  ├─ css/style.css          Gestaltung (Systemschriften, farbenblindfreundliche Palette)
 │  └─ js/
@@ -71,9 +78,9 @@ kNN algorithm/
 │     ├─ ods-parser.js       OpenDocument (.ods), Wiederholungen begrenzt
 │     ├─ dataset.js          zentraler Datenzustand (Trainings- und Testdaten), Eingabeprüfung, Änderungsereignisse
 │     ├─ data-import.js      Upload-Prüfung und Umwandlung in Datenpunkte
-│     ├─ knn.js              kNN, Abstimmung, Leave One Out
+│     ├─ knn.js              kNN, Abstimmung, Leave One Out, Regression
 │     ├─ chart.js            SVG-Diagramme (gleiche Skalierung, 1er-Gitter)
-│     ├─ pages/*.js          die sieben Seiten (+ gemeinsame Bausteine)
+│     ├─ pages/*.js          die acht Seiten (+ gemeinsame Bausteine)
 │     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
 ├─ testdata/                 Szenario-Dateien für den Unterricht (Training: szenario_*.csv, Test: szenario_*_test.csv)
 ├─ preview/                  Vorschau
@@ -173,8 +180,8 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (60) im Browser, mit simulierter SCORM-Schnittstelle:
-- Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung;
+**Automatisierte Tests** (64) im Browser, mit simulierter SCORM-Schnittstelle:
+- Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario-Dateien sowie von XLSX- und ODS-Dateien;
 - präparierte Angriffsdateien (Skript-Einschleusung, Zip-Bombe, „Billion Laughs“, getarnte Dateitypen, übergroße Dateien);

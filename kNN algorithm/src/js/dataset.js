@@ -3,7 +3,7 @@
  * @description Zentraler, seitenübergreifender Zustand der Trainingsdaten.
  *
  * Zweck:
- *   Alle sieben Seiten arbeiten auf demselben Datensatz. Dieses Modul
+ *   Alle acht Seiten arbeiten auf demselben Datensatz. Dieses Modul
  *   - speichert die Datenpunkte (jeder Punkt erhält eine stabile, fortlaufende ID),
  *   - speichert getrennt davon die Testdaten für Seite 7 (eigener Beobachterkanal),
  *   - verwaltet die Achsenbeschriftungen,

@@ -4,7 +4,7 @@
  *              Datenänderungen an alle Seiten und SCORM-Abschluss.
  *
  * Navigation:
- *   Die sieben Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
+ *   Die acht Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
  *   frei anwählbar. Beim Wechsel bleibt der Zustand jeder Seite erhalten.
  *   Bedienung per Maus, Tastatur (Pfeiltasten, Pos1/Ende auf der Tab-Leiste)
  *   sowie über "Zurück"/"Weiter" am Seitenende. ARIA-Rollen (tablist, tab,
@@ -41,7 +41,8 @@
     { id: 'k-selection', title: 'Auswahl eines passenden Wertes für k' },
     { id: 'loo-manual', title: 'Leave One Out – Verfahren' },
     { id: 'loo-auto', title: 'Leave One Out – automatisiert' },
-    { id: 'confusion', title: 'Test und Konfusionsmatrix' }
+    { id: 'confusion', title: 'Test und Konfusionsmatrix' },
+    { id: 'regression', title: 'Regression' }
   ];
 
   /** ID der sichtbaren Seite. */

@@ -889,6 +889,42 @@ svg.scatter.clickable {
   stroke-dasharray: 8 4;
 }
 
+/* Regression (Seite 8): einheitliche Punkte, Streifen x ± |Δx|, Prognose, Kurve. */
+.pt.neutral {
+  fill: #8a96a3;
+}
+
+.pt.prediction {
+  fill: var(--primary);
+  stroke: #1d2733;
+  stroke-width: 2;
+}
+
+.x-band {
+  fill: rgba(11, 92, 173, 0.08);
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 8 4;
+}
+
+.x-line,
+.pred-line {
+  stroke: var(--primary);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.reg-curve {
+  fill: none;
+  stroke: #d55e00;
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+.regression-options {
+  margin-top: 0.6rem;
+}
+
 .legend {
   list-style: none;
   margin: 0.5rem 0 0;

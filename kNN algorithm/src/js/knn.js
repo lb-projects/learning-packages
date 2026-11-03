@@ -1,7 +1,7 @@
 /**
  * @file knn.js
  * @description Der k-nächste-Nachbarn-Algorithmus (kNN) mit allen Auswertungen,
- *              die die sieben Seiten benötigen.
+ *              die die acht Seiten benötigen (Klassifizierung und Regression).
  *
  * Idee des Verfahrens:
  *   Ein Punkt mit unbekanntem Label wird klassifiziert, indem man die k
@@ -218,5 +218,107 @@
     return evaluate(points, points, kMax, metric);
   }
 
-  ns.knn = { METRICS, distance, sortByDistance, vote, classify, evaluateAllK, evaluate, leaveOneOut };
+  // ---------------------------------------------------------------------------
+  // kNN-Regression (Seite 8)
+  //
+  // Merkmal ist x, Zielwert ist y. Nachbarn sind die k Punkte mit dem kleinsten
+  // Abstand |Δx|; bei gleichem Abstand gilt die Reihenfolge der Eingabe.
+  // Prognose:
+  //   Mittelwert:            ŷ = (y₁ + … + yₖ) / k
+  //   gewichteter Mittelwert: ŷ = Σ(wᵢ·yᵢ) / Σwᵢ mit wᵢ = 1 / |Δxᵢ|;
+  //                           haben Nachbarn |Δx| = 0, zählen nur diese (gleich gewichtet).
+  // ---------------------------------------------------------------------------
+
+  /** Verfügbare Berechnungsarten der Regression. */
+  const WEIGHTINGS = Object.freeze({
+    mean: { id: 'mean', name: 'Mittelwert' },
+    weighted: { id: 'weighted', name: 'Gewichteter Mittelwert (Gewicht 1/|Δx|)' }
+  });
+
+  /**
+   * Sortiert alle Punkte nach ihrem Abstand |Δx| zum x-Wert (stabil).
+   *
+   * @param {Array<{id:number, x:number, y:number}>} points - Trainingspunkte.
+   * @param {number} x - x-Wert des neuen Punkts.
+   * @returns {Array<{point: Object, distance: number}>} Nach |Δx| sortierte Liste.
+   */
+  function sortByX(points, x) {
+    const list = points.map((point, order) => ({ point, distance: Math.abs(point.x - x), order }));
+    list.sort((a, b) => a.distance - b.distance || a.order - b.order);
+    return list.map((entry) => ({ point: entry.point, distance: entry.distance }));
+  }
+
+  /**
+   * Gewichte der Nachbarn für den gewichteten Mittelwert.
+   * @param {Array<{distance:number}>} neighbors - Nachbarn.
+   * @returns {number[]} Gewichte (bei |Δx| = 0 nur diese Nachbarn mit Gewicht 1).
+   */
+  function weightsOf(neighbors) {
+    if (neighbors.some((n) => n.distance === 0)) {
+      return neighbors.map((n) => (n.distance === 0 ? 1 : 0));
+    }
+    return neighbors.map((n) => 1 / n.distance);
+  }
+
+  /**
+   * kNN-Regression für einen x-Wert.
+   *
+   * @param {Array<{id:number, x:number, y:number}>} points - Trainingspunkte.
+   * @param {number} x - x-Wert des neuen Punkts.
+   * @param {number} k - Anzahl der Nachbarn.
+   * @param {string} [weighting='mean'] - "mean" oder "weighted".
+   * @returns {{y: (number|null), k: number, radius: number, weighting: string,
+   *            neighbors: Array<{point:Object, distance:number, weight:number}>}}
+   *          Prognose, Nachbarn (mit Gewicht) und Radius (= |Δx| des k-ten Nachbarn).
+   */
+  function regress(points, x, k, weighting) {
+    const mode = weighting === 'weighted' ? 'weighted' : 'mean';
+    const sorted = sortByX(points, x);
+    const effectiveK = Math.max(0, Math.min(k, sorted.length));
+    const nearest = sorted.slice(0, effectiveK);
+    const weights = mode === 'weighted' ? weightsOf(nearest) : nearest.map(() => 1);
+    let sumW = 0;
+    let sumWY = 0;
+    nearest.forEach((n, i) => {
+      sumW += weights[i];
+      sumWY += weights[i] * n.point.y;
+    });
+    const y = effectiveK > 0 && sumW > 0 ? Math.round((sumWY / sumW) * 1e6) / 1e6 : null;
+    return {
+      y,
+      k: effectiveK,
+      radius: effectiveK > 0 ? nearest[effectiveK - 1].distance : 0,
+      weighting: mode,
+      neighbors: nearest.map((n, i) => ({ point: n.point, distance: n.distance, weight: weights[i] }))
+    };
+  }
+
+  /**
+   * Stützstellen der Regressionskurve (Prognose für viele x-Werte).
+   *
+   * @param {Array} points - Trainingspunkte.
+   * @param {number} k - Anzahl der Nachbarn.
+   * @param {string} weighting - "mean" oder "weighted".
+   * @param {number} xMin - Linker Rand.
+   * @param {number} xMax - Rechter Rand.
+   * @param {number} [steps=400] - Anzahl der Abschnitte.
+   * @returns {Array<{x:number, y:number}>} Stützstellen (leer ohne Punkte).
+   */
+  function regressionCurve(points, k, weighting, xMin, xMax, steps) {
+    const n = Math.max(1, Math.min(2000, Math.floor(steps || 400)));
+    if (points.length === 0 || !(xMax > xMin)) {
+      return [];
+    }
+    const out = [];
+    for (let i = 0; i <= n; i++) {
+      const x = xMin + (xMax - xMin) * i / n;
+      out.push({ x, y: regress(points, x, k, weighting).y });
+    }
+    return out;
+  }
+
+  ns.knn = {
+    METRICS, distance, sortByDistance, vote, classify, evaluateAllK, evaluate, leaveOneOut,
+    WEIGHTINGS, sortByX, regress, regressionCurve
+  };
 })(window.KNN = window.KNN || {});
