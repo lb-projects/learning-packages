@@ -161,18 +161,22 @@ Die Daten sind frei erfunden, mit einer Ausnahme: `szenario_1_schwertlilien.csv`
 
 ## Qualitätssicherung
 
-Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklungswerkzeugen gebaut und getestet. Sie verwenden nur Windows-PowerShell und .NET-Bordmittel.
+Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklungswerkzeugen gebaut und getestet. Sie verwenden Node.js sowie Playwright mit Chromium im Headless-Modus.
 
 **Beim Bauen wird geprüft**, und das Paket wird nicht erstellt, wenn
-- eine Datei in `src/` nicht im Manifest steht;
+- eine Datei in `src/` nicht im Manifest steht oder umgekehrt;
 - `LICENSE.txt` von der `LICENSE` des Repositorys abweicht;
-- die CSP fehlt oder gelockert ist (`unsafe-*`, Platzhalter, fremde Quellen);
-- gefährliche APIs oder externe Adressen vorkommen;
-- unsichtbare Richtungs- oder Nullbreitenzeichen im Quelltext stehen (Schutz vor „Trojan Source“).
+- die CSP fehlt oder gelockert ist (`unsafe-*`, Platzhalter, fremde Quellen, weitere Trusted-Types-Policies), Inline-Skripte, Inline-Stile oder Event-Handler vorkommen;
+- gefährliche APIs (HTML-Senken, `eval`, Netzwerk-, Speicher- und Cookie-Zugriffe) oder externe Adressen vorkommen;
+- unsichtbare Richtungs- oder Nullbreitenzeichen im Quelltext stehen (Schutz vor „Trojan Source“);
+- eine Paketdatei kein UTF-8 ohne BOM mit LF-Zeilenenden ist (die Szenario-Dateien sind für Excel bewusst mit BOM gespeichert);
+- der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
+- im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** im Browser, mit simulierter SCORM-Schnittstelle:
-- Algorithmus (inklusive Handrechnung);
-- Parser, DEFLATE und ZIP-Grenzen;
+**Automatisierte Tests** (57) im Browser, mit simulierter SCORM-Schnittstelle:
+- Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung;
+- Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
+- Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario-Dateien sowie von XLSX- und ODS-Dateien;
 - präparierte Angriffsdateien (Skript-Einschleusung, Zip-Bombe, „Billion Laughs“, getarnte Dateitypen, übergroße Dateien);
 - Klickpfade aller Seiten und seitenübergreifende Änderungen;
 - SCORM-Meldungen;
