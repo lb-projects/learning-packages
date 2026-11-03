@@ -80,18 +80,18 @@ kNN algorithm/
 └─ README.md                 diese Datei
 ```
 
-Der Ordner `src/` enthält ausschließlich Paketdateien – genau die Dateien, die im SCORM-ZIP landen.
+Der Ordner `src/` enthält ausschließlich Paketdateien – genau die Dateien, die im SCORM-ZIP landen. Das fertige Paket entsteht als `dist/knn-algorithmus.zip` im Stamm des Repositorys; der Ordner `dist/` wird nicht versioniert.
 
 ## Paket erstellen und in Moodle einbinden
 
 Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsmanifest.xml` muss dabei direkt in der obersten Ebene des ZIP liegen, nicht in einem Unterordner `src/`.
 
-- **Windows:** Ordner `src` öffnen, alle Dateien und Ordner markieren, dann *Senden an → ZIP-komprimierter Ordner*.
-- **Andere Systeme:** im Ordner `src` z. B. `zip -r ../knn-simulator-scorm12.zip .` ausführen.
+- **Windows:** Ordner `src` öffnen, alle Dateien und Ordner markieren, dann *Senden an → ZIP-komprimierter Ordner*. Die Datei `knn-algorithmus.zip` nennen und in den Ordner `dist/` im Stamm des Repositorys legen.
+- **Andere Systeme:** im Ordner `src` z. B. `mkdir -p ../../dist && zip -r ../../dist/knn-algorithmus.zip .` ausführen.
 
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
-2. ZIP-Datei hochladen.
+2. `knn-algorithmus.zip` hochladen.
 3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle sieben Seiten besucht wurden. Ein bereits gemeldeter Abschluss bleibt erhalten. Gespeicherte Fortschritte der früheren Fassung mit sechs Seiten werden weiter gelesen.
 
 ## Sicherheits- und Datenschutzkonzept

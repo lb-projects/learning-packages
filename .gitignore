@@ -1,5 +1,6 @@
 # Build-Ergebnisse gehören nicht ins Repository
-# (Teilprojekte enthalten nur src/, preview/ und testdata/)
+# (Teilprojekte enthalten nur src/, preview/ und testdata/;
+#  die fertigen SCORM-ZIPs entstehen lokal in dist/ und werden nicht versioniert)
 *.zip
 build/
 dist/

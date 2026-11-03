@@ -1,6 +1,6 @@
 # SQL Sandbox – SCORM-1.2-Lernpaket
 
-Interaktiver Simulator zum Abfragen relationaler Datenbanken mit **SQL**. In Moodle und im Browser erscheint das Lernpaket unter dem Namen **„SQL Sandbox“** (Ordner im Repository: `SQL simulator/`).
+Die SQL Sandbox ist eine interaktive Lernumgebung zum Abfragen relationaler Datenbanken mit **SQL**.
 Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausführung) ist eigener Code: Es werden keine externen Ressourcen geladen und keine externen Bibliotheken verwendet (auch kein SQLite/sql.js).
 
 ## Inhalt für den Unterricht
@@ -10,9 +10,9 @@ Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausfüh
 | 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO` auch mit `SELECT`/`WITH`, `CREATE VIEW`) |
 | 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL, CHECK-Bedingungen) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen. Unter jeder Tabelle lässt sich der `CREATE TABLE`-Befehl aufklappen (anfangs zugeklappt). Sichten (Views) stehen in einem eigenen Abschnitt mit ihrem aktuellen Ergebnis und dem aufklappbaren `CREATE VIEW`-Befehl |
 | 3 SQL-Befehle | Eingabemaske (anfangs leer) mit „Ausführen“ (auch Strg + Enter) für Abfragen, Datenänderungen und `CREATE/DROP VIEW`; Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
-| 4 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm: Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten (`1`, `0..1`, `n`, bei n:m `n` und `m`), Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien, bei genügend Platz in die Breite, sonst in die Tiefe (auch fest wählbar); Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Einzelne Klassen lassen sich samt ihren Beziehungen aus- und einblenden. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
+| 4 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm, zur Veranschaulichung (ein Hinweis über dem Diagramm stellt klar, dass es nicht den in Unterricht und Leistungsnachweisen geforderten Zeichenkonventionen entspricht): Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten (`1`, `0..1`, `n`, bei n:m `n` und `m`), Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien, bei genügend Platz in die Breite, sonst in die Tiefe (auch fest wählbar); Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Einzelne Klassen lassen sich samt ihren Beziehungen aus- und einblenden. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
 
-Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten.
+Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten. Die Registerkarten tragen keine Abschlussmarkierung; wie viele Seiten besucht wurden, zeigt die Fußzeile („Besuchte Seiten: x von 4“).
 Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her. Wird eine andere Datenbank geladen, zeigt Seite 4 sofort deren Klassendiagramm.
 
 ### Klassendiagramm (Seite 4)
@@ -46,7 +46,7 @@ Das Diagramm wird aus den Tabellendefinitionen abgeleitet:
   - Die Auswahl bleibt bei Datenänderungen auf Seite 3 erhalten. Beim Laden einer Datenbank werden wieder alle Klassen gezeigt.
   - Hinweise zu Fremdschlüsseln gelten immer für das ganze Schema. Infozeile und Textfassung nennen, wie viele Klassen und Beziehungen angezeigt sind und welche Klassen ausgeblendet sind.
 - **Sichten** erscheinen nicht im Klassendiagramm.
-- **Aufbau der Seite:** Unter der Überschrift stehen die Bedienelemente (Anordnung, Ausrichtung, Auswahl der Klassen), danach das Diagramm mit Infozeile und Textfassung, die Erläuterung am Ende.
+- **Aufbau der Seite:** Unter der Überschrift steht ein kurzer Hinweis, dass das Diagramm nur der Veranschaulichung dient und nicht den im Unterricht und in Leistungsnachweisen geforderten Zeichenkonventionen entspricht. Darunter stehen die Bedienelemente (Anordnung, Ausrichtung, Auswahl der Klassen), danach das Diagramm mit Infozeile und Textfassung, die Erläuterung am Ende.
 
 ### Unterstützter SQL-Umfang
 
@@ -71,7 +71,7 @@ Das Diagramm wird aus den Tabellendefinitionen abgeleitet:
 
 ### Festlegungen (an MySQL/MariaDB angelehnt)
 
-Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält sich deshalb in den meisten Punkten wie MySQL. Bei der Groß-/Kleinschreibung ist er bewusst strenger, damit sich Lernende eine saubere Schreibweise angewöhnen.
+Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Die SQL Sandbox verhält sich deshalb in den meisten Punkten wie MySQL. Bei der Groß-/Kleinschreibung ist sie bewusst strenger, damit sich Lernende eine saubere Schreibweise angewöhnen.
 
 - **Schlüsselwörter** werden in jeder Schreibweise erkannt. Nicht großgeschriebene Schlüsselwörter ergeben aber einen kurzen Hinweis.
 - **Tabellen-, Spalten- und Aliasnamen** müssen genau so geschrieben werden wie definiert. `preis` statt `Preis` ergibt einen Fehler mit dem Vorschlag „Meinten Sie „Preis“?“. Namen, die sich nur in der Schreibung unterscheiden (`Preis` und `preis` in derselben Tabelle), sind nicht erlaubt.
@@ -91,7 +91,7 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält 
   - Wie im SQL-Standard und in MySQL ist ein Datensatz nur unzulässig, wenn die Bedingung **falsch** ist. Ergibt sie `NULL`, etwa weil ein Wert fehlt, wird er gespeichert.
   - Unterabfragen und Aggregatfunktionen sind in CHECK nicht erlaubt.
   - `NOT ENFORCED` (MySQL 8) speichert die Bedingung, ohne sie zu prüfen.
-- **CREATE TABLE auf Seite 2** wird aus dem aktuellen Tabellenaufbau erzeugt (ähnlich `SHOW CREATE TABLE`). Er enthält daher auch Schlüssel, die erst per `ALTER TABLE` hinzukamen. Einfache Indizes (`KEY`, `INDEX`) und Tabellenoptionen (`ENGINE=…`) haben im Simulator keine Wirkung und erscheinen dort nicht.
+- **CREATE TABLE auf Seite 2** wird aus dem aktuellen Tabellenaufbau erzeugt (ähnlich `SHOW CREATE TABLE`). Er enthält daher auch Schlüssel, die erst per `ALTER TABLE` hinzukamen. Einfache Indizes (`KEY`, `INDEX`) und Tabellenoptionen (`ENGINE=…`) haben in der SQL Sandbox keine Wirkung und erscheinen dort nicht.
 
 ### Dateiformat für den Upload (Seite 1)
 
@@ -121,7 +121,7 @@ Die ersten vier Dateien sind identisch mit den eingebauten Beispieldatenbanken a
 ## Aufbau
 
 ```
-SQL simulator/
+SQL Sandbox/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
 │  ├─ index.html             Gerüst der vier Seiten, Content-Security-Policy
@@ -149,19 +149,19 @@ SQL simulator/
 └─ README.md                 diese Datei
 ```
 
-Der Ordner `src/` enthält ausschließlich Paketdateien – genau die Dateien, die im SCORM-ZIP landen. Build-Ergebnisse (ZIP) liegen nicht im Repository.
+Der Ordner `src/` enthält ausschließlich Paketdateien – genau die Dateien, die im SCORM-ZIP landen. Das fertige Paket entsteht als `dist/sql-sandbox.zip` im Stamm des Repositorys; der Ordner `dist/` wird nicht versioniert.
 
 ## Paket erstellen und in Moodle einbinden
 
 Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsmanifest.xml` muss dabei direkt in der obersten Ebene des ZIP liegen, nicht in einem Unterordner `src/`.
 
-- **Windows:** Ordner `src` öffnen, alle Dateien und Ordner markieren, dann *Senden an → ZIP-komprimierter Ordner*.
-- **Andere Systeme:** im Ordner `src` z. B. `zip -r ../sql-simulator-scorm12.zip .` ausführen.
+- **Windows:** Ordner `src` öffnen, alle Dateien und Ordner markieren, dann *Senden an → ZIP-komprimierter Ordner*. Die Datei `sql-sandbox.zip` nennen und in den Ordner `dist/` im Stamm des Repositorys legen.
+- **Andere Systeme:** im Ordner `src` z. B. `mkdir -p ../../dist && zip -r ../../dist/sql-sandbox.zip .` ausführen.
 
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
-2. ZIP-Datei hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle vier Seiten besucht wurden. Ein bereits gemeldeter Abschluss bleibt erhalten; der Fortschritt älterer Versuche (drei Seiten) wird weiter gelesen.
+2. `sql-sandbox.zip` hochladen.
+3. Bewertung: „Abschluss“ bzw. Status „completed“ ist gesetzt, sobald alle vier Seiten besucht wurden (die Fußzeile zeigt den Stand, die Registerkarten tragen kein Häkchen). Ein bereits gemeldeter Abschluss bleibt erhalten; der Fortschritt älterer Versuche (drei Seiten) wird weiter gelesen.
 
 ## Sicherheits- und Datenschutzkonzept
 
@@ -215,7 +215,7 @@ So wird das Paket in Moodle eingebunden:
 
 ## Qualitätssicherung
 
-Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklungswerkzeugen gebaut und getestet. Sie verwenden nur Windows-PowerShell, .NET-Bordmittel und Microsoft Edge im Headless-Modus.
+Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklungswerkzeugen gebaut und getestet. Sie verwenden Node.js sowie Playwright mit Chromium im Headless-Modus.
 
 **Beim Bauen wird geprüft**, und das Paket wird nicht erstellt, wenn
 - eine Datei in `src/` nicht im Manifest steht oder umgekehrt;
@@ -225,10 +225,10 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - unsichtbare Richtungs- oder Nullbreitenzeichen im Quelltext stehen (Schutz vor „Trojan Source“);
 - eine Textdatei kein UTF-8 ohne BOM mit LF-Zeilenenden ist;
 - die eingebauten Beispieldatenbanken von `testdata/*.sql` abweichen;
-- der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht;
+- der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (über 190) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (200) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
 - jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;

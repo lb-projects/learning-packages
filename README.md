@@ -7,6 +7,8 @@ SCORM-1.2-Lernpakete für Lernplattformen.
 | [kNN algorithm](kNN%20algorithm/README.md) | **kNN Algorithmus:** Interaktiver Simulator zum Klassifikationsverfahren k nächste Nachbarn (kNN) |
 | [SQL Sandbox](SQL%20Sandbox/README.md) | **SQL Sandbox:** SQL-Abfragen im Browser: Beispieldatenbanken oder eigene SQL-Dateien laden, Tabellen ansehen, SELECT (auch mit WITH, UNION, CASE und Fensterfunktionen), INSERT/UPDATE/DELETE und CREATE VIEW ausführen, Schema als UML-Klassendiagramm ansehen |
 
+Die fertigen SCORM-Pakete entstehen lokal als `dist/sql-sandbox.zip` und `dist/knn-algorithmus.zip` im Stamm des Repositorys. Der Ordner `dist/` wird nicht versioniert.
+
 ## Lizenz
 
 - Der Quelltext steht unter der [MIT-Lizenz](LICENSE).
