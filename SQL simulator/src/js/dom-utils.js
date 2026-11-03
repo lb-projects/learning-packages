@@ -11,8 +11,8 @@
  *   Keine (nur Standard-DOM-API des Browsers).
  *
  * Sicherheitsaspekte:
- *   - Texte werden ausschließlich über Textknoten (`document.createTextNode`)
- *     bzw. `textContent` eingefügt. Dadurch wird jeglicher Inhalt – auch
+ *   - Texte werden ausschließlich als Textknoten (`Element.append` mit
+ *     Zeichenkette) bzw. über `textContent` eingefügt. Dadurch wird jeglicher Inhalt – auch
  *     Zeichenketten wie `<script>` oder `<img onerror=…>` aus hochgeladenen
  *     SQL-Dateien – nur als Text dargestellt und niemals als HTML interpretiert.
  *   - HTML-Senken (Zuweisungen von HTML-Text an Elemente) und das direkte
@@ -52,7 +52,8 @@
 
   /**
    * Hängt Kindelemente bzw. Texte an ein Element an.
-   * Zeichenketten und Zahlen werden immer als Textknoten eingefügt.
+   * Nur echte DOM-Knoten werden unverändert eingefügt; alles andere (Zeichenketten,
+   * Zahlen, Fehlerobjekte …) wird immer als Textknoten eingefügt.
    *
    * @param {Node} parent - Element, an das angehängt wird.
    * @param {Array|Node|string|number|null|undefined} children - Kind(er); null/undefined/false werden ignoriert.
@@ -66,11 +67,8 @@
       if (child === null || child === undefined || child === false) {
         continue;
       }
-      if (typeof child === 'string' || typeof child === 'number') {
-        parent.appendChild(document.createTextNode(String(child)));
-      } else {
-        parent.appendChild(child);
-      }
+      // append() fügt Zeichenketten immer als Textknoten ein; alles, was kein Knoten ist, wird zu Text.
+      parent.append(child instanceof Node ? child : String(child));
     }
   }
 
