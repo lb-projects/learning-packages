@@ -3,6 +3,7 @@
 *.zip
 build/
 dist/
+dev-tools/
 
 # Betriebssystem-Dateien
 Thumbs.db
