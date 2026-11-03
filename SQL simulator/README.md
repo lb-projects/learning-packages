@@ -100,7 +100,7 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Der Simulator verhält 
 - **Namen** müssen auch in der Datei überall gleich geschrieben sein (z. B. in `PRIMARY KEY (id)` und `INSERT INTO kurs (…)`).
 - **Übersprungen** (ohne Wirkung, mit Hinweis): `SET`, `START TRANSACTION`, `BEGIN`, `COMMIT`, `LOCK/UNLOCK TABLES`, `USE`, `CREATE DATABASE` sowie Sonderkommentare `/*! … */`. Tabellenoptionen wie `ENGINE=InnoDB DEFAULT CHARSET=utf8mb4` werden ignoriert.
 - **Sichten aus Exporten:** Zusätze wie ``ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER`` und `WITH CASCADED CHECK OPTION` werden überlesen. Ein Datenbankpräfix wie in `` `schule`.`t`.`a` `` wird ignoriert (es gibt nur eine Datenbank). Die in Exporten übliche Ersatztabelle mit dem Namen der Sicht, die anschließend per `DROP TABLE` entfernt wird, funktioniert ebenfalls.
-- **Grenzen:** 50 Tabellen, 50 Spalten je Tabelle, 20.000 Datensätze insgesamt, Texte bis 1.000 Zeichen, Namen bis 64 Zeichen.
+- **Grenzen:** 50 Tabellen, 50 Spalten je Tabelle, je Tabelle höchstens 50 CHECK-Bedingungen, 50 UNIQUE-Schlüssel und 50 Fremdschlüssel, 20.000 Datensätze insgesamt, Texte bis 1.000 Zeichen, Namen bis 64 Zeichen.
 - Eine Datei wird **ganz oder gar nicht** übernommen. Bei einem Fehler erscheint die Meldung mit Zeile, Spalte und Ausschnitt; die bisherige Datenbank bleibt unverändert.
 
 ## Beispieldatenbanken und Dateien für den Unterricht
@@ -173,11 +173,13 @@ So wird das Paket in Moodle eingebunden:
 - Tabellen, Spalten, Aliase und Gruppen liegen nur in `Map`/`Set`. Namen wie `__proto__` oder `constructor` sind daher harmlos (kein Prototype Pollution).
 
 **Schutz vor Hängern und Speicherüberlauf im Browser**
-- Verschachtelungstiefe höchstens 32 (Klammern, Unterabfragen, `NOT`).
+- Verschachtelungstiefe höchstens 32 (Klammern, Unterabfragen, `NOT`); lange Ketten wie `a + b + …`, `… OR …` oder `… UNION …` ergeben höchstens 300 Ebenen im Syntaxbaum.
+- SELECT-, GROUP-BY- und ORDER-BY-Listen höchstens 250 Einträge; Ergebnisse höchstens 250 Spalten (auch bei `*`).
 - Zwischenergebnisse von Verknüpfungen höchstens 200.000 Zeilen. Ein vergessenes `ON` führt zu einer erklärenden Meldung zum kartesischen Produkt statt zum Absturz.
 - Ergebnisse höchstens 25.000 Zeilen; angezeigt werden höchstens 1.000 Zeilen je Tabelle (mit Hinweis).
 - Zeitbudget 3 Sekunden je Befehl (Upload: 10 Sekunden), danach Abbruch mit Meldung.
-- `LIKE` wird ohne reguläre Ausdrücke ausgewertet (kein ReDoS).
+- `LIKE` wird ohne reguläre Ausdrücke ausgewertet (kein ReDoS) und hält das Zeitbudget auch innerhalb eines einzelnen Vergleichs ein.
+- Bei sehr vielen Beziehungen (über 300 Linienabschnitte) verzichtet das Klassendiagramm auf die Kreuzungsoptimierung, damit die Seite nicht hängt.
 
 **Uploads**
 - Erlaubt sind nur die Endungen `.sql` und `.txt`, höchstens 1 MB.

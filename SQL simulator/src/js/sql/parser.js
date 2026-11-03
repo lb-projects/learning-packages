@@ -15,7 +15,11 @@
  *
  * Sicherheit:
  *   Die Verschachtelungstiefe ist begrenzt (MAX_DEPTH), damit sehr tief
- *   geklammerte Eingaben keinen Stapelüberlauf auslösen.
+ *   geklammerte Eingaben keinen Stapelüberlauf auslösen. Lange Ketten wie
+ *   a + b + c … oder … UNION … UNION … ergeben ebenfalls tiefe Syntaxbäume;
+ *   deshalb wird nach dem Parsen die Tiefe des ganzen Baums geprüft
+ *   (MAX_TREE_DEPTH). Listen in SELECT, GROUP BY und ORDER BY haben höchstens
+ *   MAX_LIST_ITEMS Einträge.
  *
  * Abhängigkeiten:
  *   sql/errors.js, sql/lexer.js
@@ -28,6 +32,15 @@
 
   /** Größte erlaubte Verschachtelungstiefe (Klammern, Unterabfragen, NOT, Vorzeichen). */
   const MAX_DEPTH = 32;
+
+  /**
+   * Größte erlaubte Tiefe des Syntaxbaums (Knoten mit "type"). Begrenzt die
+   * Rekursion aller späteren Durchläufe (Binden, Auswerten).
+   */
+  const MAX_TREE_DEPTH = 300;
+
+  /** Höchstzahl der Einträge in SELECT-, GROUP-BY- und ORDER-BY-Listen. */
+  const MAX_LIST_ITEMS = 250;
 
   /**
    * Reservierte Wörter: dürfen ohne Backticks nicht als Name oder Alias
@@ -167,6 +180,18 @@
 
     leave() {
       this.depth--;
+    }
+
+    /**
+     * Bricht ab, wenn eine Liste bereits MAX_LIST_ITEMS Einträge hat.
+     *
+     * @param {Array} list - Bisherige Einträge.
+     * @param {string} what - Bezeichnung der Liste, z. B. "SELECT-Liste".
+     */
+    checkListLength(list, what) {
+      if (list.length >= MAX_LIST_ITEMS) {
+        throw new SqlError('Die ' + what + ' hat zu viele Einträge (höchstens ' + MAX_LIST_ITEMS + ').', this.peek().pos);
+      }
     }
 
     /**
@@ -515,6 +540,7 @@
           } else {
             this.acceptKw('ASC');
           }
+          this.checkListLength(node.orderBy, 'ORDER-BY-Liste');
           node.orderBy.push({ expr, desc });
         } while (this.acceptSym(','));
       }
@@ -550,6 +576,7 @@
         this.fail('Nach SELECT fehlt die Liste der Spalten (z. B. SELECT * oder SELECT Name, Ort)');
       }
       do {
+        this.checkListLength(node.columns, 'SELECT-Liste');
         node.columns.push(this.parseSelectItem());
       } while (this.acceptSym(','));
 
@@ -563,6 +590,7 @@
         this.next();
         this.expectKw('BY', 'Nach GROUP wird „BY“ erwartet');
         do {
+          this.checkListLength(node.groupBy, 'GROUP-BY-Liste');
           node.groupBy.push(this.parseExpr());
         } while (this.acceptSym(','));
       }
@@ -1699,6 +1727,35 @@
   }
 
   /**
+   * Prüft die Tiefe eines Syntaxbaums ohne Rekursion (eigener Stapel).
+   * Als Ebene zählen nur Knoten mit "type"; Listen und Hilfsobjekte werden durchlaufen.
+   *
+   * @param {Object} root - Anweisung (AST).
+   * @throws {SqlError} Wenn der Baum tiefer als MAX_TREE_DEPTH ist.
+   */
+  function checkTreeDepth(root) {
+    const seen = new Set();
+    const stack = [[root, 0]];
+    while (stack.length > 0) {
+      const [value, parentDepth] = stack.pop();
+      if (value === null || typeof value !== 'object' || seen.has(value)) {
+        continue;
+      }
+      seen.add(value);
+      const depth = typeof value.type === 'string' ? parentDepth + 1 : parentDepth;
+      if (depth > MAX_TREE_DEPTH) {
+        throw new SqlError('Der Befehl ist zu umfangreich: zu viele aufeinanderfolgende Operatoren, Bedingungen oder Mengenoperationen.',
+          value.pos || null, 'Teilen Sie den Befehl auf oder verwenden Sie z. B. IN (…) statt vieler OR-Bedingungen.');
+      }
+      for (const child of Array.isArray(value) ? value : Object.values(value)) {
+        if (child !== null && typeof child === 'object') {
+          stack.push([child, depth]);
+        }
+      }
+    }
+  }
+
+  /**
    * Zerlegt und parst ein SQL-Skript.
    *
    * @param {string} source - Quelltext.
@@ -1708,6 +1765,7 @@
   function parse(source) {
     const tokens = ns.sql.tokenize(source);
     const statements = new Parser(String(source), tokens).parseScript();
+    statements.forEach(checkTreeDepth);
     statements.keywordCase = keywordCase(tokens);
     return statements;
   }

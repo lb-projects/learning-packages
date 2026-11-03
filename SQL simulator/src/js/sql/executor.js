@@ -21,9 +21,9 @@
  * Schutz vor Hängern (die Ausführung läuft im Browser-Tab der Lernenden):
  *   - Zeitbudget je Anweisung (EXEC_LIMITS.timeMs), regelmäßig geprüft.
  *   - Zwischenergebnisse von Verknüpfungen höchstens EXEC_LIMITS.maxJoinRows Zeilen.
- *   - Endergebnis höchstens EXEC_LIMITS.maxResultRows Zeilen.
+ *   - Endergebnis höchstens EXEC_LIMITS.maxResultRows Zeilen und EXEC_LIMITS.maxResultColumns Spalten.
  *   - Rekursionstiefe ist bereits im Parser begrenzt.
- *   - LIKE wird ohne reguläre Ausdrücke ausgewertet (kein ReDoS).
+ *   - LIKE wird ohne reguläre Ausdrücke ausgewertet (kein ReDoS) und prüft dabei das Zeitbudget.
  *
  * Abhängigkeiten:
  *   sql/errors.js, sql/values.js, sql/parser.js, sql/database.js
@@ -40,6 +40,7 @@
   const EXEC_LIMITS = Object.freeze({
     maxJoinRows: 200000,
     maxResultRows: 25000,
+    maxResultColumns: 250,
     timeMs: 3000,
     importTimeMs: 10000
   });
@@ -900,6 +901,8 @@
     const aliasPosition = new Map();
     /** Alias (klein) → Schreibweise wie in der SELECT-Liste (Verweise müssen exakt passen). */
     const aliasSpelling = new Map();
+    const tooManyColumns = (pos) => new SqlError('Das Ergebnis hätte mehr als ' + EXEC_LIMITS.maxResultColumns + ' Spalten.', pos,
+      'Nennen Sie in der SELECT-Liste nur die benötigten Spalten statt *.');
     for (const item of q.columns) {
       if (item.kind === 'star') {
         if (scope.sources.length === 0) {
@@ -919,10 +922,16 @@
         }
         for (const srcIdx of indices) {
           scope.sources[srcIdx].columns.forEach((c, col) => {
+            if (q.outputs.length >= EXEC_LIMITS.maxResultColumns) {
+              throw tooManyColumns(item.pos);
+            }
             q.outputs.push({ expr: { type: 'column', table: null, name: c.name, ref: { depth: 0, src: srcIdx, col }, pos: item.pos }, name: c.name, type: c.type });
           });
         }
       } else {
+        if (q.outputs.length >= EXEC_LIMITS.maxResultColumns) {
+          throw tooManyColumns(item.expr.pos);
+        }
         const expr = bindExpr(item.expr, scope, Object.assign({}, baseFlags, { clause: 'SELECT', allowAgg: true }));
         const name = item.alias || (item.expr.type === 'column' ? item.expr.name : item.text);
         if (item.alias && !aliasMap.has(item.alias.toLowerCase())) {
@@ -1387,7 +1396,8 @@
    * Vergleicht einen Text mit einem LIKE-Muster (% = beliebig viele Zeichen,
    * _ = genau ein Zeichen, \ maskiert das folgende Zeichen). Groß-/Kleinschreibung zählt
    * (außer mit ignoreCase – das dient nur dem Hinweis auf eine falsche Schreibung).
-   * Laufzeit höchstens Textlänge × Musterlänge, ohne reguläre Ausdrücke.
+   * Laufzeit höchstens Textlänge × Musterlänge, ohne reguläre Ausdrücke; beim
+   * Zurücksetzen nach % wird das Zeitbudget geprüft (tick).
    *
    * @param {string} text - Text.
    * @param {string} pattern - Muster.
@@ -1423,6 +1433,7 @@
         starP = pi++;
         starT = ti;
       } else if (starP >= 0) {
+        tick();
         pi = starP + 1;
         ti = ++starT;
       } else {

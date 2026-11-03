@@ -18,7 +18,7 @@
  *   - Namen aus der Eingabe werden nur als Map-Schlüssel verwendet, nie als
  *     Eigenschaftsnamen von Objekten (kein Prototype Pollution, z. B. bei
  *     einer Tabelle namens "__proto__").
- *   - Grenzwerte (LIMITS) für Tabellen, Spalten, Datensätze und Textlänge.
+ *   - Grenzwerte (LIMITS) für Tabellen, Spalten, Datensätze, Textlänge und Schlüssel je Tabelle.
  *
  * Abhängigkeiten:
  *   sql/errors.js, sql/values.js
@@ -36,7 +36,9 @@
     maxColumns: 50,
     maxRows: 20000,
     maxString: 1000,
-    maxChecks: 50
+    maxChecks: 50,
+    maxUniques: 50,
+    maxForeignKeys: 50
   });
 
   /** Ganzzahltypen mit Wertebereich (vorzeichenbehaftet). */
@@ -656,6 +658,9 @@
     if ((table.primaryKey && table.primaryKey.join(',') === sig) || table.uniques.some((u) => u.join(',') === sig)) {
       return;
     }
+    if (table.uniques.length >= LIMITS.maxUniques) {
+      throw new SqlError('Eine Tabelle darf höchstens ' + LIMITS.maxUniques + ' UNIQUE-Schlüssel haben.', pos);
+    }
     table.uniques.push(columns);
     table.invalidate();
     checkAllKeys(table, table.rows, pos);
@@ -683,6 +688,20 @@
   }
 
   /**
+   * Fügt einen Fremdschlüssel hinzu (geprüft wird er erst beim Ändern von Daten bzw. im Diagramm).
+   *
+   * @param {Table} table - Tabelle.
+   * @param {Object} fk - {columns, refTable, refColumns, name}.
+   * @param {Object|null} pos - Position.
+   */
+  function addForeignKey(table, fk, pos) {
+    if (table.foreignKeys.length >= LIMITS.maxForeignKeys) {
+      throw new SqlError('Eine Tabelle darf höchstens ' + LIMITS.maxForeignKeys + ' Fremdschlüssel haben.', pos);
+    }
+    table.foreignKeys.push(fk);
+  }
+
+  /**
    * Wendet ein Tabellen-Constraint (aus CREATE TABLE oder ALTER TABLE ADD) an.
    *
    * @param {Table} table - Tabelle.
@@ -705,7 +724,7 @@
         if (name !== null && table.foreignKeys.some((f) => f.name !== null && f.name.toLowerCase() === name.toLowerCase())) {
           throw new SqlError('Es gibt bereits einen Fremdschlüssel namens „' + name + '“ in der Tabelle „' + table.name + '“.', c.pos);
         }
-        table.foreignKeys.push({ columns: cols, refTable: c.refTable, refColumns: c.refColumns.slice(), name });
+        addForeignKey(table, { columns: cols, refTable: c.refTable, refColumns: c.refColumns.slice(), name }, c.pos);
         break;
       }
       case 'index':
@@ -772,7 +791,7 @@
         addUnique(table, [idx], def.pos);
       }
       if (def.references) {
-        table.foreignKeys.push({ columns: [idx], refTable: def.references.refTable, refColumns: def.references.refColumns.slice(), name: null });
+        addForeignKey(table, { columns: [idx], refTable: def.references.refTable, refColumns: def.references.refColumns.slice(), name: null }, def.pos);
       }
       for (const c of def.checks) {
         addCheck(table, c, idx);

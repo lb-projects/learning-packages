@@ -6,7 +6,8 @@
  *   1. Zyklen brechen, Ebenen bestimmen: referenzierte Klassen oben, abhängige darunter.
  *      Assoziationsklassen liegen unter beiden Enden ihrer n:m-Beziehung.
  *   2. Linien über mehrere Ebenen erhalten Hilfsknoten (Durchgänge).
- *   3. Reihenfolge je Ebene: Baryzentren und Nachbartausch, um Kreuzungen zu vermeiden.
+ *   3. Reihenfolge je Ebene: Baryzentren und Nachbartausch, um Kreuzungen zu vermeiden
+ *      (entfällt bei sehr vielen Linienabschnitten, da die Kreuzungszählung quadratisch wächst).
  *   4. Waagerechte Lage: Ausgleich zur Mitte der Nachbarn bei festen Mindestabständen.
  *   5. Linienführung nur mit waagerechten und senkrechten Abschnitten: Zwischen zwei
  *      Ebenen liegt ein Kanal mit Spuren; jede waagerechte Strecke bekommt eine Spur,
@@ -32,6 +33,8 @@
   const PORT_MARGIN = 14;  // Abstand der Anschlüsse von den Kartenecken
   const PORT_GAP = 18;     // Mindestabstand zweier Anschlüsse auf einer Seite
   const SWEEPS = 12;
+  /** Oberhalb dieser Zahl von Linienabschnitten wird die Reihenfolge nicht optimiert (Laufzeit). */
+  const MAX_OPTIMIZED_SEGMENTS = 300;
 
   /** @returns {{x:number, y:number}} Punkt. */
   const pt = (x, y) => ({ x, y });
@@ -347,8 +350,9 @@
       row.sort((a, b) => (bary.get(a) - bary.get(b)) || (pos.get(a) - pos.get(b)));
       row.forEach((it, i) => pos.set(it, i));
     };
+    const optimize = segs.reduce((n, s) => n + (s ? s.length : 0), 0) <= MAX_OPTIMIZED_SEGMENTS;
     let best = layers.map((row) => row.slice());
-    let bestScore = total();
+    let bestScore = optimize ? total() : 0;
     for (let s = 0; s < SWEEPS && bestScore > 0; s++) {
       if (s % 2 === 0) {
         for (let l = 1; l < layerCount; l++) {
@@ -370,7 +374,7 @@
     });
     index();
     const local = (l) => (l > 0 ? crossings(l - 1) : 0) + crossings(l) + penalty(l);
-    for (let guard = 0, improved = true; improved && guard < 30; guard++) {
+    for (let guard = 0, improved = optimize; improved && guard < 30; guard++) {
       improved = false;
       for (let l = 0; l < layerCount; l++) {
         const row = layers[l];
