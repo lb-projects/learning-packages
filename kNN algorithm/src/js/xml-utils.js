@@ -15,6 +15,9 @@
  *   - Dokumente mit DOCTYPE- oder ENTITY-Deklarationen werden vorab abgelehnt.
  *     Tabellendokumente benötigen diese nie; sie wären aber das Mittel für
  *     Angriffe wie "Billion Laughs" (exponentielle Entitäten-Expansion).
+ *   - Dokumente mit mehr als MAX_XML_ELEMENTS Elementen werden vor dem Parsen
+ *     abgelehnt (z. B. Hunderttausende leere Zeilen), damit der DOM-Aufbau
+ *     Speicher und Rechenzeit nicht ausschöpft.
  *   - Trusted Types: Die Content-Security-Policy (index.html) verlangt für
  *     DOMParser.parseFromString ein TrustedHTML-Objekt. Dafür wird hier die
  *     einzige erlaubte Policy "knn-xml" angelegt. Das Policy-Objekt bleibt in
@@ -37,17 +40,46 @@
     : null;
 
   /**
+   * Höchstzahl der Elemente je XML-Dokument. Eine Tabelle mit 5.000 Zeilen und
+   * 10 Spalten hat rund 105.000 Elemente; leere <row/>-Einträge zählen mit.
+   */
+  const MAX_XML_ELEMENTS = 200000;
+
+  /**
+   * Zählt die öffnenden Tags (ohne </…>, <?…?> und <!…>), bis die Grenze überschritten ist.
+   *
+   * @param {string} text - XML-Quelltext.
+   * @param {number} limit - Grenze; danach wird nicht weitergezählt.
+   * @returns {number} Anzahl der Elemente (höchstens limit + 1).
+   */
+  function countElements(text, limit) {
+    let count = 0;
+    let i = text.indexOf('<');
+    while (i >= 0 && count <= limit) {
+      const next = text.charAt(i + 1);
+      if (next !== '/' && next !== '?' && next !== '!') {
+        count++;
+      }
+      i = text.indexOf('<', i + 1);
+    }
+    return count;
+  }
+
+  /**
    * Parst einen XML-Text.
    *
    * @param {string} text - XML-Quelltext.
    * @param {string} name - Name des Archiveintrags (nur für Fehlermeldungen).
    * @returns {Document} Das geparste XML-Dokument.
-   * @throws {Error} Bei DOCTYPE/ENTITY-Deklarationen oder fehlerhaftem XML.
+   * @throws {Error} Bei DOCTYPE/ENTITY-Deklarationen, zu vielen Elementen oder fehlerhaftem XML.
    */
   function parseXml(text, name) {
     if (/<!DOCTYPE|<!ENTITY/i.test(text)) {
       throw new Error('Ungültige oder nicht unterstützte Datei: ' + name +
         ' enthält unzulässige DOCTYPE-/ENTITY-Deklarationen.');
+    }
+    if (countElements(text, MAX_XML_ELEMENTS) > MAX_XML_ELEMENTS) {
+      throw new Error('Ungültige oder nicht unterstützte Datei: ' + name + ' enthält zu viele Elemente.');
     }
     const source = xmlPolicy ? xmlPolicy.createHTML(text) : text;
     const doc = new DOMParser().parseFromString(source, 'application/xml');

@@ -114,6 +114,7 @@ So wird das Paket in Moodle eingebunden:
 - Gegen Zip-Bomben gibt es Grenzwerte: höchstens 1000 Einträge, 8 MB je Eintrag, 16 MB insgesamt und Kompressionsverhältnis 200 : 1.
 - CRC-Prüfung; verschlüsselte Archive und ZIP64 werden abgelehnt.
 - XML mit DOCTYPE/ENTITY wird abgelehnt (Schutz vor „Billion Laughs“).
+- Höchstens 200.000 XML-Elemente je Archiveintrag; die Zählung erfolgt vor dem Parsen (Schutz vor Dateien mit Hunderttausenden leerer Zeilen).
 - ODS-Wiederholungsangaben sind begrenzt.
 
 **Content-Security-Policy**
