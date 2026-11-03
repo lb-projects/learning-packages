@@ -94,12 +94,6 @@ code {
   }
 }
 
-.subtitle {
-  font-weight: normal;
-  color: var(--muted);
-  font-size: 1rem;
-}
-
 .tabs {
   display: flex;
   flex-wrap: wrap;

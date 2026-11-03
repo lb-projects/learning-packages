@@ -14,7 +14,7 @@
   </metadata>
   <organizations default="ORG-SQL">
     <organization identifier="ORG-SQL">
-      <title>SQL Sandbox – Datenbanken abfragen</title>
+      <title>SQL Sandbox</title>
       <item identifier="ITEM-SQL" identifierref="RES-SQL" isvisible="true">
         <title>SQL Sandbox</title>
       </item>

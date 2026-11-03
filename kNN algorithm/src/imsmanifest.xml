@@ -14,7 +14,7 @@
   </metadata>
   <organizations default="ORG-KNN">
     <organization identifier="ORG-KNN">
-      <title>kNN-Simulator – k nächste Nachbarn</title>
+      <title>kNN-Simulator – Der k-nächste-Nachbarn-Algorithmus</title>
       <item identifier="ITEM-KNN" identifierref="RES-KNN" isvisible="true">
         <title>kNN-Simulator</title>
       </item>
