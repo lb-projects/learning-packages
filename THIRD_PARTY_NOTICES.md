@@ -6,14 +6,14 @@ Davon abweichend oder ergänzend gilt Folgendes.
 Das Repository enthält zwei Pakete. Die Hinweise sind danach gegliedert, für wen sie gelten:
 
 - [Allgemein](#allgemein-beide-pakete): gilt für beide Pakete.
-- [kNN algorithm](#knn-algorithm): gilt nur für das kNN-Paket (`kNN algorithm/`).
+- [kNN Algorithm](#knn-algorithm): gilt nur für das kNN-Paket (`kNN Algorithm/`).
 - [SQL Sandbox](#sql-sandbox): gilt nur für das SQL-Paket (`SQL Sandbox/`).
 
 ## Allgemein (beide Pakete)
 
 ### Code
 
-Das Projekt enthält **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder. Einzige Ausnahme ist eine Datei im kNN-Paket (siehe [kNN algorithm](#knn-algorithm)).
+Das Projekt enthält **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder. Einzige Ausnahme ist eine Datei im kNN-Paket (siehe [kNN Algorithm](#knn-algorithm)).
 
 ### Gestaltung
 
@@ -47,11 +47,11 @@ Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu
 
 Dieses Projekt steht in keiner Verbindung zu den Inhabern der genannten Marken und wird von ihnen weder unterstützt noch empfohlen.
 
-## kNN algorithm
+## kNN Algorithm
 
 ### Code: puff – DEFLATE-Referenzdekoder (zlib-Lizenz)
 
-- **Betrifft:** `kNN algorithm/src/js/inflate.js`
+- **Betrifft:** `kNN Algorithm/src/js/inflate.js`
 - **Herkunft:** Die Huffman-Dekodierung und der Ablauf der Blockverarbeitung sind eine veränderte JavaScript-Übertragung von `puff.c` von Mark Adler (zlib-Distribution, `contrib/puff`).
 - **Lizenz:** zlib-Lizenz, Copyright (C) 2002-2013 Mark Adler. Die zlib-Lizenz ist mit der MIT-Lizenz vereinbar.
 - **Kennzeichnung:** Der vollständige Lizenzhinweis und die Kennzeichnung als veränderte Fassung stehen im Kopf der Datei. Sie dürfen nicht entfernt werden.
@@ -61,8 +61,8 @@ Darüber hinaus enthält das kNN-Paket keinen Code von Dritten.
 ### Daten: Iris-Datensatz (Szenario „Schwertlilien“)
 
 - **Betrifft:**
-  - `kNN algorithm/testdata/szenario_1_schwertlilien.csv` (Trainingsdaten)
-  - `kNN algorithm/testdata/szenario_1_schwertlilien_test.csv` (Testdaten)
+  - `kNN Algorithm/testdata/szenario_1_schwertlilien.csv` (Trainingsdaten)
+  - `kNN Algorithm/testdata/szenario_1_schwertlilien_test.csv` (Testdaten)
 - **Inhalt:** zwei getrennte Teilmengen der Merkmale Blütenblattlänge und Blütenblattbreite:
   - Trainingsdaten: 43 von 150 Datensätzen;
   - Testdaten: 11 weitere Datensätze (Nr. 13, 14, 19, 65, 66, 84, 99, 109, 118, 120 und 121 der UCI-Datei `iris.data`).

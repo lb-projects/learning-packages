@@ -186,12 +186,15 @@ SQL Sandbox/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
 │  ├─ index.html             Gerüst der sechs Seiten, Content-Security-Policy
-│  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert)
-│  ├─ css/style.css          Gestaltung (Systemschriften, feste Zeilenhöhen für die Scrollbereiche)
+│  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert; Kopie von LICENSE)
+│  ├─ css/base.css           gemeinsame Grundgestaltung (Kopie aus shared/)
+│  ├─ css/style.css          Gestaltung des Pakets (feste Zeilenhöhen für die Scrollbereiche)
 │  └─ js/
-│     ├─ dom-utils.js        sichere DOM-Erzeugung (nur Textknoten, keine Event-/style-Attribute)
-│     ├─ text-utils.js       Entfernen unsichtbarer Steuer- und Richtungszeichen vor der Anzeige
-│     ├─ scorm-api.js        SCORM-1.2-Wrapper (Schreib-Whitelist, Offline-Modus; wie im kNN-Paket)
+│     ├─ dom-utils.js        sichere DOM-Erzeugung (Kopie aus shared/)
+│     ├─ format-utils.js     Mengenangaben des Pakets (ergänzt dom)
+│     ├─ text-utils.js       Entfernen unsichtbarer Steuer- und Richtungszeichen vor der Anzeige (Kopie aus shared/)
+│     ├─ tabs.js             Seitennavigation über Registerkarten (Kopie aus shared/)
+│     ├─ scorm-api.js        SCORM-1.2-Wrapper (Schreib-Whitelist, Offline-Modus; Kopie aus shared/)
 │     ├─ sql/errors.js       Fehlerklasse, Vorschläge bei Tippfehlern
 │     ├─ sql/lexer.js        Zerlegung in Tokens mit Zeile/Spalte
 │     ├─ sql/parser.js       Syntaxbaum (rekursiver Abstieg, Tiefe begrenzt)
@@ -287,7 +290,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - unsichtbare Richtungs- oder Nullbreitenzeichen im Quelltext stehen (Schutz vor „Trojan Source“);
 - eine Textdatei kein UTF-8 ohne BOM mit LF-Zeilenenden ist;
 - die eingebauten Beispieldatenbanken von `testdata/*.sql` abweichen;
-- der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
+- eine Kopie des gemeinsamen Codes (`base.css`, `dom-utils.js`, `text-utils.js`, `tabs.js`, `scorm-api.js`) von ihrer Quelle in `shared/` abweicht oder fehlt;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
 **Automatisierte Tests** (252) im Browser, mit simulierter SCORM-Schnittstelle:

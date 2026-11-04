@@ -1,0 +1,234 @@
+/*
+ * base.css – gemeinsame Grundgestaltung beider Lernpakete
+ *
+ * Gemeinsamer Code (Quelle: shared/css/base.css). Wird vor css/style.css geladen;
+ * paketeigene Regeln und Farben stehen in style.css.
+ *
+ * Grundsätze:
+ *   - Nur Systemschriften (keine Webfonts, keine externen Ressourcen).
+ *   - Farben zentral als CSS-Variablen; paketeigene Farben ergänzt style.css.
+ */
+
+:root {
+  --bg: #f5f7fa;
+  --surface: #ffffff;
+  --text: #1d2733;
+  --muted: #5b6776;
+  --border: #d3dae3;
+  --primary: #0b5cad;
+  --primary-dark: #08457f;
+  --danger: #b3261e;
+  --ok-bg: #d8f0dd;
+  --ok-border: #2e7d32;
+  --wrong-bg: #f9dcdc;
+  --wrong-border: #c62828;
+  --warn-bg: #fff4d6;
+  --warn-border: #b7791f;
+  --info-bg: #e3eefa;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+}
+
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0.75rem 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.app-header h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.35rem;
+}
+
+/* Auf schmalen Bildschirmen würde die mehrzeilige Tab-Leiste zu viel Platz belegen. */
+@media (max-width: 700px) {
+  .app-header {
+    position: static;
+  }
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.tabs button:hover {
+  background: var(--info-bg);
+}
+
+.tabs button[aria-selected="true"] {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.tab-no {
+  display: inline-block;
+  min-width: 1.4em;
+  font-weight: bold;
+}
+
+main {
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page[hidden] {
+  display: none;
+}
+
+.intro {
+  color: var(--muted);
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.count {
+  font-weight: normal;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.file-label {
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+input[type="file"] {
+  max-width: 100%;
+}
+
+.btn {
+  font: inherit;
+  font-size: 0.95rem;
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #fff;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--info-bg);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: var(--primary-dark);
+}
+
+.btn-danger {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.page-nav .btn-primary {
+  margin-left: auto;
+}
+
+.status,
+.notice {
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  margin: 0.6rem 0;
+  border-left: 5px solid var(--primary);
+  background: var(--info-bg);
+}
+
+.status p {
+  margin: 0;
+}
+
+.status ul {
+  margin: 0.4rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.status[hidden],
+.notice[hidden] {
+  display: none;
+}
+
+.notice {
+  background: var(--warn-bg);
+  border-left-color: var(--warn-border);
+}
+
+.status-success {
+  background: var(--ok-bg);
+  border-left-color: var(--ok-border);
+}
+
+.status-error {
+  background: var(--wrong-bg);
+  border-left-color: var(--wrong-border);
+}
+
+body > .status {
+  margin: 1rem;
+}
+
+.app-footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.app-footer p {
+  margin: 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

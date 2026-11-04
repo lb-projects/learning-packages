@@ -74,15 +74,19 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 ## Aufbau
 
 ```
-kNN algorithm/
+kNN Algorithm/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
 │  ├─ index.html             Gerüst der neun Seiten, Content-Security-Policy
-│  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert)
-│  ├─ css/style.css          Gestaltung (Systemschriften, farbenblindfreundliche Palette)
+│  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert; Kopie von LICENSE)
+│  ├─ css/base.css           gemeinsame Grundgestaltung (Kopie aus shared/)
+│  ├─ css/style.css          Gestaltung des Pakets (farbenblindfreundliche Palette, Diagramme)
 │  └─ js/
-│     ├─ dom-utils.js        sichere DOM-Erzeugung (nur Textknoten, keine Event-/style-Attribute)
-│     ├─ scorm-api.js        SCORM-1.2-Wrapper (Schreib-Whitelist, Offline-Modus)
+│     ├─ dom-utils.js        sichere DOM-Erzeugung (Kopie aus shared/)
+│     ├─ format-utils.js     Zahl- und Punktformate des Pakets (ergänzt dom)
+│     ├─ text-utils.js       Entfernen unsichtbarer Steuer- und Richtungszeichen (Kopie aus shared/)
+│     ├─ tabs.js             Seitennavigation über Registerkarten (Kopie aus shared/)
+│     ├─ scorm-api.js        SCORM-1.2-Wrapper (Schreib-Whitelist, Offline-Modus; Kopie aus shared/)
 │     ├─ inflate.js          eigener DEFLATE-Dekoder (RFC 1951) + CRC-32
 │     ├─ zip-reader.js       ZIP-Leser mit Grenzwerten gegen Zip-Bomben
 │     ├─ xml-utils.js        XML-Parsing ohne DOCTYPE/ENTITY
@@ -229,10 +233,10 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - gefährliche APIs (HTML-Senken, `eval`, Netzwerk-, Speicher- und Cookie-Zugriffe) oder externe Adressen vorkommen;
 - unsichtbare Richtungs- oder Nullbreitenzeichen im Quelltext stehen (Schutz vor „Trojan Source“);
 - eine Paketdatei kein UTF-8 ohne BOM mit LF-Zeilenenden ist (die Szenario-Dateien sind für Excel bewusst mit BOM gespeichert);
-- der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
+- eine Kopie des gemeinsamen Codes (`base.css`, `dom-utils.js`, `text-utils.js`, `tabs.js`, `scorm-api.js`) von ihrer Quelle in `shared/` abweicht oder fehlt;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (83) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (84) im Browser, mit simulierter SCORM-Schnittstelle:
 - Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Normalisierung (Min-Max, Z-Standardisierung mit Division durch n, konstante Achse); Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario- und Regressionsdateien sowie von XLSX- und ODS-Dateien;

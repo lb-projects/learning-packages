@@ -24,8 +24,12 @@
     <resource identifier="RES-KNN" type="webcontent" adlcp:scormtype="sco" href="index.html">
       <file href="index.html"/>
       <file href="LICENSE.txt"/>
+      <file href="css/base.css"/>
       <file href="css/style.css"/>
       <file href="js/dom-utils.js"/>
+      <file href="js/format-utils.js"/>
+      <file href="js/text-utils.js"/>
+      <file href="js/tabs.js"/>
       <file href="js/scorm-api.js"/>
       <file href="js/inflate.js"/>
       <file href="js/zip-reader.js"/>

@@ -117,18 +117,9 @@
   }
 
   /**
-   * Unsichtbare bzw. darstellungsverändernde Zeichen:
-   * Steuerzeichen (C0/C1), Nullbreitenzeichen, Richtungssteuerzeichen
-   * (z. B. U+202E "Right-to-Left Override", mit dem sich "rechnung\u202Efdp.csv"
-   * als "rechnungvsc.pdf" tarnen ließe), Worttrenner und Byte-Order-Mark.
-   */
-  const INVISIBLE_PATTERN = /[\u0000-\u001f\u007f-\u009f\u00ad\u061c\u180e\u200b-\u200f\u2028-\u202e\u2060-\u206f\ufeff\ufff9-\ufffb]/g;
-
-  /**
    * Bereinigt Text, der aus Dateien stammt und angezeigt wird (z. B. Dateiname):
    * unsichtbare Zeichen entfernen, Leerraum zusammenfassen, Länge begrenzen.
-   * Angezeigt wird ohnehin nur per textContent; die Bereinigung verhindert
-   * zusätzlich optische Täuschung.
+   * Weiterleitung auf das gemeinsame Modul text-utils.js (Kopie aus shared/).
    *
    * @param {*} input - Rohtext.
    * @param {number} maxLength - Höchstlänge in Zeichen.
@@ -136,13 +127,7 @@
    * @returns {string} Bereinigter Text.
    */
   function sanitizeDisplayText(input, maxLength, fallback) {
-    const text = String(input === null || input === undefined ? '' : input)
-      .normalize('NFC')
-      .replace(INVISIBLE_PATTERN, ' ')
-      .trim()
-      .replace(/\s+/g, ' ')
-      .slice(0, maxLength);
-    return text === '' ? fallback : text;
+    return ns.text.sanitizeDisplayText(input, maxLength, fallback);
   }
 
   /**

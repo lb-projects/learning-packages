@@ -1,3 +1,4 @@
+// Kopie aus shared/js/dom-utils.js – nicht hier bearbeiten: Änderungen in shared/ vornehmen und sync-shared.mjs ausführen.
 /**
  * @file dom-utils.js
  * @description Sichere Hilfsfunktionen zum Erzeugen und Bearbeiten von DOM-Elementen.
@@ -7,38 +8,31 @@
  *   Funktionen. Dadurch gibt es genau eine Stelle, an der festgelegt ist, wie
  *   Elemente, Attribute und Texte in die Seite gelangen.
  *
+ * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/dom-utils.js).
+ *
  * Abhängigkeiten:
  *   Keine (nur Standard-DOM-API des Browsers).
  *
  * Sicherheitsaspekte:
- *   - Texte werden ausschließlich über Textknoten (`document.createTextNode`)
- *     bzw. `textContent` eingefügt. Dadurch wird jeglicher Inhalt – auch
+ *   - Texte werden ausschließlich als Textknoten (`Element.append` mit
+ *     Zeichenkette) bzw. über `textContent` eingefügt. Dadurch wird jeglicher Inhalt – auch
  *     Zeichenketten wie `<script>` oder `<img onerror=…>` aus hochgeladenen
  *     Dateien – nur als Text dargestellt und niemals als HTML interpretiert.
- *   - `innerHTML`, `outerHTML`, `insertAdjacentHTML` und `document.write`
- *     werden im gesamten Projekt nicht verwendet.
- *   - Attributnamen, die mit "on" beginnen (Event-Handler), sowie das
- *     Attribut "style" werden abgelehnt. So kann selbst durch einen
- *     Programmierfehler kein Inline-Code oder Inline-Stil entstehen, der
- *     zudem von der Content-Security-Policy blockiert würde.
+ *   - HTML-Senken (Zuweisungen von HTML-Text an Elemente) und das direkte
+ *     Schreiben ins Dokument werden im gesamten Projekt nicht verwendet;
+ *     der Build prüft das.
+ *   - Attributnamen, die mit "on" beginnen (Event-Handler), sowie die
+ *     Attribute "style" und "srcdoc" werden abgelehnt.
  *   - URL-Attribute (href, src, …) dürfen kein Schema wie "javascript:" enthalten.
  */
 (function (ns) {
   'use strict';
 
-  /** XML-Namensraum für SVG-Elemente (reiner Bezeichner, es wird nichts geladen). */
-  const SVG_NS = 'http://www.w3.org/2000/svg';
-
-  /** Attribute, deren Wert als URL ausgewertet wird (könnten "javascript:" ausführen). */
+  /** Attribute, die eine Adresse enthalten können. */
   const URL_ATTRIBUTES = new Set(['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'poster', 'background']);
 
   /**
    * Prüft, ob ein Attribut gesetzt werden darf.
-   * Verboten sind Event-Handler-Attribute (onclick, onerror, …), "style",
-   * "srcdoc" sowie URL-Attribute mit einem anderen Schema als einer relativen
-   * Adresse oder "#…" (insbesondere javascript:, data:, vbscript:).
-   * Das Paket setzt derzeit keine URL-Attribute; die Prüfung schützt vor
-   * Fehlern in künftigem Code.
    *
    * @param {string} name - Name des Attributs.
    * @param {*} value - Vorgesehener Wert.
@@ -51,8 +45,8 @@
     }
     if (URL_ATTRIBUTES.has(lower)) {
       // Steuer- und Leerzeichen entfernen, die Browser beim Auswerten ebenfalls ignorieren.
-      const url = String(value).replace(/[\u0000-\u0020\u007f-\u009f]/g, '');
-      // Erlaubt: "#anker" oder relative Pfade ohne Schema (kein ":" vor dem ersten "/", "?" oder "#").
+      const url = String(value).replace(/[\u0000- \u007f-\u009f]/g, '');
+      // Erlaubt: "#anker" oder relative Pfade ohne Schema.
       if (!/^#/.test(url) && /^[^/?#]*:/.test(url)) {
         throw new Error('Unzulässige Adresse im Attribut ' + name);
       }
@@ -61,14 +55,14 @@
 
   /**
    * Hängt Kindelemente bzw. Texte an ein Element an.
-   * Zeichenketten und Zahlen werden immer als Textknoten eingefügt.
+   * Nur echte DOM-Knoten werden unverändert eingefügt; alles andere (Zeichenketten,
+   * Zahlen, Fehlerobjekte …) wird immer als Textknoten eingefügt.
    *
    * @param {Node} parent - Element, an das angehängt wird.
-   * @param {Array<Node|string|number|null|undefined>|Node|string|number|null|undefined} children
-   *        Einzelnes Kind oder Liste von Kindern; null/undefined werden ignoriert.
+   * @param {Array|Node|string|number|null|undefined} children - Kind(er); null/undefined/false werden ignoriert.
    */
   function appendChildren(parent, children) {
-    if (children === null || children === undefined) {
+    if (children === null || children === undefined || children === false) {
       return;
     }
     const list = Array.isArray(children) ? children : [children];
@@ -76,23 +70,18 @@
       if (child === null || child === undefined || child === false) {
         continue;
       }
-      if (typeof child === 'string' || typeof child === 'number') {
-        parent.appendChild(document.createTextNode(String(child)));
-      } else {
-        parent.appendChild(child);
-      }
+      // append() fügt Zeichenketten immer als Textknoten ein; alles, was kein Knoten ist, wird zu Text.
+      parent.append(child instanceof Node ? child : String(child));
     }
   }
 
   /**
    * Setzt Attribute auf einem Element.
-   * Sonderfälle:
-   *   - "class": Klassenliste (String, Leerzeichen-getrennt).
-   *   - Wert `true` setzt ein boolesches Attribut ohne Wert, `false`/null/undefined
-   *     lassen das Attribut weg.
+   * "class" ist eine Leerzeichen-getrennte Klassenliste; `true` setzt ein
+   * boolesches Attribut ohne Wert, `false`/null/undefined lassen es weg.
    *
    * @param {Element} element - Zielelement.
-   * @param {Object<string, *>} attrs - Attribute als Schlüssel/Wert-Paare.
+   * @param {Object<string, *>} attrs - Attribute als Schlüssel/Wert-Paare (feste Namen aus dem Programmcode).
    * @throws {Error} Bei unzulässigen Attributnamen.
    */
   function setAttributes(element, attrs) {
@@ -105,11 +94,7 @@
       if (value === false || value === null || value === undefined) {
         continue;
       }
-      if (value === true) {
-        element.setAttribute(name, '');
-      } else {
-        element.setAttribute(name, String(value));
-      }
+      element.setAttribute(name, value === true ? '' : String(value));
     }
   }
 
@@ -117,7 +102,7 @@
    * Erzeugt ein HTML-Element.
    *
    * @example
-   *   el('button', { type: 'button', class: 'btn' }, 'Speichern');
+   *   el('button', { type: 'button', class: 'btn' }, 'Laden');
    *
    * @param {string} tag - Tag-Name, z. B. "div".
    * @param {Object<string, *>} [attrs] - Attribute (siehe {@link setAttributes}).
@@ -131,15 +116,19 @@
     return element;
   }
 
+  /** Namensraum für SVG-Elemente (nur ein Bezeichner, es wird nichts geladen). */
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
   /**
-   * Erzeugt ein SVG-Element im SVG-Namensraum.
+   * Erzeugt ein SVG-Element (z. B. für das Klassendiagramm).
+   * Es gelten dieselben Attributprüfungen wie bei {@link el}; Texte werden als Textknoten eingefügt.
    *
-   * @param {string} tag - SVG-Tag-Name, z. B. "circle".
-   * @param {Object<string, *>} [attrs] - Attribute (siehe {@link setAttributes}).
+   * @param {string} tag - Tag-Name, z. B. "rect".
+   * @param {Object<string, *>} [attrs] - Attribute.
    * @param {Array|Node|string|number} [children] - Kindelemente oder Text.
-   * @returns {SVGElement} Das neue SVG-Element.
+   * @returns {SVGElement} Das neue Element.
    */
-  function svgEl(tag, attrs, children) {
+  function svg(tag, attrs, children) {
     const element = document.createElementNS(SVG_NS, tag);
     setAttributes(element, attrs);
     appendChildren(element, children);
@@ -175,52 +164,6 @@
     return element;
   }
 
-  /** Zahlformat für die Anzeige (deutsche Schreibweise, höchstens 3 Nachkommastellen). */
-  const numberFormat = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 3 });
-
-  /** Prozentformat (deutsche Schreibweise, höchstens 1 Nachkommastelle). */
-  const percentFormat = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 1 });
-
-  /**
-   * Formatiert eine Zahl in deutscher Schreibweise (Dezimalkomma).
-   *
-   * @param {number} value - Zahl.
-   * @returns {string} Formatierte Zahl, z. B. "2,5".
-   */
-  function formatNumber(value) {
-    return numberFormat.format(value);
-  }
-
-  /**
-   * Formatiert einen Anteil (0 … 1) als Prozentangabe.
-   *
-   * @param {number} ratio - Anteil zwischen 0 und 1.
-   * @returns {string} z. B. "62,5 %".
-   */
-  function formatPercent(ratio) {
-    return percentFormat.format(ratio * 100) + ' %';
-  }
-
-  /**
-   * Erzeugt die Kurzbeschreibung eines Datenpunkts, z. B. "#3 (2 | 4,5) Apfel".
-   *
-   * @param {{id:number, x:number, y:number, label:string}} point - Datenpunkt.
-   * @returns {string} Beschreibung als reiner Text.
-   */
-  function describePoint(point) {
-    return '#' + point.id + ' (' + formatNumber(point.x) + ' | ' + formatNumber(point.y) + ') ' + point.label;
-  }
-
-  ns.dom = {
-    SVG_NS,
-    el,
-    svgEl,
-    clear,
-    byId,
-    appendChildren,
-    setAttributes,
-    formatNumber,
-    formatPercent,
-    describePoint
-  };
+  // Paketeigene Formatierer (z. B. formatNumber, plural) ergänzt js/format-utils.js im jeweiligen Paket.
+  ns.dom = Object.assign(ns.dom || {}, { el, svg, clear, byId, appendChildren, setAttributes, SVG_NS });
 })(window.KNN = window.KNN || {});

@@ -13,14 +13,15 @@
  * Ablauf nach SCORM 1.2:
  *   LMSInitialize("") → LMSGetValue/LMSSetValue … → LMSCommit("") → LMSFinish("")
  *
+ * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/scorm-api.js).
+ *
  * Abhängigkeiten:
  *   Keine.
  *
  * Datenschutz / Sicherheit:
  *   - Schreibzugriffe sind auf eine feste Liste von Datenelementen beschränkt
  *     (WRITABLE_ELEMENTS). So kann kein Programmteil versehentlich
- *     Trainingsdaten oder andere Inhalte an das LMS übertragen (Ausnahme: der bewusst
- *     gespeicherte Bearbeitungsstand in cmi.suspend_data, siehe progress.js).
+ *     Daten, Eingaben oder andere Inhalte der Lernenden an das LMS übertragen.
  *   - cmi.suspend_data (gespeicherter Bearbeitungsstand) ist nur schreibbar,
  *     wenn ein Paket es beim Start ausdrücklich freigibt (init({suspendData: true}));
  *     die Länge ist auf SUSPEND_DATA_MAX Zeichen begrenzt (SCORM 1.2).
@@ -206,4 +207,4 @@
   }
 
   ns.scorm = { init, isConnected, getValue, setValue, commit, finish, SUSPEND_DATA_MAX };
-})(window.KNN = window.KNN || {});
+})(window.LP = window.LP || {});

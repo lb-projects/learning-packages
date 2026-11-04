@@ -1,3 +1,4 @@
+// Kopie aus shared/js/scorm-api.js – nicht hier bearbeiten: Änderungen in shared/ vornehmen und sync-shared.mjs ausführen.
 /**
  * @file scorm-api.js
  * @description Schlanker Wrapper für die SCORM-1.2-Laufzeitschnittstelle (API-Adapter des LMS).
@@ -13,13 +14,15 @@
  * Ablauf nach SCORM 1.2:
  *   LMSInitialize("") → LMSGetValue/LMSSetValue … → LMSCommit("") → LMSFinish("")
  *
+ * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/scorm-api.js).
+ *
  * Abhängigkeiten:
  *   Keine.
  *
  * Datenschutz / Sicherheit:
  *   - Schreibzugriffe sind auf eine feste Liste von Datenelementen beschränkt
  *     (WRITABLE_ELEMENTS). So kann kein Programmteil versehentlich
- *     Datenbankinhalte, SQL-Eingaben oder andere Inhalte an das LMS übertragen.
+ *     Daten, Eingaben oder andere Inhalte der Lernenden an das LMS übertragen.
  *   - cmi.suspend_data (gespeicherter Bearbeitungsstand) ist nur schreibbar,
  *     wenn ein Paket es beim Start ausdrücklich freigibt (init({suspendData: true}));
  *     die Länge ist auf SUSPEND_DATA_MAX Zeichen begrenzt (SCORM 1.2).

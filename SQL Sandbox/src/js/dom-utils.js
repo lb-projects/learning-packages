@@ -1,3 +1,4 @@
+// Kopie aus shared/js/dom-utils.js – nicht hier bearbeiten: Änderungen in shared/ vornehmen und sync-shared.mjs ausführen.
 /**
  * @file dom-utils.js
  * @description Sichere Hilfsfunktionen zum Erzeugen und Bearbeiten von DOM-Elementen.
@@ -7,6 +8,8 @@
  *   Funktionen. Dadurch gibt es genau eine Stelle, an der festgelegt ist, wie
  *   Elemente, Attribute und Texte in die Seite gelangen.
  *
+ * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/dom-utils.js).
+ *
  * Abhängigkeiten:
  *   Keine (nur Standard-DOM-API des Browsers).
  *
@@ -14,7 +17,7 @@
  *   - Texte werden ausschließlich als Textknoten (`Element.append` mit
  *     Zeichenkette) bzw. über `textContent` eingefügt. Dadurch wird jeglicher Inhalt – auch
  *     Zeichenketten wie `<script>` oder `<img onerror=…>` aus hochgeladenen
- *     SQL-Dateien – nur als Text dargestellt und niemals als HTML interpretiert.
+ *     Dateien – nur als Text dargestellt und niemals als HTML interpretiert.
  *   - HTML-Senken (Zuweisungen von HTML-Text an Elemente) und das direkte
  *     Schreiben ins Dokument werden im gesamten Projekt nicht verwendet;
  *     der Build prüft das.
@@ -161,30 +164,6 @@
     return element;
   }
 
-  /** Zahlformat für Mengenangaben in Fließtexten (deutsche Schreibweise, z. B. "1.250"). */
-  const countFormat = new Intl.NumberFormat('de-DE', { maximumFractionDigits: 0 });
-
-  /**
-   * Formatiert eine Anzahl mit Tausenderpunkten.
-   *
-   * @param {number} value - Anzahl.
-   * @returns {string} z. B. "20.000".
-   */
-  function formatCount(value) {
-    return countFormat.format(value);
-  }
-
-  /**
-   * Gibt "1 Zeile" bzw. "3 Zeilen" zurück.
-   *
-   * @param {number} count - Anzahl.
-   * @param {string} singular - Einzahl, z. B. "Zeile".
-   * @param {string} plural - Mehrzahl, z. B. "Zeilen".
-   * @returns {string} Text mit Anzahl.
-   */
-  function plural(count, singular, plural) {
-    return formatCount(count) + ' ' + (count === 1 ? singular : plural);
-  }
-
-  ns.dom = { el, svg, clear, byId, appendChildren, setAttributes, formatCount, plural };
+  // Paketeigene Formatierer (z. B. formatNumber, plural) ergänzt js/format-utils.js im jeweiligen Paket.
+  ns.dom = Object.assign(ns.dom || {}, { el, svg, clear, byId, appendChildren, setAttributes, SVG_NS });
 })(window.SQLSIM = window.SQLSIM || {});

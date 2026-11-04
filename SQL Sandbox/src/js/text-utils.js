@@ -1,14 +1,17 @@
+// Kopie aus shared/js/text-utils.js – nicht hier bearbeiten: Änderungen in shared/ vornehmen und sync-shared.mjs ausführen.
 /**
  * @file text-utils.js
  * @description Bereinigung von Texten vor der Anzeige.
  *
  * Zweck:
- *   Werte aus Datenbanken, Tabellen- und Spaltennamen, Dateinamen und
- *   SQL-Ausschnitte werden zwar ausschließlich als Text (textContent)
+ *   Werte aus hochgeladenen Dateien (Datenbanken, Tabellen), Namen, Dateinamen
+ *   und Quelltext-Ausschnitte werden zwar ausschließlich als Text (textContent)
  *   eingefügt und können daher keinen Code ausführen. Unsichtbare oder
  *   darstellungsverändernde Zeichen könnten die Anzeige aber optisch
  *   verfälschen, z. B. U+202E "Right-to-Left Override" (Trojan-Source-Prinzip).
  *   Diese Zeichen werden hier entfernt bzw. sichtbar ersetzt.
+ *
+ * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/text-utils.js).
  *
  * Abhängigkeiten:
  *   Keine.

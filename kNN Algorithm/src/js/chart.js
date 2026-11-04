@@ -120,8 +120,8 @@
    */
   function markerIcon(labelIndex, hollow) {
     const index = labelIndex >= 0 ? labelIndex : 0;
-    return dom.svgEl('svg', { class: 'marker-icon', viewBox: '0 0 20 20', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, [
-      dom.svgEl('path', {
+    return dom.svg('svg', { class: 'marker-icon', viewBox: '0 0 20 20', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, [
+      dom.svg('path', {
         d: markerPath(index, 10, 10, 6),
         class: 'pt label-' + index + (hollow ? ' is-validation' : '') + (labelIndex < 0 ? ' unknown' : '')
       })
@@ -134,8 +134,8 @@
    * @returns {SVGElement} Mini-SVG.
    */
   function neutralIcon(prediction) {
-    return dom.svgEl('svg', { class: 'marker-icon', viewBox: '0 0 20 20', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, [
-      dom.svgEl('path', { d: markerPath(prediction ? 3 : 0, 10, 10, 6), class: 'pt ' + (prediction ? 'prediction' : 'neutral') })
+    return dom.svg('svg', { class: 'marker-icon', viewBox: '0 0 20 20', width: 16, height: 16, 'aria-hidden': 'true', focusable: 'false' }, [
+      dom.svg('path', { d: markerPath(prediction ? 3 : 0, 10, 10, 6), class: 'pt ' + (prediction ? 'prediction' : 'neutral') })
     ]);
   }
 
@@ -300,7 +300,7 @@
       this.layout = null;
       this.drawnPoints = [];
       container.classList.add('chart');
-      this.svg = dom.svgEl('svg', {
+      this.svg = dom.svg('svg', {
         class: 'scatter',
         role: 'img',
         'aria-label': this.options.ariaLabel || 'Diagramm der Datenpunkte'
@@ -442,17 +442,17 @@
       const bottom = top + height;
 
       // Zuschneidebereich: Metrik-Form und Linien bleiben in der Zeichenfläche.
-      svg.appendChild(dom.svgEl('defs', null, [
-        dom.svgEl('clipPath', { id: this.clipId }, [
-          dom.svgEl('rect', { x: fmt(left), y: fmt(top), width: fmt(width), height: fmt(height) })
+      svg.appendChild(dom.svg('defs', null, [
+        dom.svg('clipPath', { id: this.clipId }, [
+          dom.svg('rect', { x: fmt(left), y: fmt(top), width: fmt(width), height: fmt(height) })
         ])
       ]));
-      svg.appendChild(dom.svgEl('rect', { class: 'plot-bg', x: fmt(left), y: fmt(top), width: fmt(width), height: fmt(height) }));
+      svg.appendChild(dom.svg('rect', { class: 'plot-bg', x: fmt(left), y: fmt(top), width: fmt(width), height: fmt(height) }));
 
       // --- Gitter und Achsenbeschriftung ----------------------------------------
       const labelStep = chooseLabelStep(unit, 28);
       const drawMinor = unit >= 3;
-      const grid = dom.svgEl('g', { class: 'grid', 'aria-hidden': 'true' });
+      const grid = dom.svg('g', { class: 'grid', 'aria-hidden': 'true' });
       if (fineGrid) {
         this.renderFitGrid(grid, b, top, bottom, left, right);
       }
@@ -462,12 +462,12 @@
           continue;
         }
         const sx = this.toSvg(x, 0).sx;
-        grid.appendChild(dom.svgEl('line', {
+        grid.appendChild(dom.svg('line', {
           class: x === 0 ? 'axis-zero' : (isMajor ? 'grid-major' : 'grid-minor'),
           x1: fmt(sx), y1: fmt(top), x2: fmt(sx), y2: fmt(bottom)
         }));
         if (isMajor) {
-          grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(sx), y: fmt(bottom + 16), 'text-anchor': 'middle' }, dom.formatNumber(x)));
+          grid.appendChild(dom.svg('text', { class: 'tick', x: fmt(sx), y: fmt(bottom + 16), 'text-anchor': 'middle' }, dom.formatNumber(x)));
         }
       }
       for (let y = b.yMin; !fineGrid && y <= b.yMax; y++) {
@@ -476,37 +476,37 @@
           continue;
         }
         const sy = this.toSvg(0, y).sy;
-        grid.appendChild(dom.svgEl('line', {
+        grid.appendChild(dom.svg('line', {
           class: y === 0 ? 'axis-zero' : (isMajor ? 'grid-major' : 'grid-minor'),
           x1: fmt(left), y1: fmt(sy), x2: fmt(right), y2: fmt(sy)
         }));
         if (isMajor) {
-          grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(left - 6), y: fmt(sy + 4), 'text-anchor': 'end' }, dom.formatNumber(y)));
+          grid.appendChild(dom.svg('text', { class: 'tick', x: fmt(left - 6), y: fmt(sy + 4), 'text-anchor': 'end' }, dom.formatNumber(y)));
         }
       }
-      grid.appendChild(dom.svgEl('rect', { class: 'plot-frame', x: fmt(left), y: fmt(top), width: fmt(width), height: fmt(height) }));
+      grid.appendChild(dom.svg('rect', { class: 'plot-frame', x: fmt(left), y: fmt(top), width: fmt(width), height: fmt(height) }));
       svg.appendChild(grid);
 
       // Achsentitel (Text aus Datei/Eingabe → nur als Textknoten).
       const axis = view.axisLabels || { x: 'x', y: 'y' };
-      svg.appendChild(dom.svgEl('text', { class: 'axis-title', x: fmt(left + width / 2), y: fmt(bottom + 40), 'text-anchor': 'middle' }, axis.x));
+      svg.appendChild(dom.svg('text', { class: 'axis-title', x: fmt(left + width / 2), y: fmt(bottom + 40), 'text-anchor': 'middle' }, axis.x));
       const yTitleX = 16;
       const yTitleY = top + height / 2;
-      svg.appendChild(dom.svgEl('text', {
+      svg.appendChild(dom.svg('text', {
         class: 'axis-title', x: fmt(yTitleX), y: fmt(yTitleY), 'text-anchor': 'middle',
         transform: 'rotate(-90 ' + fmt(yTitleX) + ' ' + fmt(yTitleY) + ')'
       }, axis.y));
 
       // --- Metrik-Form und Nachbarlinien --------------------------------------
-      const overlay = dom.svgEl('g', { 'clip-path': 'url(#' + this.clipId + ')' });
+      const overlay = dom.svg('g', { 'clip-path': 'url(#' + this.clipId + ')' });
       // Regression: Streifen x ± |Δx| des k-ten Nachbarn, senkrechte Linie beim x-Wert.
       if (view.band) {
         const bx = this.toSvg(view.band.x, 0).sx;
         const half = Math.max(0, view.band.radius) * xUnit;
         if (half > 0) {
-          overlay.appendChild(dom.svgEl('rect', { class: 'x-band', x: fmt(bx - half), y: fmt(top), width: fmt(2 * half), height: fmt(height) }));
+          overlay.appendChild(dom.svg('rect', { class: 'x-band', x: fmt(bx - half), y: fmt(top), width: fmt(2 * half), height: fmt(height) }));
         }
-        overlay.appendChild(dom.svgEl('line', { class: 'x-line', x1: fmt(bx), y1: fmt(top), x2: fmt(bx), y2: fmt(bottom) }));
+        overlay.appendChild(dom.svg('line', { class: 'x-line', x1: fmt(bx), y1: fmt(top), x2: fmt(bx), y2: fmt(bottom) }));
       }
       if (view.curve && view.curve.length > 1) {
         const pts = view.curve.filter((c) => c.y !== null && Number.isFinite(c.y)).map((c) => {
@@ -514,24 +514,24 @@
           return fmt(s.sx) + ',' + fmt(s.sy);
         });
         if (pts.length > 1) {
-          overlay.appendChild(dom.svgEl('polyline', { class: 'reg-curve', points: pts.join(' ') }));
+          overlay.appendChild(dom.svg('polyline', { class: 'reg-curve', points: pts.join(' ') }));
         }
       }
       if (view.prediction) {
         const ps = this.toSvg(view.prediction.x, view.prediction.y);
-        overlay.appendChild(dom.svgEl('line', { class: 'pred-line', x1: fmt(left), y1: fmt(ps.sy), x2: fmt(ps.sx), y2: fmt(ps.sy) }));
+        overlay.appendChild(dom.svg('line', { class: 'pred-line', x1: fmt(left), y1: fmt(ps.sy), x2: fmt(ps.sx), y2: fmt(ps.sy) }));
       }
       if (!view.band && origin && neighbors.length > 0 && view.radius > 0) {
         const o = this.toSvg(origin.x, origin.y);
         const r = view.radius * unit;
         if (view.metric === 'manhattan') {
-          overlay.appendChild(dom.svgEl('path', {
+          overlay.appendChild(dom.svg('path', {
             class: 'metric-shape',
             d: 'M' + fmt(o.sx) + ' ' + fmt(o.sy - r) + 'L' + fmt(o.sx + r) + ' ' + fmt(o.sy) +
               'L' + fmt(o.sx) + ' ' + fmt(o.sy + r) + 'L' + fmt(o.sx - r) + ' ' + fmt(o.sy) + 'Z'
           }));
         } else {
-          overlay.appendChild(dom.svgEl('circle', { class: 'metric-shape', cx: fmt(o.sx), cy: fmt(o.sy), r: fmt(r) }));
+          overlay.appendChild(dom.svg('circle', { class: 'metric-shape', cx: fmt(o.sx), cy: fmt(o.sy), r: fmt(r) }));
         }
       }
       if (origin) {
@@ -542,44 +542,44 @@
           const d = view.metric === 'manhattan'
             ? 'M' + fmt(o.sx) + ' ' + fmt(o.sy) + 'H' + fmt(s.sx) + 'V' + fmt(s.sy)
             : 'M' + fmt(o.sx) + ' ' + fmt(o.sy) + 'L' + fmt(s.sx) + ' ' + fmt(s.sy);
-          overlay.appendChild(dom.svgEl('path', { class: 'nb-line', d }));
+          overlay.appendChild(dom.svg('path', { class: 'nb-line', d }));
         }
       }
       svg.appendChild(overlay);
 
       // --- Datenpunkte -----------------------------------------------------------
-      const pointLayer = dom.svgEl('g', { class: 'points' });
+      const pointLayer = dom.svg('g', { class: 'points' });
       for (const p of points) {
         const s = this.toSvg(p.x, p.y);
         if (view.uniform) {
-          pointLayer.appendChild(dom.svgEl('path', { class: 'pt neutral', d: markerPath(0, s.sx, s.sy, MARKER_R) },
-            [dom.svgEl('title', null, '#' + p.id + ' (' + dom.formatNumber(p.x) + ' | ' + dom.formatNumber(p.y) + ')')]));
+          pointLayer.appendChild(dom.svg('path', { class: 'pt neutral', d: markerPath(0, s.sx, s.sy, MARKER_R) },
+            [dom.svg('title', null, '#' + p.id + ' (' + dom.formatNumber(p.x) + ' | ' + dom.formatNumber(p.y) + ')')]));
           continue;
         }
         const index = view.labelIndex(p.label);
         const isVal = validationIds.has(p.id);
-        pointLayer.appendChild(dom.svgEl('path', {
+        pointLayer.appendChild(dom.svg('path', {
           class: 'pt label-' + Math.max(0, index) + (isVal ? ' is-validation' : '') + (index < 0 ? ' unknown' : ''),
           d: markerPath(Math.max(0, index), s.sx, s.sy, MARKER_R)
-        }, [dom.svgEl('title', null, dom.describePoint(p) + (isVal ? ' (' + hollowName + ')' : ''))]));
+        }, [dom.svg('title', null, dom.describePoint(p) + (isVal ? ' (' + hollowName + ')' : ''))]));
       }
       svg.appendChild(pointLayer);
       this.drawnPoints = points;
 
       // --- Hervorhebungen: Nachbarn, Auswahl, neuer Punkt -----------------------
-      const marks = dom.svgEl('g', { class: 'marks', 'aria-hidden': 'true' });
+      const marks = dom.svg('g', { class: 'marks', 'aria-hidden': 'true' });
       neighbors.forEach((n, i) => {
         const s = this.toSvg(n.point.x, n.point.y);
-        marks.appendChild(dom.svgEl('circle', { class: 'nb-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 4 }));
+        marks.appendChild(dom.svg('circle', { class: 'nb-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 4 }));
         if (neighbors.length <= MAX_RANK_LABELS) {
-          marks.appendChild(dom.svgEl('text', { class: 'nb-rank', x: fmt(s.sx + 9), y: fmt(s.sy - 9) }, String(i + 1)));
+          marks.appendChild(dom.svg('text', { class: 'nb-rank', x: fmt(s.sx + 9), y: fmt(s.sy - 9) }, String(i + 1)));
         }
       });
       if (view.markedIds && view.markedIds.size > 0) {
         for (const p of points) {
           if (view.markedIds.has(p.id)) {
             const s = this.toSvg(p.x, p.y);
-            marks.appendChild(dom.svgEl('circle', { class: 'diff-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 6 }));
+            marks.appendChild(dom.svg('circle', { class: 'diff-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 6 }));
           }
         }
       }
@@ -587,25 +587,25 @@
         const sel = points.find((p) => p.id === view.selectedId);
         if (sel) {
           const s = this.toSvg(sel.x, sel.y);
-          marks.appendChild(dom.svgEl('circle', { class: 'sel-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 7 }));
+          marks.appendChild(dom.svg('circle', { class: 'sel-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 7 }));
         }
       }
       if (view.query) {
         const s = this.toSvg(view.query.x, view.query.y);
         const qIndex = view.query.label !== null && view.query.label !== undefined ? view.labelIndex(view.query.label) : -1;
-        marks.appendChild(dom.svgEl('circle', { class: 'query-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 9 }));
-        marks.appendChild(dom.svgEl('path', {
+        marks.appendChild(dom.svg('circle', { class: 'query-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 9 }));
+        marks.appendChild(dom.svg('path', {
           class: 'pt query ' + (qIndex >= 0 ? 'label-' + qIndex : 'unknown'),
           d: markerPath(qIndex >= 0 ? qIndex : 0, s.sx, s.sy, MARKER_R + 2)
         }));
         if (qIndex < 0) {
-          marks.appendChild(dom.svgEl('text', { class: 'query-unknown', x: fmt(s.sx), y: fmt(s.sy + 4), 'text-anchor': 'middle' }, '?'));
+          marks.appendChild(dom.svg('text', { class: 'query-unknown', x: fmt(s.sx), y: fmt(s.sy + 4), 'text-anchor': 'middle' }, '?'));
         }
       }
       if (view.prediction) {
         const s = this.toSvg(view.prediction.x, view.prediction.y);
-        marks.appendChild(dom.svgEl('circle', { class: 'query-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 9 }));
-        marks.appendChild(dom.svgEl('path', { class: 'pt prediction', d: markerPath(3, s.sx, s.sy, MARKER_R + 2) }));
+        marks.appendChild(dom.svg('circle', { class: 'query-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 9 }));
+        marks.appendChild(dom.svg('path', { class: 'pt prediction', d: markerPath(3, s.sx, s.sy, MARKER_R + 2) }));
       }
       svg.appendChild(marks);
 
@@ -625,13 +625,13 @@
     renderFitGrid(grid, b, top, bottom, left, right) {
       for (const x of ticks(b.xMin, b.xMax, b.xStep)) {
         const sx = this.toSvg(x, 0).sx;
-        grid.appendChild(dom.svgEl('line', { class: x === 0 ? 'axis-zero' : 'grid-major', x1: fmt(sx), y1: fmt(top), x2: fmt(sx), y2: fmt(bottom) }));
-        grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(sx), y: fmt(bottom + 16), 'text-anchor': 'middle' }, dom.formatNumber(x)));
+        grid.appendChild(dom.svg('line', { class: x === 0 ? 'axis-zero' : 'grid-major', x1: fmt(sx), y1: fmt(top), x2: fmt(sx), y2: fmt(bottom) }));
+        grid.appendChild(dom.svg('text', { class: 'tick', x: fmt(sx), y: fmt(bottom + 16), 'text-anchor': 'middle' }, dom.formatNumber(x)));
       }
       for (const y of ticks(b.yMin, b.yMax, b.yStep)) {
         const sy = this.toSvg(0, y).sy;
-        grid.appendChild(dom.svgEl('line', { class: y === 0 ? 'axis-zero' : 'grid-major', x1: fmt(left), y1: fmt(sy), x2: fmt(right), y2: fmt(sy) }));
-        grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(left - 6), y: fmt(sy + 4), 'text-anchor': 'end' }, dom.formatNumber(y)));
+        grid.appendChild(dom.svg('line', { class: y === 0 ? 'axis-zero' : 'grid-major', x1: fmt(left), y1: fmt(sy), x2: fmt(right), y2: fmt(sy) }));
+        grid.appendChild(dom.svg('text', { class: 'tick', x: fmt(left - 6), y: fmt(sy + 4), 'text-anchor': 'end' }, dom.formatNumber(y)));
       }
     }
 
@@ -702,7 +702,7 @@
     const plotW = 900;
     const plotH = 260;
     const barW = plotW / data.length;
-    const svg = dom.svgEl('svg', {
+    const svg = dom.svg('svg', {
       class: 'bars', role: 'img',
       viewBox: '0 0 ' + (m.left + plotW + m.right) + ' ' + (m.top + plotH + m.bottom),
       'aria-label': 'Balkendiagramm der Genauigkeit je k'
@@ -710,23 +710,23 @@
     // Waagerechte Hilfslinien bei 0, 25, 50, 75, 100 %.
     for (let pct = 0; pct <= 100; pct += 25) {
       const y = m.top + plotH * (1 - pct / 100);
-      svg.appendChild(dom.svgEl('line', { class: pct === 0 ? 'axis-zero' : 'grid-major', x1: m.left, y1: fmt(y), x2: m.left + plotW, y2: fmt(y) }));
-      svg.appendChild(dom.svgEl('text', { class: 'tick', x: m.left - 6, y: fmt(y + 4), 'text-anchor': 'end' }, pct + ' %'));
+      svg.appendChild(dom.svg('line', { class: pct === 0 ? 'axis-zero' : 'grid-major', x1: m.left, y1: fmt(y), x2: m.left + plotW, y2: fmt(y) }));
+      svg.appendChild(dom.svg('text', { class: 'tick', x: m.left - 6, y: fmt(y + 4), 'text-anchor': 'end' }, pct + ' %'));
     }
     const labelEvery = Math.ceil(data.length / 40);
     data.forEach((d, i) => {
       const h = plotH * d.rate;
       const x = m.left + i * barW;
-      const bar = dom.svgEl('rect', {
+      const bar = dom.svg('rect', {
         class: 'bar' + (bestKs.has(d.k) ? ' best' : ''),
         x: fmt(x + barW * 0.15), y: fmt(m.top + plotH - h), width: fmt(barW * 0.7), height: fmt(Math.max(h, 0.5))
-      }, [dom.svgEl('title', null, 'k = ' + d.k + ': ' + dom.formatPercent(d.rate))]);
+      }, [dom.svg('title', null, 'k = ' + d.k + ': ' + dom.formatPercent(d.rate))]);
       svg.appendChild(bar);
       if (d.k === 1 || d.k % labelEvery === 0 || bestKs.has(d.k)) {
-        svg.appendChild(dom.svgEl('text', { class: 'tick' + (bestKs.has(d.k) ? ' best' : ''), x: fmt(x + barW / 2), y: m.top + plotH + 16, 'text-anchor': 'middle' }, String(d.k)));
+        svg.appendChild(dom.svg('text', { class: 'tick' + (bestKs.has(d.k) ? ' best' : ''), x: fmt(x + barW / 2), y: m.top + plotH + 16, 'text-anchor': 'middle' }, String(d.k)));
       }
     });
-    svg.appendChild(dom.svgEl('text', { class: 'axis-title', x: fmt(m.left + plotW / 2), y: m.top + plotH + 40, 'text-anchor': 'middle' }, 'k'));
+    svg.appendChild(dom.svg('text', { class: 'axis-title', x: fmt(m.left + plotW / 2), y: m.top + plotH + 40, 'text-anchor': 'middle' }, 'k'));
     container.appendChild(svg);
   }
 
