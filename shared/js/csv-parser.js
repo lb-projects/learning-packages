@@ -14,7 +14,7 @@
  * Ausgabeformat (gemeinsam mit xlsx-parser.js und ods-parser.js):
  *   Array von Zeilen { row: Zeilennummer (ab 1), cells: [{ type: 'text', value }] }
  *
- * Gemeinsamer Code der Lernpakete NEIGHBORS und GRAIL (Quelle: shared/js/csv-parser.js).
+ * Gemeinsamer Code der Lernpakete NOSY NEIGHBORS und EDGY EDGES (Quelle: shared/js/csv-parser.js).
  *
  * Abhängigkeiten:
  *   Keine.

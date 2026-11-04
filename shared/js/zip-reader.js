@@ -11,7 +11,7 @@
  *   Das Ende-Verzeichnis (EOCD) steht am Dateiende und verweist auf das
  *   Central Directory, das alle Einträge mit Größen und Positionen auflistet.
  *
- * Gemeinsamer Code der Lernpakete NEIGHBORS und GRAIL (Quelle: shared/js/zip-reader.js).
+ * Gemeinsamer Code der Lernpakete NOSY NEIGHBORS und EDGY EDGES (Quelle: shared/js/zip-reader.js).
  *
  * Abhängigkeiten:
  *   inflate.js (ns.inflate.inflateRaw, ns.inflate.crc32)

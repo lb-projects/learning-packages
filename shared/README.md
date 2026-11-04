@@ -1,6 +1,6 @@
 # Gemeinsamer Code der Lernpakete
 
-Dieser Ordner enthält den Quelltext, den die Lernpakete **NEIGHBORS**, **QUEST** und **GRAIL** gemeinsam nutzen. Er ist die **einzige Stelle**, an der dieser Code bearbeitet wird.
+Dieser Ordner enthält den Quelltext, den die Lernpakete **NOSY NEIGHBORS**, **SQL Sandbox** und **EDGY EDGES** gemeinsam nutzen. Er ist die **einzige Stelle**, an der dieser Code bearbeitet wird.
 
 | Datei | Inhalt |
 |---|---|
@@ -10,7 +10,7 @@ Dieser Ordner enthält den Quelltext, den die Lernpakete **NEIGHBORS**, **QUEST*
 | `js/tabs.js` | Seitennavigation über Registerkarten (Maus, Tastatur, „Zurück/Weiter“) |
 | `css/base.css` | gemeinsame Grundgestaltung: Grundfarben, Kopf und Tabs, Schaltflächen, Meldungen, Seitennavigation, Fußzeile; Inhaltsbreite höchstens 1400 px, für Seiten mit `class="page page-wide"` bis 2400 px (solange die Seite sichtbar ist, per `:has()`) |
 
-Datei-Import (nur **NEIGHBORS** und **GRAIL**):
+Datei-Import (nur **NOSY NEIGHBORS** und **EDGY EDGES**):
 
 | Datei | Inhalt |
 |---|---|
@@ -23,7 +23,7 @@ Datei-Import (nur **NEIGHBORS** und **GRAIL**):
 
 ## So werden die Dateien verwendet
 
-Jedes SCORM-Paket muss alle Dateien selbst enthalten. Deshalb liegen in `NEIGHBORS/src/`, `QUEST/src/` und `GRAIL/src/` **Kopien** dieser Dateien (welche Dateien ein Paket erhält, legt `sync-shared.mjs` fest). Jede Kopie trägt in der ersten Zeile den Hinweis „Kopie aus shared/… – nicht hier bearbeiten“. So bleibt `src/` vollständig: `index.html` lässt sich direkt im Browser öffnen, und das ZIP lässt sich weiterhin von Hand erstellen.
+Jedes SCORM-Paket muss alle Dateien selbst enthalten. Deshalb liegen in `NOSY-NEIGHBORS/src/`, `SQL-Sandbox/src/` und `EDGY-EDGES/src/` **Kopien** dieser Dateien (welche Dateien ein Paket erhält, legt `sync-shared.mjs` fest). Jede Kopie trägt in der ersten Zeile den Hinweis „Kopie aus shared/… – nicht hier bearbeiten“. So bleibt `src/` vollständig: `index.html` lässt sich direkt im Browser öffnen, und das ZIP lässt sich weiterhin von Hand erstellen.
 
 Ablauf bei Änderungen:
 1. Die Datei **hier** in `shared/` ändern.
@@ -37,13 +37,13 @@ Die JavaScript-Dateien enden mit `})(window.LP = window.LP || {});`. In der Kopi
 `dom-utils.js` stellt nur die gemeinsamen Funktionen bereit. Die paketeigenen Formatierer ergänzt jeweils `src/js/format-utils.js` unter demselben Objekt `dom`:
 - kNN: `formatNumber`, `formatPercent`, `describePoint`
 - SQL: `formatCount`, `plural`
-- GRAIL: `formatInt`, `formatDistance`, `formatTriple`, `plural`, `joinNames`
+- EDGY EDGES: `formatInt`, `formatDistance`, `formatTriple`, `plural`, `joinNames`
 
 ## Was hier nicht hingehört
 
 Paketspezifisches bleibt im jeweiligen Paket, zum Beispiel:
 - die Seiten
-- SCORM-Start und -Ende (NEIGHBORS und GRAIL speichern einen Bearbeitungsstand)
+- SCORM-Start und -Ende (NOSY NEIGHBORS und EDGY EDGES speichern einen Bearbeitungsstand)
 - die SQL-Engine und paketeigene Importlogik (`data-import.js`, `graph-import.js`)
 - paketeigene Farben und Regeln in `css/style.css`
 

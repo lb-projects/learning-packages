@@ -5,7 +5,7 @@
  * Zweck:
  *   Gemeinsame Hilfsfunktionen für xlsx-parser.js und ods-parser.js.
  *
- * Gemeinsamer Code der Lernpakete NEIGHBORS und GRAIL (Quelle: shared/js/xml-utils.js).
+ * Gemeinsamer Code der Lernpakete NOSY NEIGHBORS und EDGY EDGES (Quelle: shared/js/xml-utils.js).
  *
  * Abhängigkeiten:
  *   Keine (Browser-API DOMParser).

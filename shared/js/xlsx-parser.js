@@ -18,7 +18,7 @@
  * Ausgabeformat:
  *   Array von Zeilen { row: Zeilennummer, cells: [{ type: 'number'|'text', value }] }
  *
- * Gemeinsamer Code der Lernpakete NEIGHBORS und GRAIL (Quelle: shared/js/xlsx-parser.js).
+ * Gemeinsamer Code der Lernpakete NOSY NEIGHBORS und EDGY EDGES (Quelle: shared/js/xlsx-parser.js).
  *
  * Abhängigkeiten:
  *   zip-reader.js (ns.zip), xml-utils.js (ns.xml)

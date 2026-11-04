@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SCORM-1.2-Manifest der SQL Sandbox (Simple And Nice Database Box for Online eXercises).
+  - Ein einzelnes SCO (index.html), das alle sechs Seiten als Registerkarten enthält.
+  - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
+  - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
+-->
+<manifest identifier="SQL-SANDBOX-1" version="1.0"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="ORG-SQL-SANDBOX">
+    <organization identifier="ORG-SQL-SANDBOX">
+      <title>SQL Sandbox – SQL-Abfragen</title>
+      <item identifier="ITEM-SQL-SANDBOX" identifierref="RES-SQL-SANDBOX" isvisible="true">
+        <title>SQL Sandbox – SQL-Abfragen</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="RES-SQL-SANDBOX" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="index.html"/>
+      <file href="LICENSE.txt"/>
+      <file href="css/base.css"/>
+      <file href="css/style.css"/>
+      <file href="js/dom-utils.js"/>
+      <file href="js/format-utils.js"/>
+      <file href="js/text-utils.js"/>
+      <file href="js/tabs.js"/>
+      <file href="js/scorm-api.js"/>
+      <file href="js/sql/errors.js"/>
+      <file href="js/sql/lexer.js"/>
+      <file href="js/sql/parser.js"/>
+      <file href="js/sql/values.js"/>
+      <file href="js/sql/database.js"/>
+      <file href="js/sql/executor.js"/>
+      <file href="js/sql-import.js"/>
+      <file href="js/normalization.js"/>
+      <file href="js/state.js"/>
+      <file href="js/samples/schule.js"/>
+      <file href="js/samples/bibliothek.js"/>
+      <file href="js/samples/online-shop.js"/>
+      <file href="js/samples/sportverein.js"/>
+      <file href="js/samples/kursbuchung.js"/>
+      <file href="js/pages/common.js"/>
+      <file href="js/pages/load.js"/>
+      <file href="js/pages/tables.js"/>
+      <file href="js/pages/query.js"/>
+      <file href="js/pages/steps.js"/>
+      <file href="js/uml-model.js"/>
+      <file href="js/uml-layout.js"/>
+      <file href="js/pages/diagram.js"/>
+      <file href="js/pages/redundancy.js"/>
+      <file href="js/app.js"/>
+    </resource>
+  </resources>
+</manifest>

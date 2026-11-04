@@ -55,7 +55,7 @@
  *   Die Huffman-Dekodierung folgt dem kanonischen Verfahren nach dem Vorbild
  *   von "puff" (siehe "Herkunft und Lizenz" oben).
  *
- * Gemeinsamer Code der Lernpakete NEIGHBORS und GRAIL (Quelle: shared/js/inflate.js).
+ * Gemeinsamer Code der Lernpakete NOSY NEIGHBORS und EDGY EDGES (Quelle: shared/js/inflate.js).
  *
  * Abhängigkeiten:
  *   Keine.

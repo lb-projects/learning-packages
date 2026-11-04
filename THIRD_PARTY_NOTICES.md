@@ -6,19 +6,19 @@ Davon abweichend oder ergänzend gilt Folgendes.
 Das Repository enthält drei Pakete. Die Hinweise sind danach gegliedert, für wen sie gelten:
 
 - [Allgemein](#allgemein-alle-pakete): gilt für alle Pakete.
-- [NEIGHBORS](#neighbors): gilt für NEIGHBORS (`NEIGHBORS/`); der Abschnitt zu `inflate.js` gilt auch für GRAIL.
-- [QUEST](#quest): gilt nur für QUEST (`QUEST/`).
-- [GRAIL](#grail): gilt nur für das Graphen-Paket (`GRAIL/`).
+- [NOSY NEIGHBORS](#nosy-neighbors): gilt für NOSY NEIGHBORS (`NOSY-NEIGHBORS/`); der Abschnitt zu `inflate.js` gilt auch für EDGY EDGES.
+- [SQL Sandbox](#sql-sandbox): gilt nur für die SQL Sandbox (`SQL-Sandbox/`).
+- [EDGY EDGES](#edgy-edges): gilt nur für das Graphen-Paket (`EDGY-EDGES/`).
 
 ## Allgemein (alle Pakete)
 
 ### Code
 
-Das Projekt enthält **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder. Einzige Ausnahme ist eine Datei des gemeinsamen Datei-Imports (`inflate.js`), die in NEIGHBORS und in GRAIL enthalten ist (siehe [NEIGHBORS](#neighbors)).
+Das Projekt enthält **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder. Einzige Ausnahme ist eine Datei des gemeinsamen Datei-Imports (`inflate.js`), die in NOSY NEIGHBORS und in EDGY EDGES enthalten ist (siehe [NOSY NEIGHBORS](#nosy-neighbors)).
 
 ### Gestaltung
 
-- **Farbpalette:** Die Klassenfarben basieren auf der farbenblindfreundlichen Palette von Masataka Okabe und Kei Ito, *Color Universal Design* (2008). NEIGHBORS verwendet sie für die Labels, QUEST für die Farben der Oberfläche, GRAIL für die Zustände der Knoten und Kanten. Die Nennung ist eine Würdigung. Farbwerte als solche sind nicht urheberrechtlich geschützt.
+- **Farbpalette:** Die Klassenfarben basieren auf der farbenblindfreundlichen Palette von Masataka Okabe und Kei Ito, *Color Universal Design* (2008). NOSY NEIGHBORS verwendet sie für die Labels, die SQL Sandbox für die Farben der Oberfläche, EDGY EDGES für die Zustände der Knoten und Kanten. Die Nennung ist eine Würdigung. Farbwerte als solche sind nicht urheberrechtlich geschützt.
 
 ### Standards
 
@@ -37,33 +37,33 @@ Die folgenden Namen werden nur beschreibend verwendet, um die Kompatibilität zu
 - **SCORM®** ist eine eingetragene Marke des U.S. Department of Defense (Advanced Distributed Learning Initiative).
 - **Microsoft Windows und Edge** sind Marken der Microsoft Corporation.
 - **Chrome** ist eine Marke von Google LLC, **Firefox** von der Mozilla Foundation, **Safari** von Apple Inc.
-- **Microsoft Excel** ist eine Marke der Microsoft Corporation (NEIGHBORS und GRAIL: Import von `.xlsx`).
-- **LibreOffice** ist eine Marke der The Document Foundation (NEIGHBORS und GRAIL: Import von `.ods`).
-- **MySQL** ist eine eingetragene Marke der Oracle Corporation und/oder ihrer verbundenen Unternehmen (QUEST).
-- **MariaDB®** ist eine eingetragene Marke der MariaDB plc (QUEST).
-- **PostgreSQL** und **Postgres** sind Marken oder eingetragene Marken der PostgreSQL Community Association of Canada (QUEST).
-- **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy (QUEST).
-- **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc. (QUEST).
-- **UML®** und **Unified Modeling Language™** sind Marken der Object Management Group, Inc. (QUEST).
+- **Microsoft Excel** ist eine Marke der Microsoft Corporation (NOSY NEIGHBORS und EDGY EDGES: Import von `.xlsx`).
+- **LibreOffice** ist eine Marke der The Document Foundation (NOSY NEIGHBORS und EDGY EDGES: Import von `.ods`).
+- **MySQL** ist eine eingetragene Marke der Oracle Corporation und/oder ihrer verbundenen Unternehmen (SQL Sandbox).
+- **MariaDB®** ist eine eingetragene Marke der MariaDB plc (SQL Sandbox).
+- **PostgreSQL** und **Postgres** sind Marken oder eingetragene Marken der PostgreSQL Community Association of Canada (SQL Sandbox).
+- **phpMyAdmin** ist ein Projekt der Software Freedom Conservancy (SQL Sandbox).
+- **SQLite** ist eine Marke von Hipp, Wyrick & Company, Inc. (SQL Sandbox).
+- **UML®** und **Unified Modeling Language™** sind Marken der Object Management Group, Inc. (SQL Sandbox).
 
 Dieses Projekt steht in keiner Verbindung zu den Inhabern der genannten Marken und wird von ihnen weder unterstützt noch empfohlen.
 
-## NEIGHBORS
+## NOSY NEIGHBORS
 
 ### Code: puff – DEFLATE-Referenzdekoder (zlib-Lizenz)
 
-- **Betrifft:** `shared/js/inflate.js` (Quelle) und die Kopien `NEIGHBORS/src/js/inflate.js` und `GRAIL/src/js/inflate.js`
+- **Betrifft:** `shared/js/inflate.js` (Quelle) und die Kopien `NOSY-NEIGHBORS/src/js/inflate.js` und `EDGY-EDGES/src/js/inflate.js`
 - **Herkunft:** Die Huffman-Dekodierung und der Ablauf der Blockverarbeitung sind eine veränderte JavaScript-Übertragung von `puff.c` von Mark Adler (zlib-Distribution, `contrib/puff`).
 - **Lizenz:** zlib-Lizenz, Copyright (C) 2002-2013 Mark Adler. Die zlib-Lizenz ist mit der MIT-Lizenz vereinbar.
 - **Kennzeichnung:** Der vollständige Lizenzhinweis und die Kennzeichnung als veränderte Fassung stehen im Kopf der Datei. Sie dürfen nicht entfernt werden.
 
-Darüber hinaus enthält NEIGHBORS keinen Code von Dritten.
+Darüber hinaus enthält NOSY NEIGHBORS keinen Code von Dritten.
 
 ### Daten: Iris-Datensatz (Szenario „Schwertlilien“)
 
 - **Betrifft:**
-  - `NEIGHBORS/testdata/szenario_1_schwertlilien.csv` (Trainingsdaten)
-  - `NEIGHBORS/testdata/szenario_1_schwertlilien_test.csv` (Testdaten)
+  - `NOSY-NEIGHBORS/testdata/szenario_1_schwertlilien.csv` (Trainingsdaten)
+  - `NOSY-NEIGHBORS/testdata/szenario_1_schwertlilien_test.csv` (Testdaten)
 - **Inhalt:** zwei getrennte Teilmengen der Merkmale Blütenblattlänge und Blütenblattbreite:
   - Trainingsdaten: 43 von 150 Datensätzen;
   - Testdaten: 11 weitere Datensätze (Nr. 13, 14, 19, 65, 66, 84, 99, 109, 118, 120 und 121 der UCI-Datei `iris.data`).
@@ -78,8 +78,8 @@ Darüber hinaus enthält NEIGHBORS keinen Code von Dritten.
 
 ### Daten: übrige Daten
 
-Alle übrigen Daten von NEIGHBORS wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
-- die eingebauten Beispieldaten in NEIGHBORS (Früchte);
+Alle übrigen Daten von NOSY NEIGHBORS wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
+- die eingebauten Beispieldaten in NOSY NEIGHBORS (Früchte);
 - die Szenarien Wetter, Spam, Lernerfolg und Musik sowie die Szenarien mit Ausreißern und mit unausgewogenen Klassen, jeweils Trainings- und Testdaten (`szenario_2_…` bis `szenario_12_…`, auch `*_test.csv`, darunter das Szenario zur Normalisierung);
 - die Regressionsdateien Eisverkauf, Bremsweg, Lernzeit, Gebrauchtwagen, Stromverbrauch und Taxifahrt (`regression_1_…` bis `regression_6_…`).
 
@@ -94,17 +94,17 @@ Es handelt sich nicht um Messungen realer Personen.
 | Office Open XML | ECMA-376 |
 | OpenDocument | OASIS/ISO/IEC 26300 |
 
-## QUEST
+## SQL Sandbox
 
 ### Code
 
-QUEST enthält keinen Code von Dritten: Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
+Die SQL Sandbox enthält keinen Code von Dritten: Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
 
 ### Daten: Beispieldatenbanken
 
 - **Betrifft:**
-  - `QUEST/testdata/*.sql`
-  - die inhaltsgleichen eingebauten Beispieldatenbanken `QUEST/src/js/samples/*.js`
+  - `SQL-Sandbox/testdata/*.sql`
+  - die inhaltsgleichen eingebauten Beispieldatenbanken `SQL-Sandbox/src/js/samples/*.js`
 - **Inhalt:** Schule, Bibliothek, Online-Shop, Sportverein, die absichtlich nicht normalisierte Kursbuchung, sieben Übungsdateien zu den Normalformen (Kontaktliste, Ausleihe, Vereinsmitglieder, Projektmitarbeit, Arztpraxis, Bestellungen, normalisierte Vereinsverwaltung), ein Beispiel im Stil eines Datenbank-Exports (Musikschule) und eine absichtlich fehlerhafte Übungsdatei.
 - **Herkunft:** frei erfunden für dieses Projekt, MIT-Lizenz:
   - Namen sind frei kombinierte, gängige Vor- und Nachnamen.
@@ -123,11 +123,11 @@ QUEST enthält keinen Code von Dritten: Lexer, Parser und Ausführung der SQL-Be
 | SQL | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
 | UML-Klassendiagramm | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
 
-## GRAIL
+## EDGY EDGES
 
 ### Code
 
-GRAIL enthält außer dem gemeinsamen Datei-Import (`inflate.js`, siehe [NEIGHBORS](#neighbors)) keinen Code von Dritten. Die Algorithmen sind allgemein bekannte Verfahren in eigener Umsetzung:
+EDGY EDGES enthält außer dem gemeinsamen Datei-Import (`inflate.js`, siehe [NOSY NEIGHBORS](#nosy-neighbors)) keinen Code von Dritten. Die Algorithmen sind allgemein bekannte Verfahren in eigener Umsetzung:
 - Breitensuche und Tiefensuche;
 - Dijkstra-Algorithmus (E. W. Dijkstra, 1959);
 - Bellman-Ford-Algorithmus (R. Bellman, 1958; L. R. Ford, 1956) mit der üblichen Erkennung negativer Zyklen;
@@ -135,10 +135,10 @@ GRAIL enthält außer dem gemeinsamen Datei-Import (`inflate.js`, siehe [NEIGHBO
 
 ### Daten: Beispielgraphen
 
-- **Betrifft:** `GRAIL/testdata/beispiel-*.csv` und die inhaltsgleichen eingebauten Beispiele `GRAIL/src/js/samples.js`.
+- **Betrifft:** `EDGY-EDGES/testdata/beispiel-*.csv` und die inhaltsgleichen eingebauten Beispiele `EDGY-EDGES/src/js/samples.js`.
 - **Herkunft:** für dieses Projekt erstellt, MIT-Lizenz. Die Graphen mit Buchstaben als Knotennamen sind frei erfunden.
 - Das Städtenetz verwendet die Namen bayerischer Städte und gerundete Näherungswerte für Straßenentfernungen in km. Es handelt sich um selbst geschätzte, vereinfachte Werte ohne Übernahme aus einer Datenbank oder einem Kartendienst; sie sind nicht für Planungszwecke gedacht.
 
 ### Standards
 
-Für den Datei-Import gelten dieselben Standards wie in NEIGHBORS (DEFLATE, ZIP, Office Open XML, OpenDocument).
+Für den Datei-Import gelten dieselben Standards wie in NOSY NEIGHBORS (DEFLATE, ZIP, Office Open XML, OpenDocument).

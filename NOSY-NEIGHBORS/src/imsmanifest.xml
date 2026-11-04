@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SCORM-1.2-Manifest von NOSY NEIGHBORS (Nearest Objects Sort You: New Examples Inherit Group Habits By Observing Relevant Samples).
+  - Ein einzelnes SCO (index.html), das alle neun Seiten als Registerkarten enthält.
+  - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
+  - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
+-->
+<manifest identifier="NOSY-NEIGHBORS-1" version="1.0"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="ORG-NOSY-NEIGHBORS">
+    <organization identifier="ORG-NOSY-NEIGHBORS">
+      <title>NOSY NEIGHBORS – k nächste Nachbarn</title>
+      <item identifier="ITEM-NOSY-NEIGHBORS" identifierref="RES-NOSY-NEIGHBORS" isvisible="true">
+        <title>NOSY NEIGHBORS – k nächste Nachbarn</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="RES-NOSY-NEIGHBORS" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="index.html"/>
+      <file href="LICENSE.txt"/>
+      <file href="css/base.css"/>
+      <file href="css/style.css"/>
+      <file href="js/dom-utils.js"/>
+      <file href="js/format-utils.js"/>
+      <file href="js/text-utils.js"/>
+      <file href="js/tabs.js"/>
+      <file href="js/scorm-api.js"/>
+      <file href="js/inflate.js"/>
+      <file href="js/zip-reader.js"/>
+      <file href="js/xml-utils.js"/>
+      <file href="js/csv-parser.js"/>
+      <file href="js/xlsx-parser.js"/>
+      <file href="js/ods-parser.js"/>
+      <file href="js/dataset.js"/>
+      <file href="js/data-import.js"/>
+      <file href="js/knn.js"/>
+      <file href="js/chart.js"/>
+      <file href="js/pages/common.js"/>
+      <file href="js/pages/training.js"/>
+      <file href="js/pages/classify.js"/>
+      <file href="js/pages/k-effect.js"/>
+      <file href="js/pages/evaluation-page.js"/>
+      <file href="js/pages/k-selection.js"/>
+      <file href="js/pages/loo-manual.js"/>
+      <file href="js/pages/loo-auto.js"/>
+      <file href="js/pages/confusion.js"/>
+      <file href="js/pages/normalization.js"/>
+      <file href="js/pages/regression.js"/>
+      <file href="js/progress.js"/>
+      <file href="js/app.js"/>
+    </resource>
+  </resources>
+</manifest>
