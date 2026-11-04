@@ -49,6 +49,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 - **Manhattan-Metrik:** |Δx| + |Δy|. Im Diagramm wird sie als Weg entlang der Achsen und als Raute dargestellt.
 - **Stimmengleichstand:** Es gewinnt das Label des nächstgelegenen Nachbarn unter den gleichauf liegenden Labels. Die Seite zeigt den Hinweis „Gleichstand“.
 - **Gleicher Abstand:** Es zählt die Reihenfolge der Eingabe. Seite 2 weist darauf hin, wenn das an der Grenze des k-ten Nachbarn relevant ist.
+- **Seite 2:** Werden neue Trainingsdaten geladen (Datei oder Beispieldaten), wird der neue Punkt zurückgesetzt; k und Metrik bleiben eingestellt. Bei einzelnen Änderungen der Trainingsdaten bleibt er erhalten.
 - **Seite 3:** Der betrachtete Punkt wird bei seiner eigenen Klassifizierung ausgeschlossen.
 - **Seite 4:** Es bleiben immer mindestens ein Validierungs- und ein Trainingspunkt; die Anzahl ist der gerundete Anteil.
 - **Seite 7:** Nachbarn sind alle Trainingspunkte (auch die auf Seite 4 als Validierungsdaten markierten).

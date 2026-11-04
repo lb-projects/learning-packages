@@ -175,8 +175,22 @@
     dom.byId('query-form').addEventListener('submit', (event) => event.preventDefault());
   }
 
-  /** Datenänderungen: Der neue Punkt bleibt erhalten; render() berechnet neu. */
-  function onDataChange() {}
+  /**
+   * Datenänderungen: Neue Trainingsdaten (Datei, Beispieldaten) setzen den neuen Punkt
+   * zurück – er gehört zu den alten Daten. Bei einzelnen Änderungen bleibt er erhalten;
+   * render() berechnet neu. k und Metrik bleiben eingestellt.
+   * @param {{type: string}} event - Änderung.
+   */
+  function onDataChange(event) {
+    if (event && event.type === 'replace') {
+      state.query = null;
+      if (ui) {
+        ui.qx.value = '';
+        ui.qy.value = '';
+        ui.queryError.textContent = '';
+      }
+    }
+  }
 
   ns.pages = ns.pages || {};
   ns.pages.classify = { id: 'classify', init, render, onDataChange };
