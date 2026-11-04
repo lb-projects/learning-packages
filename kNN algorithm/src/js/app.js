@@ -22,10 +22,9 @@
  *     cmi.core.lesson_status = "completed" gemeldet (ein bereits gemeldeter
  *     Abschluss bzw. "passed" bleibt unverändert).
  *   - Übertragen werden cmi.core.lesson_status, cmi.core.exit und in
- *     cmi.suspend_data der Bearbeitungsstand der Seiten 4 und 5 (Eintragungen,
- *     Validierungsauswahl und – wenn Platz ist – die Trainingsdaten; siehe
- *     progress.js). Besuchte Seiten, Testdaten und alle übrigen Eingaben
- *     verlassen den Browser nicht.
+ *     cmi.suspend_data der Bearbeitungsstand (Trainings- und Testdaten,
+ *     Validierungsauswahl, Eintragungen der Seiten 4 und 5; siehe progress.js).
+ *     Besuchte Seiten und alle übrigen Eingaben verlassen den Browser nicht.
  *   - Ist ein Stand gespeichert, endet die Sitzung mit cmi.core.exit = "suspend",
  *     damit die Lernplattform den Versuch beim nächsten Öffnen fortsetzt.
  *
@@ -66,8 +65,8 @@
   function renderProgress() {
     dom.byId('progress').textContent = scorm.isConnected()
       ? 'Verbunden mit der Lernplattform – das Lernpaket ist als abgeschlossen gemeldet. ' +
-        'Eintragungen auf den Seiten 4 und 5 werden gespeichert.' + ns.progress.statusText()
-      : 'Offline-Modus (keine Lernplattform gefunden, Eintragungen werden nicht gespeichert).';
+        'Daten und Eintragungen werden gespeichert.' + ns.progress.statusText()
+      : 'Offline-Modus (keine Lernplattform gefunden, Daten und Eintragungen werden nicht gespeichert).';
   }
 
   /**

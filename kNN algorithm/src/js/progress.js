@@ -1,19 +1,25 @@
 /**
  * @file progress.js
- * @description Speichert den Bearbeitungsstand der Seiten 4 und 5 in der Lernplattform
- *              (SCORM 1.2, cmi.suspend_data) und stellt ihn beim nächsten Öffnen wieder her.
+ * @description Speichert den Bearbeitungsstand in der Lernplattform (SCORM 1.2,
+ *              cmi.suspend_data) und stellt ihn beim nächsten Öffnen wieder her:
+ *              Trainingsdaten, Testdaten (Seite 7), Validierungsauswahl und die
+ *              Eintragungen der Seiten 4 und 5.
  *
- * Gespeichert wird nach jeder Eintragung ("x"), nach "zurücksetzen", nach einer neuen
- * Validierungsauswahl und nach Änderungen der Trainingsdaten. So geht nichts verloren,
- * wenn der Browser im Unterricht unerwartet geschlossen wird.
+ * Gespeichert wird sofort nach jeder Änderung: Punkt eingegeben oder gelöscht, Datei
+ * oder Beispieldaten geladen, Testdaten geändert, Eintragung ("x"), "zurücksetzen",
+ * neue Validierungsauswahl. So geht nichts verloren, wenn der Browser im Unterricht
+ * unerwartet geschlossen wird. Ohne Daten bleibt cmi.suspend_data leer.
  *
  * Format (JSON, Version 1, höchstens 4096 Zeichen):
  *   {"v":1,"h":"<Prüfwert>","d":{"a":[x-Achse,y-Achse],"l":[Labels],"p":[[x,y,Labelindex],…]},
+ *    "t":{"l":[Labels],"p":[[x,y,Labelindex],…]},
  *    "s":[Positionen der Validierungspunkte],"f":Anteil in %,"e4":"<Bits>","e5":"<Bits>"}
  *   - h:  Prüfwert der Trainingsdaten (dataset.fingerprint).
  *   - d:  die Trainingsdaten selbst – nur, wenn der Stand damit in 4096 Zeichen passt.
  *         Sonst fehlt d; die Eintragungen werden dann übernommen, sobald dieselben
  *         Daten erneut geladen werden (gleicher Prüfwert).
+ *   - t:  Testdaten (Seite 7) mit eigener Labelliste; fehlt ohne Testpunkte oder wenn
+ *         auch ohne d der Platz nicht reicht (Hinweis in der Statuszeile).
  *   - e4/e5: Eintragungen der Seiten 4 und 5 als Bitfolge (je Tabellenzeile 10 Bits
  *         für k = 1 … 10) in Base64. Zeilen in der Reihenfolge der Tabelle.
  *   Punkte werden über ihre Position adressiert, weil IDs beim Laden neu vergeben werden.
@@ -49,6 +55,8 @@
   let pending = null;
   /** Zustand für die Statuszeile: '', 'restored', 'pending', 'too-large'. */
   let status = '';
+  /** true, wenn die Testdaten zuletzt aus Platzgründen nicht mitgespeichert wurden. */
+  let testDropped = false;
   /** Rückruf bei geändertem Status. */
   let onStatus = null;
 
@@ -119,32 +127,50 @@
     return rows;
   }
 
-  /** @returns {boolean} true, wenn es etwas zu speichern gibt (Validierungsauswahl oder Eintragungen). */
+  /** @returns {boolean} true, wenn es etwas zu speichern gibt (Daten, Validierungsauswahl oder Eintragungen). */
   function hasWork() {
     const { k4, k5 } = evalPages();
-    return ds.getValidationPoints().length > 0 ||
+    return ds.size() > 0 || ds.testSize() > 0 || ds.getValidationPoints().length > 0 ||
       k4.getEntryRows().some((r) => r.length > 0) || k5.getEntryRows().some((r) => r.length > 0);
+  }
+
+  /**
+   * Punkte kompakt mit eigener Labelliste ({l: Labels, p: [[x, y, Labelindex], …]}).
+   * @param {Array<{x:number, y:number, label:string}>} points - Punkte.
+   * @returns {{l: string[], p: Array<number[]>}} Kompakte Darstellung.
+   */
+  function packPoints(points) {
+    const labels = [];
+    for (const p of points) {
+      if (!labels.includes(p.label)) {
+        labels.push(p.label);
+      }
+    }
+    return { l: labels, p: points.map((p) => [p.x, p.y, labels.indexOf(p.label)]) };
+  }
+
+  /** @returns {{l: string[], p: Array<number[]>}|undefined} Testdaten kompakt (undefined ohne Testpunkte). */
+  function packTest() {
+    return ds.testSize() > 0 ? packPoints(ds.getTestPoints()) : undefined;
   }
 
   /**
    * Stellt den zu speichernden Text zusammen.
    * @param {boolean} withData - Trainingsdaten mitspeichern.
+   * @param {boolean} withTest - Testdaten mitspeichern.
    * @returns {string} JSON-Text.
    */
-  function serialize(withData) {
+  function serialize(withData, withTest) {
     const { k4, k5 } = evalPages();
     const points = ds.getPoints();
     const position = new Map(points.map((p, i) => [p.id, i]));
     const state = { v: VERSION, h: ds.fingerprint() };
     if (withData) {
-      const labels = [];
-      for (const p of points) {
-        if (!labels.includes(p.label)) {
-          labels.push(p.label);
-        }
-      }
       const axis = ds.getAxisLabels();
-      state.d = { a: [axis.x, axis.y], l: labels, p: points.map((p) => [p.x, p.y, labels.indexOf(p.label)]) };
+      state.d = Object.assign({ a: [axis.x, axis.y] }, packPoints(points));
+    }
+    if (withTest && ds.testSize() > 0) {
+      state.t = packTest();
     }
     state.s = ds.getValidationPoints().map((p) => position.get(p.id));
     state.f = k4.getPercent();
@@ -155,7 +181,8 @@
 
   /**
    * Speichert den aktuellen Stand in der Lernplattform.
-   * @param {boolean} userAction - true bei einer Bearbeitung (Eintragung, Zurücksetzen, Validierungsauswahl).
+   * @param {boolean} userAction - true bei einer Bearbeitung (Eintragung, Zurücksetzen, Validierungsauswahl,
+   *        Punkt eingegeben oder gelöscht); false beim bloßen Laden von Trainingsdaten.
    */
   function save(userAction) {
     if (!active || restoring) {
@@ -171,22 +198,68 @@
       setStatus('');
     }
     if (!hasWork() && !saved) {
-      return; // Nichts bearbeitet und nichts gespeichert: cmi.suspend_data bleibt leer.
+      return; // Keine Daten und nichts gespeichert: cmi.suspend_data bleibt leer.
     }
-    let text = serialize(true);
-    if (text.length > scorm.SUSPEND_DATA_MAX) {
-      text = serialize(false);
+    // Erst alles, dann ohne Trainingsdaten (Prüfwert genügt), zuletzt auch ohne Testdaten.
+    let text = null;
+    let dropped = false;
+    for (const [withData, withTest] of [[true, true], [false, true], [false, false]]) {
+      const candidate = serialize(withData, withTest);
+      if (candidate.length <= scorm.SUSPEND_DATA_MAX) {
+        text = candidate;
+        dropped = !withTest && ds.testSize() > 0;
+        break;
+      }
     }
-    if (text.length > scorm.SUSPEND_DATA_MAX) {
+    if (text === null) {
       setStatus('too-large');
       return;
     }
     if (scorm.setValue('cmi.suspend_data', text)) {
       scorm.commit();
       saved = true;
+      testDropped = dropped;
       if (status === 'too-large') {
         setStatus('');
+      } else if (onStatus) {
+        onStatus();
       }
+    }
+  }
+
+  /**
+   * Testdaten geändert: sofort speichern. Ist ein Stand vorgemerkt (wartet auf dieselben
+   * Trainingsdaten), werden nur die Testdaten darin ersetzt – die Kreuze bleiben erhalten.
+   */
+  function onTestDataChange() {
+    if (!active || restoring) {
+      return;
+    }
+    if (!pending) {
+      save(true);
+      return;
+    }
+    const next = Object.assign({}, pending);
+    const t = packTest();
+    if (t) {
+      next.t = t;
+    } else {
+      delete next.t;
+    }
+    let text = JSON.stringify(next);
+    testDropped = false;
+    if (text.length > scorm.SUSPEND_DATA_MAX) {
+      delete next.t;
+      text = JSON.stringify(next);
+      testDropped = Boolean(t);
+    }
+    pending = next;
+    if (scorm.setValue('cmi.suspend_data', text)) {
+      scorm.commit();
+      saved = true;
+    }
+    if (onStatus) {
+      onStatus();
     }
   }
 
@@ -213,17 +286,20 @@
         (obj.f !== undefined && !(Number.isInteger(obj.f) && obj.f >= 1 && obj.f <= 90))) {
       return null;
     }
-    if (obj.d !== undefined) {
-      const d = obj.d;
-      if (!d || typeof d !== 'object' || !Array.isArray(d.a) || d.a.length !== 2 || !d.a.every((t) => typeof t === 'string') ||
-          !Array.isArray(d.l) || d.l.length > ds.LIMITS.maxLabels || !d.l.every((l) => ds.validateLabel(l).ok) ||
-          !Array.isArray(d.p) || d.p.length > ds.LIMITS.maxPoints ||
-          !d.p.every((p) => Array.isArray(p) && p.length === 3 &&
-            ds.validateCoordinate(p[0], 'x').ok && ds.validateCoordinate(p[1], 'y').ok &&
-            typeof p[0] === 'number' && typeof p[1] === 'number' &&
-            Number.isInteger(p[2]) && p[2] >= 0 && p[2] < d.l.length)) {
-        return null;
-      }
+    /** Prüft kompakte Punkte ({l, p}) streng. */
+    const validPoints = (d) => d && typeof d === 'object' &&
+      Array.isArray(d.l) && d.l.length <= ds.LIMITS.maxLabels && d.l.every((l) => typeof l === 'string' && ds.validateLabel(l).ok) &&
+      Array.isArray(d.p) && d.p.length <= ds.LIMITS.maxPoints &&
+      d.p.every((p) => Array.isArray(p) && p.length === 3 &&
+        typeof p[0] === 'number' && typeof p[1] === 'number' &&
+        ds.validateCoordinate(p[0], 'x').ok && ds.validateCoordinate(p[1], 'y').ok &&
+        Number.isInteger(p[2]) && p[2] >= 0 && p[2] < d.l.length);
+    if (obj.d !== undefined &&
+        !(validPoints(obj.d) && Array.isArray(obj.d.a) && obj.d.a.length === 2 && obj.d.a.every((t) => typeof t === 'string'))) {
+      return null;
+    }
+    if (obj.t !== undefined && !validPoints(obj.t)) {
+      return null;
     }
     return obj;
   }
@@ -276,7 +352,8 @@
       }
       return;
     }
-    save(event.type === 'validation');
+    // Laden (replace) ist keine Bearbeitung; Eingeben/Löschen von Punkten, Achsen und Validierungsauswahl schon.
+    save(event.type !== 'replace');
   }
 
   /**
@@ -293,6 +370,14 @@
     const obj = parse(scorm.getValue('cmi.suspend_data'));
     if (obj) {
       saved = true;
+      if (obj.t) {
+        restoring = true;
+        try {
+          ds.replaceTestPoints(obj.t.p.map(([x, y, l]) => ({ x, y, label: obj.t.l[l] })));
+        } finally {
+          restoring = false;
+        }
+      }
       if (obj.d) {
         restoring = true;
         try {
@@ -309,6 +394,7 @@
       }
     }
     ds.onChange(onDataChange);
+    ds.onTestChange(onTestDataChange);
     const { k4, k5 } = evalPages();
     k4.onUserChange(() => save(true));
     k5.onUserChange(() => save(true));
@@ -319,17 +405,20 @@
     if (!active) {
       return '';
     }
+    let text = '';
     if (status === 'restored') {
-      return ' Gespeicherte Eintragungen wurden wiederhergestellt.';
+      text = ' Der gespeicherte Bearbeitungsstand wurde wiederhergestellt.';
+    } else if (status === 'pending') {
+      text = ' Gespeicherte Eintragungen liegen vor; sie werden übernommen, sobald dieselben Trainingsdaten erneut geladen werden.';
+    } else if (status === 'too-large') {
+      text = ' Achtung: Der Bearbeitungsstand ist zu groß und konnte nicht gespeichert werden.';
     }
-    if (status === 'pending') {
-      return ' Gespeicherte Eintragungen liegen vor; sie werden übernommen, sobald dieselben Trainingsdaten erneut geladen werden.';
+    if (testDropped) {
+      text += ' Die Testdaten sind zu umfangreich und wurden nicht gespeichert.';
     }
-    if (status === 'too-large') {
-      return ' Achtung: Der Bearbeitungsstand ist zu groß und konnte nicht gespeichert werden.';
-    }
-    return '';
+    return text;
   }
+
 
   ns.progress = {
     init,
