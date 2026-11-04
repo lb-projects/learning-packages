@@ -67,6 +67,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
   - **Gewichteter Mittelwert:** ŷ = Σ(wᵢ·yᵢ) / Σwᵢ mit wᵢ = 1 / |Δxᵢ|. Haben Nachbarn denselben x-Wert (|Δx| = 0), zählen nur diese, jeweils mit gleichem Gewicht.
   - Bei gleichem Abstand zählt die Reihenfolge der Eingabe (mit Hinweis an der Grenze des k-ten Nachbarn).
   - Die Regressionskurve zeigt die Prognose für jeden x-Wert des Diagramms (beim Mittelwert eine Treppenfunktion).
+  - Werden neue Trainingsdaten geladen (Datei oder Beispieldaten), wird der gewählte x-Wert zurückgesetzt; k, Berechnung und Kurve bleiben eingestellt.
   - Im Diagramm sind die Achsen getrennt skaliert, damit Daten mit verschiedenen Größenordnungen (z. B. Uhrzeit und kW) die Fläche füllen. Abstände werden auf dieser Seite nur in x-Richtung gemessen. Auf den Seiten 1 bis 7 bleiben die Achsen gleich skaliert, weil dort Abstände in beiden Richtungen zählen.
 
 ## Aufbau

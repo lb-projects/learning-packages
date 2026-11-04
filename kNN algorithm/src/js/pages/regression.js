@@ -198,8 +198,21 @@
     dom.byId('regression-form').addEventListener('submit', (event) => event.preventDefault());
   }
 
-  /** Datenänderungen: Der x-Wert bleibt erhalten; render() berechnet neu. */
-  function onDataChange() {}
+  /**
+   * Datenänderungen: Neue Trainingsdaten (Datei, Beispieldaten) setzen den neuen Punkt
+   * zurück – er gehört zu den alten Daten. Bei einzelnen Änderungen bleibt er erhalten;
+   * render() berechnet neu. k, Berechnung und Kurve bleiben eingestellt.
+   * @param {{type: string}} event - Änderung.
+   */
+  function onDataChange(event) {
+    if (event && event.type === 'replace') {
+      state.x = null;
+      if (ui) {
+        ui.x.value = '';
+        ui.error.textContent = '';
+      }
+    }
+  }
 
   ns.pages = ns.pages || {};
   ns.pages.regression = { id: 'regression', init, render, onDataChange };
