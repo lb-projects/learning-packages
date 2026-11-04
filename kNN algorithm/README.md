@@ -157,7 +157,7 @@ So wird das Paket in Moodle eingebunden:
 
 ## Szenario-Dateien für den Unterricht
 
-In `testdata/` liegen zu jedem Szenario zwei CSV-Dateien (Werte zwischen 0 und 10, Kopfzeile, Semikolon, Dezimalkomma):
+In `testdata/` liegen zu jedem Szenario zwei CSV-Dateien (Kopfzeile, Semikolon, Dezimalkomma; bei den Szenarien 1 bis 5 liegen die Werte zwischen 0 und 10):
 
 - `szenario_N_….csv`: Trainingsdaten zum Hochladen auf der Seite „Training“.
 - `szenario_N_…_test.csv`: 10 bis 12 Testdaten zum Hochladen auf der Seite „Test und Konfusionsmatrix“. Sie enthalten keine Punkte der Trainingsdatei. Einige liegen bewusst im Grenzbereich zwischen den Klassen, damit die Matrix auch Fehlklassifikationen zeigt; je nach k ändern sich die Ergebnisse.
@@ -169,6 +169,16 @@ In `testdata/` liegen zu jedem Szenario zwei CSV-Dateien (Werte zwischen 0 und 1
 | `szenario_3_spam.csv` | `szenario_3_spam_test.csv` | Spam-Filter: Links und Ausrufezeichen | Spam, kein Spam |
 | `szenario_4_lernerfolg.csv` | `szenario_4_lernerfolg_test.csv` | Prüfung: Lernzeit und Schlaf | bestanden, nicht bestanden |
 | `szenario_5_musik.csv` | `szenario_5_musik_test.csv` | Musikgenres: Energie und Tanzbarkeit | Klassik, Rock, Hip-Hop, Pop |
+| `szenario_6_ausreisser_raumsensoren.csv` | `szenario_6_ausreisser_raumsensoren_test.csv` | Raumsensoren: Temperatur und Luftfeuchtigkeit | Keller, Wohnzimmer, Dachboden |
+| `szenario_7_ausreisser_ausdauersport.csv` | `szenario_7_ausreisser_ausdauersport_test.csv` | Ausdauersport: Trainingsumfang und Ruhepuls | Anfaenger, Freizeit, Leistung |
+| `szenario_8_ausreisser_haustiere.csv` | `szenario_8_ausreisser_haustiere_test.csv` | Haustiere: Körperlänge und Gewicht | Kaninchen, Katze, Hund |
+| `szenario_9_unausgewogen_kartenzahlungen.csv` | `szenario_9_unausgewogen_kartenzahlungen_test.csv` | Kartenzahlungen: Betrag und Uhrzeit | normal (40), Betrug (4) |
+| `szenario_10_unausgewogen_atemwegserkrankung.csv` | `szenario_10_unausgewogen_atemwegserkrankung_test.csv` | Atemwegserkrankung: Sauerstoffsättigung und Atemfrequenz | gesund (42), krank (5) |
+| `szenario_11_unausgewogen_qualitaetskontrolle.csv` | `szenario_11_unausgewogen_qualitaetskontrolle_test.csv` | Qualitätskontrolle: Durchmesser und Gewicht | in Ordnung (40), zu klein (4), zu gross (3) |
+
+**Szenarien mit Ausreißern (6 bis 8):** Je Klasse liegt mindestens ein Punkt weit außerhalb seiner Gruppe (z. B. eine sehr schwere Katze, ein Zwerghund, ein Sensor im Heizungsraum). Die Testdaten enthalten ebenfalls einen solchen Punkt. Damit lässt sich zeigen, wie Ausreißer die Nachbarn und die Wahl von k beeinflussen: Bei kleinem k stört ein Ausreißer das Ergebnis, bei größerem k wird er überstimmt.
+
+**Szenarien mit unausgewogenen Klassen (9 bis 11):** Eine Klasse stellt über 90 % der Trainingsdaten, die seltenen Klassen haben nur 3 bis 5 Punkte. Die Testdaten enthalten bewusst mehr seltene Fälle. Damit lässt sich zeigen, dass eine hohe Genauigkeit täuschen kann: Wer immer die häufige Klasse vorhersagt, hat fast immer recht, erkennt aber den seltenen Fall nicht. Die Konfusionsmatrix macht das sichtbar.
 
 Die Daten sind frei erfunden, mit einer Ausnahme: `szenario_1_schwertlilien.csv` und `szenario_1_schwertlilien_test.csv` enthalten zwei getrennte Teilmengen des Iris-Datensatzes (Anderson 1935, Fisher 1936; UCI Machine Learning Repository, CC BY 4.0). Bei der Weitergabe dieser Dateien bitte die Quelle nennen und auf die Lizenz verweisen (Einzelheiten in `THIRD_PARTY_NOTICES.md`).
 
@@ -206,7 +216,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (77) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (78) im Browser, mit simulierter SCORM-Schnittstelle:
 - Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario- und Regressionsdateien sowie von XLSX- und ODS-Dateien;
