@@ -15,7 +15,8 @@ keine externen Bibliotheken.
 | 5 Leave One Out – Verfahren | Wie Seite 4, aber jeder Punkt wird einmal weggelassen |
 | 6 Leave One Out – automatisiert | Genauigkeit für alle k = 1 … n−1 als Balkendiagramm und Tabelle, beste k hervorgehoben, Detailmatrix |
 | 7 Test und Konfusionsmatrix | Testdaten per Datei oder Eingabemaske erfassen und einzeln entfernen; jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert (k und Metrik wählbar). Die Konfusionsmatrix (Zeilen = tatsächliches, Spalten = vorhergesagtes Label) passt ihre Größe an die Labels der Trainingsdaten an; dazu Genauigkeit und Ergebnis je Testpunkt |
-| 8 Regression | Für einen neuen x-Wert wird der y-Wert aus den k Trainingspunkten mit dem nächsten x-Wert prognostiziert (Mittelwert oder gewichteter Mittelwert, umschaltbar); Streifen = Abstand zum k-ten Nachbarn, Nachbarn und prognostizierter Punkt hervorgehoben, Rechenweg und Nachbartabelle; Regressionskurve zuschaltbar. Die Punkte erscheinen einheitlich, das Label spielt keine Rolle |
+| 8 Normalisierung | Die aktuellen Trainingsdaten links ohne, rechts mit Normalisierung (Min-Max auf 0 bis 1 oder Z-Standardisierung, umschaltbar), jeweils mit einem neuen Punkt und seinen k nächsten Nachbarn. Aufklappbar: allgemeine Erklärung, Rechnung mit den aktuellen Kennwerten, Nachbarn des neuen Punkts im Vergleich, Genauigkeit je k (Leave One Out) ohne und mit Normalisierung, Punkte, deren Ergebnis sich ändert (in beiden Diagrammen markiert) |
+| 9 Regression | Für einen neuen x-Wert wird der y-Wert aus den k Trainingspunkten mit dem nächsten x-Wert prognostiziert (Mittelwert oder gewichteter Mittelwert, umschaltbar); Streifen = Abstand zum k-ten Nachbarn, Nachbarn und prognostizierter Punkt hervorgehoben, Rechenweg und Nachbartabelle; Regressionskurve zuschaltbar. Die Punkte erscheinen einheitlich, das Label spielt keine Rolle |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsdaten wirken sofort auf alle Seiten:
 
@@ -51,7 +52,14 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 - **Seite 3:** Der betrachtete Punkt wird bei seiner eigenen Klassifizierung ausgeschlossen.
 - **Seite 4:** Es bleiben immer mindestens ein Validierungs- und ein Trainingspunkt; die Anzahl ist der gerundete Anteil.
 - **Seite 7:** Nachbarn sind alle Trainingspunkte (auch die auf Seite 4 als Validierungsdaten markierten).
-- **Seite 8 (Regression):**
+- **Seite 8 (Normalisierung):**
+  - **Min-Max:** x' = (x − min) / (max − min); die Trainingsdaten liegen danach zwischen 0 und 1.
+  - **Z-Standardisierung:** x' = (x − x̄) / s mit s = √(Σ(x − x̄)² / n) (geteilt durch die Anzahl n der Punkte); danach Mittelwert 0 und Standardabweichung 1.
+  - Kennwerte (min/max bzw. x̄/s) stammen aus allen Trainingspunkten und werden bei jeder Datenänderung neu berechnet; ein neuer Punkt wird mit denselben Kennwerten umgerechnet (bei Min-Max ggf. außerhalb von 0 bis 1).
+  - Haben alle Trainingspunkte auf einer Achse denselben Wert, wird durch 1 geteilt; die umgerechneten Werte sind dann 0 (mit Hinweis).
+  - Das linke Diagramm ist wie überall gleich skaliert – bei Merkmalen mit sehr unterschiedlichen Größenordnungen wirken die Daten dort zusammengedrückt; genau das zeigt die Verzerrung der Abstände. Das rechte Diagramm ist ebenfalls gleich skaliert.
+  - Leave-One-Out-Vergleich für k = 1 … min(20, n − 1); die Liste der unterschiedlich klassifizierten Punkte verwendet das eingestellte k.
+- **Seite 9 (Regression):**
   - Merkmal ist x, vorhergesagt wird y. Der Abstand ist |Δx|; eine Metrik-Auswahl gibt es deshalb nicht. Nachbarn sind alle Trainingspunkte.
   - **Mittelwert:** ŷ = (y₁ + … + yₖ) / k.
   - **Gewichteter Mittelwert:** ŷ = Σ(wᵢ·yᵢ) / Σwᵢ mit wᵢ = 1 / |Δxᵢ|. Haben Nachbarn denselben x-Wert (|Δx| = 0), zählen nur diese, jeweils mit gleichem Gewicht.
@@ -65,7 +73,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
 kNN algorithm/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
-│  ├─ index.html             Gerüst der acht Seiten, Content-Security-Policy
+│  ├─ index.html             Gerüst der neun Seiten, Content-Security-Policy
 │  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert)
 │  ├─ css/style.css          Gestaltung (Systemschriften, farbenblindfreundliche Palette)
 │  └─ js/
@@ -81,7 +89,7 @@ kNN algorithm/
 │     ├─ data-import.js      Upload-Prüfung und Umwandlung in Datenpunkte
 │     ├─ knn.js              kNN, Abstimmung, Leave One Out, Regression
 │     ├─ chart.js            SVG-Diagramme (gleiche Skalierung, 1er-Gitter)
-│     ├─ pages/*.js          die acht Seiten (+ gemeinsame Bausteine)
+│     ├─ pages/*.js          die neun Seiten (+ gemeinsame Bausteine)
 │     ├─ progress.js         Speichern/Wiederherstellen der Eintragungen (Seiten 4 und 5) in Moodle
 │     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
 ├─ testdata/                 Dateien für den Unterricht (Klassifikation: szenario_*.csv, szenario_*_test.csv; Regression: regression_*.csv)
@@ -175,16 +183,19 @@ In `testdata/` liegen zu jedem Szenario zwei CSV-Dateien (Kopfzeile, Semikolon, 
 | `szenario_9_unausgewogen_kartenzahlungen.csv` | `szenario_9_unausgewogen_kartenzahlungen_test.csv` | Kartenzahlungen: Betrag und Uhrzeit | normal (40), Betrug (4) |
 | `szenario_10_unausgewogen_atemwegserkrankung.csv` | `szenario_10_unausgewogen_atemwegserkrankung_test.csv` | Atemwegserkrankung: Sauerstoffsättigung und Atemfrequenz | gesund (42), krank (5) |
 | `szenario_11_unausgewogen_qualitaetskontrolle.csv` | `szenario_11_unausgewogen_qualitaetskontrolle_test.csv` | Qualitätskontrolle: Durchmesser und Gewicht | in Ordnung (40), zu klein (4), zu gross (3) |
+| `szenario_12_normalisierung_bildschirmzeit.csv` | `szenario_12_normalisierung_bildschirmzeit_test.csv` | Befinden: Bildschirmzeit (Minuten, 45 bis 595) und Schlaf (Stunden, 5 bis 10) | ausgeruht, müde |
 
 **Szenarien mit Ausreißern (6 bis 8):** Je Klasse liegt mindestens ein Punkt weit außerhalb seiner Gruppe (z. B. eine sehr schwere Katze, ein Zwerghund, ein Sensor im Heizungsraum). Die Testdaten enthalten ebenfalls einen solchen Punkt. Damit lässt sich zeigen, wie Ausreißer die Nachbarn und die Wahl von k beeinflussen: Bei kleinem k stört ein Ausreißer das Ergebnis, bei größerem k wird er überstimmt.
 
 **Szenarien mit unausgewogenen Klassen (9 bis 11):** Eine Klasse stellt über 90 % der Trainingsdaten, die seltenen Klassen haben nur 3 bis 5 Punkte. Die Testdaten enthalten bewusst mehr seltene Fälle. Damit lässt sich zeigen, dass eine hohe Genauigkeit täuschen kann: Wer immer die häufige Klasse vorhersagt, hat fast immer recht, erkennt aber den seltenen Fall nicht. Die Konfusionsmatrix macht das sichtbar.
 
+**Szenario zur Normalisierung (12):** Die Bildschirmzeit liegt zwischen 45 und 595 Minuten, der Schlaf zwischen 5 und 10 Stunden. Das Befinden hängt vor allem vom Schlaf ab. Ohne Normalisierung bestimmt fast nur die Bildschirmzeit den Abstand: Leave One Out erreicht höchstens etwa 68 %. Mit Normalisierung (Seite 8) sind es etwa 98 %.
+
 Die Daten sind frei erfunden, mit einer Ausnahme: `szenario_1_schwertlilien.csv` und `szenario_1_schwertlilien_test.csv` enthalten zwei getrennte Teilmengen des Iris-Datensatzes (Anderson 1935, Fisher 1936; UCI Machine Learning Repository, CC BY 4.0). Bei der Weitergabe dieser Dateien bitte die Quelle nennen und auf die Lizenz verweisen (Einzelheiten in `THIRD_PARTY_NOTICES.md`).
 
-### Regressionsdateien (Seite 8)
+### Regressionsdateien (Seite 9)
 
-Zu jedem Thema liegt in `testdata/` eine CSV-Datei (Kopfzeile, Semikolon, Dezimalkomma) zum Hochladen auf der Seite „Training“. Danach zeigt Seite 8 die Daten. x ist das Merkmal, y der Zielwert. Die dritte Spalte (Gruppe) wird vom Paket verlangt, spielt aber für die Regression keine Rolle; sie lässt sich auf den anderen Seiten nutzen.
+Zu jedem Thema liegt in `testdata/` eine CSV-Datei (Kopfzeile, Semikolon, Dezimalkomma) zum Hochladen auf der Seite „Training“. Danach zeigt Seite 9 die Daten. x ist das Merkmal, y der Zielwert. Die dritte Spalte (Gruppe) wird vom Paket verlangt, spielt aber für die Regression keine Rolle; sie lässt sich auf den anderen Seiten nutzen.
 
 | Datei | Thema | x | y | Verlauf |
 |---|---|---|---|---|
@@ -216,8 +227,8 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (78) im Browser, mit simulierter SCORM-Schnittstelle:
-- Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
+**Automatisierte Tests** (83) im Browser, mit simulierter SCORM-Schnittstelle:
+- Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Normalisierung (Min-Max, Z-Standardisierung mit Division durch n, konstante Achse); Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario- und Regressionsdateien sowie von XLSX- und ODS-Dateien;
 - präparierte Angriffsdateien (Skript-Einschleusung, Zip-Bombe, „Billion Laughs“, getarnte Dateitypen, übergroße Dateien);

@@ -1,6 +1,6 @@
 /**
  * @file regression.js
- * @description Seite 8 "Regression".
+ * @description Seite 9 "Regression".
  *
  * Funktionen der Seite:
  *   - Eingabe eines x-Werts über das Eingabefeld oder Klick ins Diagramm.

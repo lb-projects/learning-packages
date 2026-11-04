@@ -5,8 +5,8 @@
   Einstiegsseite des Lernpakets (im Manifest als SCO eingetragen).
 
   Aufbau:
-    - Kopfbereich mit Registerkarten (Tabs) für die acht Seiten
-    - acht <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Kopfbereich mit Registerkarten (Tabs) für die neun Seiten
+    - neun <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
     - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
 
   Sicherheit:
@@ -52,6 +52,7 @@
   <script src="js/pages/loo-manual.js" defer></script>
   <script src="js/pages/loo-auto.js" defer></script>
   <script src="js/pages/confusion.js" defer></script>
+  <script src="js/pages/normalization.js" defer></script>
   <script src="js/pages/regression.js" defer></script>
   <script src="js/progress.js" defer></script>
   <script src="js/app.js" defer></script>
@@ -67,7 +68,8 @@
       <button type="button" role="tab" id="tab-loo-manual" aria-controls="page-loo-manual" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Leave One Out – Verfahren</button>
       <button type="button" role="tab" id="tab-loo-auto" aria-controls="page-loo-auto" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Leave One Out – automatisiert</button>
       <button type="button" role="tab" id="tab-confusion" aria-controls="page-confusion" aria-selected="false" tabindex="-1"><span class="tab-no">7</span> Test und Konfusionsmatrix</button>
-      <button type="button" role="tab" id="tab-regression" aria-controls="page-regression" aria-selected="false" tabindex="-1"><span class="tab-no">8</span> Regression</button>
+      <button type="button" role="tab" id="tab-normalization" aria-controls="page-normalization" aria-selected="false" tabindex="-1"><span class="tab-no">8</span> Normalisierung</button>
+      <button type="button" role="tab" id="tab-regression" aria-controls="page-regression" aria-selected="false" tabindex="-1"><span class="tab-no">9</span> Regression</button>
     </nav>
   </header>
 
@@ -395,7 +397,71 @@
     </section>
 
     <!-- ===================================================================
-         Seite 8: Regression
+         Seite 8: Normalisierung
+         =================================================================== -->
+    <section id="page-normalization" class="page" role="tabpanel" aria-labelledby="tab-normalization" hidden>
+      <h2>Normalisierung</h2>
+      <p class="intro">Haben die beiden Merkmale sehr unterschiedliche Größenordnungen, bestimmt das Merkmal mit den größeren Zahlen fast allein den Abstand – und damit, welche Punkte Nachbarn sind. Bei der <strong>Normalisierung</strong> werden beide Merkmale auf einen vergleichbaren Bereich umgerechnet. Links sehen Sie die aktuellen Trainingsdaten ohne, rechts mit Normalisierung – jeweils mit demselben neuen Punkt und seinen k nächsten Nachbarn. Darunter wird erklärt und durchgerechnet, wie normalisiert wird, und verglichen, wie sich das auf die Ergebnisse auswirkt.</p>
+      <div id="notice-normalization" class="notice" hidden></div>
+      <form id="norm-form" class="card norm-settings" novalidate autocomplete="off">
+        <div>
+          <h3>Neuer Datenpunkt</h3>
+          <div class="field-row">
+            <div class="field">
+              <label for="n-x">x-Wert</label>
+              <input type="text" id="n-x" inputmode="decimal" maxlength="12">
+            </div>
+            <div class="field">
+              <label for="n-y">y-Wert</label>
+              <input type="text" id="n-y" inputmode="decimal" maxlength="12">
+            </div>
+          </div>
+          <p class="hint">Originalwerte eingeben oder in eines der Diagramme klicken.</p>
+          <p id="n-error" class="error" role="alert"></p>
+        </div>
+        <div>
+          <h3>Einstellungen</h3>
+          <div id="k-normalization"></div>
+        </div>
+        <div id="method-normalization"></div>
+        <div id="metric-normalization"></div>
+      </form>
+      <div class="dual-charts">
+        <div class="card">
+          <h3>Ohne Normalisierung</h3>
+          <div id="chart-norm-raw"></div>
+          <p id="norm-raw-result" class="result-line" role="status" aria-live="polite"></p>
+        </div>
+        <div class="card">
+          <h3 id="norm-right-title">Mit Normalisierung</h3>
+          <div id="chart-norm-scaled"></div>
+          <p id="norm-scaled-result" class="result-line" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+      <details id="norm-explain" class="card norm-section" open>
+        <summary>Wie wird normalisiert?</summary>
+        <div id="norm-explain-body"></div>
+      </details>
+      <details id="norm-worked" class="card norm-section" open>
+        <summary>Durchgerechnet für die aktuellen Daten</summary>
+        <div id="norm-worked-body"></div>
+      </details>
+      <details id="norm-neighbors" class="card norm-section">
+        <summary>Neuer Punkt: Ergebnis ohne und mit Normalisierung</summary>
+        <div id="norm-neighbors-body"></div>
+      </details>
+      <details id="norm-loo" class="card norm-section">
+        <summary>Genauigkeit je k (Leave One Out)</summary>
+        <div id="norm-loo-body"></div>
+      </details>
+      <details id="norm-diff" class="card norm-section">
+        <summary>Unterschiedlich klassifizierte Punkte</summary>
+        <div id="norm-diff-body"></div>
+      </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 9: Regression
          =================================================================== -->
     <section id="page-regression" class="page" role="tabpanel" aria-labelledby="tab-regression" hidden>
       <h2>Regression</h2>

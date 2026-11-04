@@ -12,7 +12,7 @@
  *     Gitterlinien gezeichnet.
  *   - Jedes Label erhält eine eigene Farbe UND eine eigene Markerform, damit
  *     die Klassen auch bei Farbsehschwäche unterscheidbar sind.
- *   - Regression (Seite 8): einheitliche Punkte, Streifen x ± |Δx| zum k-ten
+ *   - Regression (Seite 9): einheitliche Punkte, Streifen x ± |Δx| zum k-ten
  *     Nachbarn, prognostizierter Punkt, optional die Regressionskurve.
  *     Dort sind die Achsen getrennt skaliert (view.fit), damit Daten mit
  *     verschiedenen Größenordnungen (z. B. Uhrzeit und kW) die Fläche füllen;
@@ -393,6 +393,9 @@
      *        Abstand |Δx| zum k-ten Nachbarn) statt Kreis/Raute.
      * @param {{x:number, y:number}|null} [view.prediction] - Prognostizierter Punkt (Regression).
      * @param {Array<{x:number, y:(number|null)}>} [view.curve] - Stützstellen der Regressionskurve.
+     * @param {boolean} [view.fitEqual] - Feine Achsenschritte bei gleicher Einheit in x und y (Normalisierung).
+     * @param {Set<number>} [view.markedIds] - IDs zusätzlich markierter Punkte (gestrichelter Ring).
+     * @param {string} [view.markedLegend] - Legendentext für die markierten Punkte.
      */
     render(view) {
       const svg = dom.clear(this.svg);
@@ -413,7 +416,11 @@
         coords.push({ x: view.band.x, y: points.length > 0 ? points[0].y : 0 });
       }
       const fit = view.fit === true;
-      const b = fit ? computeFitBounds(coords) : computeBounds(coords);
+      // fitEqual: feine „schöne“ Schritte wie bei fit, aber gleiche Einheit in x und y
+      // (z. B. normalisierte Daten 0 … 1 – Abstände bleiben unverzerrt).
+      const fitEqual = !fit && view.fitEqual === true;
+      const fineGrid = fit || fitEqual;
+      const b = fineGrid ? computeFitBounds(coords) : computeBounds(coords);
       const xSpan = b.xMax - b.xMin;
       const ySpan = b.yMax - b.yMin;
       const unit = PLOT_SIZE / Math.max(xSpan, ySpan);
@@ -423,7 +430,7 @@
       const height = ySpan * yUnit;
       this.layout = {
         xMin: b.xMin, xMax: b.xMax, yMin: b.yMin, yMax: b.yMax, xUnit, yUnit, width, height,
-        fit, xStep: b.xStep || 1, yStep: b.yStep || 1
+        fit: fineGrid, xStep: b.xStep || 1, yStep: b.yStep || 1
       };
       const totalW = MARGIN.left + width + MARGIN.right;
       const totalH = MARGIN.top + height + MARGIN.bottom;
@@ -446,10 +453,10 @@
       const labelStep = chooseLabelStep(unit, 28);
       const drawMinor = unit >= 3;
       const grid = dom.svgEl('g', { class: 'grid', 'aria-hidden': 'true' });
-      if (fit) {
+      if (fineGrid) {
         this.renderFitGrid(grid, b, top, bottom, left, right);
       }
-      for (let x = b.xMin; !fit && x <= b.xMax; x++) {
+      for (let x = b.xMin; !fineGrid && x <= b.xMax; x++) {
         const isMajor = x % labelStep === 0;
         if (!drawMinor && !isMajor) {
           continue;
@@ -463,7 +470,7 @@
           grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(sx), y: fmt(bottom + 16), 'text-anchor': 'middle' }, dom.formatNumber(x)));
         }
       }
-      for (let y = b.yMin; !fit && y <= b.yMax; y++) {
+      for (let y = b.yMin; !fineGrid && y <= b.yMax; y++) {
         const isMajor = y % labelStep === 0;
         if (!drawMinor && !isMajor) {
           continue;
@@ -568,6 +575,14 @@
           marks.appendChild(dom.svgEl('text', { class: 'nb-rank', x: fmt(s.sx + 9), y: fmt(s.sy - 9) }, String(i + 1)));
         }
       });
+      if (view.markedIds && view.markedIds.size > 0) {
+        for (const p of points) {
+          if (view.markedIds.has(p.id)) {
+            const s = this.toSvg(p.x, p.y);
+            marks.appendChild(dom.svgEl('circle', { class: 'diff-ring', cx: fmt(s.sx), cy: fmt(s.sy), r: MARKER_R + 6 }));
+          }
+        }
+      }
       if (view.selectedId !== null && view.selectedId !== undefined) {
         const sel = points.find((p) => p.id === view.selectedId);
         if (sel) {
@@ -662,6 +677,9 @@
           'k = ' + neighbors.length + ' nächste Nachbarn (Ring, Nummer = Rang); ' +
           (view.metric === 'manhattan' ? 'Raute' : 'Kreis') + ' = Abstand zum k-ten Nachbarn'
         ]));
+      }
+      if (view.markedIds && points.some((p) => view.markedIds.has(p.id))) {
+        legend.appendChild(dom.el('li', { class: 'legend-marked' }, view.markedLegend || 'markierte Punkte (gestrichelter Ring)'));
       }
       legend.hidden = legend.childNodes.length === 0;
     }

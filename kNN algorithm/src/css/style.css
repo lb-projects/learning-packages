@@ -925,6 +925,84 @@ svg.scatter.clickable {
   margin-top: 0.6rem;
 }
 
+/* Normalisierung (Seite 8): zwei Diagramme nebeneinander, markierte Punkte, Abschnitte. */
+.norm-settings {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem 1.5rem;
+  align-items: start;
+}
+
+.result-line {
+  margin: 0.5rem 0 0;
+  font-weight: 600;
+}
+
+.dual-charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .dual-charts {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dual-charts h3 {
+  margin-top: 0;
+}
+
+.diff-ring {
+  fill: none;
+  stroke: #d55e00;
+  stroke-width: 2.5;
+  stroke-dasharray: 3 2;
+}
+
+.legend-marked {
+  color: #b34a00;
+}
+
+.norm-section {
+  margin-bottom: 0.8rem;
+}
+
+.norm-section > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.norm-section[open] > summary {
+  margin-bottom: 0.6rem;
+}
+
+.formula {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--info-bg);
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+}
+
+.side-by-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .side-by-side {
+    grid-template-columns: 1fr;
+  }
+}
+
+tr.only-here td {
+  background: #fdf0e6;
+}
+
 .legend {
   list-style: none;
   margin: 0.5rem 0 0;

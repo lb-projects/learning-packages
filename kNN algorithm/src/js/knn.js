@@ -1,7 +1,7 @@
 /**
  * @file knn.js
  * @description Der k-nächste-Nachbarn-Algorithmus (kNN) mit allen Auswertungen,
- *              die die acht Seiten benötigen (Klassifizierung und Regression).
+ *              die die neun Seiten benötigen (Klassifizierung, Normalisierung, Regression).
  *
  * Idee des Verfahrens:
  *   Ein Punkt mit unbekanntem Label wird klassifiziert, indem man die k
@@ -219,7 +219,7 @@
   }
 
   // ---------------------------------------------------------------------------
-  // kNN-Regression (Seite 8)
+  // kNN-Regression (Seite 9)
   //
   // Merkmal ist x, Zielwert ist y. Nachbarn sind die k Punkte mit dem kleinsten
   // Abstand |Δx|; bei gleichem Abstand gilt die Reihenfolge der Eingabe.
@@ -317,8 +317,94 @@
     return out;
   }
 
+  // ---------------------------------------------------------------------------
+  // Normalisierung (Seite 8)
+  //
+  // Min-Max:            x' = (x − min) / (max − min)       → Trainingsdaten liegen in 0 … 1
+  // Z-Standardisierung: x' = (x − x̄) / s, s = √(Σ(x − x̄)² / n)  (geteilt durch n)
+  // Die Kennwerte stammen aus den Trainingspunkten; neue Punkte werden mit
+  // denselben Kennwerten umgerechnet. Ist eine Achse konstant (max = min bzw.
+  // s = 0), wird durch 1 geteilt; alle umgerechneten Werte sind dann 0.
+  // ---------------------------------------------------------------------------
+
+  /** Verfügbare Normalisierungsverfahren. */
+  const NORMALIZATIONS = Object.freeze({
+    minmax: { id: 'minmax', name: 'Min-Max (0 bis 1)' },
+    zscore: { id: 'zscore', name: 'Z-Standardisierung' }
+  });
+
+  /** Rundet auf 6 Nachkommastellen (Darstellungsartefakte vermeiden). */
+  function round6(v) {
+    return Math.round(v * 1e6) / 1e6;
+  }
+
+  /**
+   * Kennwerte einer Achse.
+   * @param {number[]} values - Werte (mindestens einer).
+   * @param {string} method - "minmax" oder "zscore".
+   * @returns {{offset:number, scale:number, constant:boolean, min:number, max:number,
+   *            mean:number, sd:number, sum:number, n:number}} Kennwerte.
+   */
+  function axisParams(values, method) {
+    const n = values.length;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const sum = values.reduce((a, b) => a + b, 0);
+    const mean = sum / n;
+    const sd = Math.sqrt(values.reduce((a, v) => a + (v - mean) * (v - mean), 0) / n);
+    const offset = method === 'zscore' ? mean : min;
+    const raw = method === 'zscore' ? sd : max - min;
+    const constant = !(raw > 1e-12);
+    return { offset, scale: constant ? 1 : raw, constant, min, max, mean, sd, sum, n };
+  }
+
+  /**
+   * Bestimmt die Kennwerte der Normalisierung aus den Trainingspunkten.
+   * @param {Array<{x:number, y:number}>} points - Trainingspunkte (mindestens einer).
+   * @param {string} method - "minmax" oder "zscore".
+   * @returns {{method:string, x:Object, y:Object}|null} Kennwerte je Achse (null ohne Punkte).
+   */
+  function normalizationParams(points, method) {
+    const m = method === 'zscore' ? 'zscore' : 'minmax';
+    if (points.length === 0) {
+      return null;
+    }
+    return { method: m, x: axisParams(points.map((p) => p.x), m), y: axisParams(points.map((p) => p.y), m) };
+  }
+
+  /**
+   * Rechnet einen Wert um.
+   * @param {number} v - Originalwert.
+   * @param {{offset:number, scale:number}} axis - Kennwerte der Achse.
+   * @returns {number} Normalisierter Wert.
+   */
+  function normalizeValue(v, axis) {
+    return round6((v - axis.offset) / axis.scale);
+  }
+
+  /**
+   * Rechnet einen normalisierten Wert zurück.
+   * @param {number} v - Normalisierter Wert.
+   * @param {{offset:number, scale:number}} axis - Kennwerte der Achse.
+   * @returns {number} Originalwert.
+   */
+  function denormalizeValue(v, axis) {
+    return round6(v * axis.scale + axis.offset);
+  }
+
+  /**
+   * Normalisiert Punkte (ID und Label bleiben erhalten).
+   * @param {Array<{id:number, x:number, y:number, label:string}>} points - Punkte.
+   * @param {{x:Object, y:Object}} params - Kennwerte (normalizationParams).
+   * @returns {Array<{id:number, x:number, y:number, label:string}>} Normalisierte Punkte.
+   */
+  function normalizePoints(points, params) {
+    return points.map((p) => ({ id: p.id, x: normalizeValue(p.x, params.x), y: normalizeValue(p.y, params.y), label: p.label }));
+  }
+
   ns.knn = {
     METRICS, distance, sortByDistance, vote, classify, evaluateAllK, evaluate, leaveOneOut,
-    WEIGHTINGS, sortByX, regress, regressionCurve
+    WEIGHTINGS, sortByX, regress, regressionCurve,
+    NORMALIZATIONS, normalizationParams, normalizeValue, denormalizeValue, normalizePoints
   };
 })(window.KNN = window.KNN || {});
