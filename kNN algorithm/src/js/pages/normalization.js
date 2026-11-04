@@ -319,13 +319,17 @@
     if (rawResult) {
       const rawIds = new Set(rawResult.neighbors.map((n) => n.point.id));
       const scaledIds = new Set(scaledResult.neighbors.map((n) => n.point.id));
+      // Ergebnis jeweils direkt unter der zugehörigen Tabelle
       ui.neighbors.appendChild(dom.el('div', { class: 'side-by-side' }, [
-        neighborTable('Ohne Normalisierung (Abstand in Originalwerten)', rawResult, scaledIds),
-        neighborTable('Mit Normalisierung (Abstand in umgerechneten Werten)', scaledResult, rawIds)
+        dom.el('div', null, [
+          neighborTable('Ohne Normalisierung (Abstand in Originalwerten)', rawResult, scaledIds),
+          dom.el('p', { class: 'result-line', id: 'norm-raw-compare' }, ['Ohne Normalisierung: ', common.labelBadge(rawResult.label)])
+        ]),
+        dom.el('div', null, [
+          neighborTable('Mit Normalisierung (Abstand in umgerechneten Werten)', scaledResult, rawIds),
+          dom.el('p', { class: 'result-line', id: 'norm-scaled-compare' }, ['Mit Normalisierung: ', common.labelBadge(scaledResult.label)])
+        ])
       ]));
-      const same = rawResult.label === scaledResult.label;
-      ui.neighbors.appendChild(dom.el('p', { class: 'result-main' }, ['Ohne Normalisierung: ', common.labelBadge(rawResult.label),
-        ' – mit Normalisierung: ', common.labelBadge(scaledResult.label), same ? ' (gleiches Ergebnis)' : ' (unterschiedliches Ergebnis)']));
       ui.neighbors.appendChild(dom.el('p', { class: 'hint' }, 'Hervorgehoben: Nachbarn, die nur in einer der beiden Rechnungen vorkommen.'));
     } else {
       ui.neighbors.appendChild(dom.el('p', null, 'Geben Sie oben einen neuen Punkt ein oder klicken Sie in eines der Diagramme.'));
@@ -451,8 +455,26 @@
     }
   }
 
-  /** Datenänderungen: Der gewählte Beispielpunkt entfällt, wenn er gelöscht wurde; render() rechnet neu. */
-  function onDataChange() {
+  /**
+   * Datenänderungen: Neue Trainingsdaten (Datei, Beispieldaten) setzen die Seite zurück –
+   * neuer Punkt und Beispielpunkt entfallen, alle Abschnitte werden zugeklappt.
+   * Bei einzelnen Änderungen entfällt nur ein gelöschter Beispielpunkt. render() rechnet neu.
+   * @param {{type: string}} event - Änderung.
+   */
+  function onDataChange(event) {
+    if (event && event.type === 'replace') {
+      state.query = null;
+      state.exampleId = null;
+      if (ui) {
+        ui.x.value = '';
+        ui.y.value = '';
+        ui.error.textContent = '';
+        for (const id of ['norm-explain', 'norm-worked', 'norm-neighbors', 'norm-loo', 'norm-diff']) {
+          dom.byId(id).open = false;
+        }
+      }
+      return;
+    }
     if (state.exampleId !== null && !ds.getPoint(state.exampleId)) {
       state.exampleId = null;
     }

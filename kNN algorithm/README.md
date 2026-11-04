@@ -59,6 +59,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
   - Haben alle Trainingspunkte auf einer Achse denselben Wert, wird durch 1 geteilt; die umgerechneten Werte sind dann 0 (mit Hinweis).
   - Das linke Diagramm ist wie überall gleich skaliert – bei Merkmalen mit sehr unterschiedlichen Größenordnungen wirken die Daten dort zusammengedrückt; genau das zeigt die Verzerrung der Abstände. Das rechte Diagramm ist ebenfalls gleich skaliert.
   - Leave-One-Out-Vergleich für k = 1 … min(20, n − 1); die Liste der unterschiedlich klassifizierten Punkte verwendet das eingestellte k.
+  - Alle Abschnitte sind anfangs zugeklappt. Werden neue Trainingsdaten geladen (Datei oder Beispieldaten), wird die Seite zurückgesetzt: neuer Punkt und gewählter Beispielpunkt entfallen, alle Abschnitte werden zugeklappt. Verfahren, Metrik und k bleiben eingestellt.
 - **Seite 9 (Regression):**
   - Merkmal ist x, vorhergesagt wird y. Der Abstand ist |Δx|; eine Metrik-Auswahl gibt es deshalb nicht. Nachbarn sind alle Trainingspunkte.
   - **Mittelwert:** ŷ = (y₁ + … + yₖ) / k.
