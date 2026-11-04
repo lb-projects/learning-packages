@@ -14,6 +14,9 @@
  *     die Klassen auch bei Farbsehschwäche unterscheidbar sind.
  *   - Regression (Seite 8): einheitliche Punkte, Streifen x ± |Δx| zum k-ten
  *     Nachbarn, prognostizierter Punkt, optional die Regressionskurve.
+ *     Dort sind die Achsen getrennt skaliert (view.fit), damit Daten mit
+ *     verschiedenen Größenordnungen (z. B. Uhrzeit und kW) die Fläche füllen;
+ *     Abstände werden auf dieser Seite nur in x-Richtung gemessen.
  *   - Optionale Ebenen: Metrik-Form (Kreis bei euklidischer, Raute bei
  *     Manhattan-Metrik; Radius = Abstand zum k-ten Nachbarn), Linien zu den
  *     Nachbarn (bei Manhattan als Weg entlang der Achsen), Rangnummern,
@@ -191,6 +194,84 @@
    * @param {number} minPixels - Mindestabstand.
    * @returns {number} Beschriftungsabstand.
    */
+  /** Zeichenfläche bei getrennt skalierten Achsen (viewBox-Einheiten). */
+  const FIT_WIDTH = 560;
+  const FIT_HEIGHT = 420;
+
+  /**
+   * Wählt einen „schönen“ Schritt (1, 2, 2,5 oder 5 · 10ⁿ), sodass die Spannweite
+   * in höchstens maxSteps Abschnitte zerfällt.
+   * @param {number} span - Spannweite (> 0).
+   * @param {number} maxSteps - Höchstzahl der Abschnitte.
+   * @returns {number} Schritt.
+   */
+  function niceStep(span, maxSteps) {
+    const raw = span / maxSteps;
+    const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    for (const m of [1, 2, 2.5, 5, 10]) {
+      if (m * pow >= raw) {
+        return Math.round(m * pow * 1e9) / 1e9;
+      }
+    }
+    return 10 * pow;
+  }
+
+  /**
+   * Vielfache des Schritts von min bis max (gegen Gleitkommafehler gerundet).
+   * @param {number} min - Anfang (Vielfaches von step).
+   * @param {number} max - Ende.
+   * @param {number} step - Schritt.
+   * @returns {number[]} Werte.
+   */
+  function ticks(min, max, step) {
+    const out = [];
+    const n = Math.round((max - min) / step);
+    for (let i = 0; i <= n && i <= 100; i++) {
+      out.push(Math.round((min + i * step) * 1e9) / 1e9);
+    }
+    return out;
+  }
+
+  /**
+   * Wertebereich für getrennt skalierte Achsen (Regression): je Achse ein
+   * „schöner“ Schritt für höchstens 10 Abschnitte, Grenzen auf Vielfache davon
+   * erweitert, kleiner Rand, damit Punkte nicht auf dem Rahmen liegen.
+   *
+   * @param {Array<{x:number, y:number}>} coords - Alle zu zeigenden Koordinaten.
+   * @returns {{xMin:number, xMax:number, yMin:number, yMax:number, xStep:number, yStep:number}} Wertebereich.
+   */
+  function computeFitBounds(coords) {
+    if (coords.length === 0) {
+      return { xMin: 0, xMax: 10, yMin: 0, yMax: 10, xStep: 1, yStep: 1 };
+    }
+    /**
+     * Bereich einer Achse.
+     * @param {number[]} values - Werte.
+     * @returns {{min:number, max:number, step:number}} Bereich mit Schritt.
+     */
+    function axis(values) {
+      let lo = Math.min(...values);
+      let hi = Math.max(...values);
+      if (hi - lo < 1e-9) {
+        lo -= 1;
+        hi += 1;
+      }
+      const pad = (hi - lo) * 0.04;
+      // Nichtnegative Werte (z. B. Preise, Mengen): Achse nicht unter 0 verlängern.
+      lo = lo >= 0 ? Math.max(0, lo - pad) : lo - pad;
+      hi += pad;
+      const step = niceStep(hi - lo, 10);
+      return {
+        min: Math.round(Math.floor(lo / step) * step * 1e9) / 1e9,
+        max: Math.round(Math.ceil(hi / step) * step * 1e9) / 1e9,
+        step
+      };
+    }
+    const ax = axis(coords.map((c) => c.x));
+    const ay = axis(coords.map((c) => c.y));
+    return { xMin: ax.min, xMax: ax.max, yMin: ay.min, yMax: ay.max, xStep: ax.step, yStep: ay.step };
+  }
+
   function chooseLabelStep(unit, minPixels) {
     for (const step of LABEL_STEPS) {
       if (step * unit >= minPixels) {
@@ -242,8 +323,8 @@
     toSvg(x, y) {
       const l = this.layout;
       return {
-        sx: MARGIN.left + (x - l.xMin) * l.unit,
-        sy: MARGIN.top + (l.yMax - y) * l.unit
+        sx: MARGIN.left + (x - l.xMin) * l.xUnit,
+        sy: MARGIN.top + (l.yMax - y) * l.yUnit
       };
     }
 
@@ -279,8 +360,10 @@
       const inside = p.x >= MARGIN.left && p.x <= MARGIN.left + l.width &&
         p.y >= MARGIN.top && p.y <= MARGIN.top + l.height;
       if (inside && this.options.onPlaneClick) {
-        const x = Math.round((l.xMin + (p.x - MARGIN.left) / l.unit) * 10) / 10;
-        const y = Math.round((l.yMax - (p.y - MARGIN.top) / l.unit) * 10) / 10;
+        // Gleich skaliert: auf 0,1 runden; getrennt skaliert: auf ein Zehntel des Gitterschritts.
+        const roundTo = (v, step) => Math.round(Math.round(v / step) * step * 1e6) / 1e6;
+        const x = roundTo(l.xMin + (p.x - MARGIN.left) / l.xUnit, l.fit ? l.xStep / 10 : 0.1);
+        const y = roundTo(l.yMax - (p.y - MARGIN.top) / l.yUnit, l.fit ? l.yStep / 10 : 0.1);
         this.options.onPlaneClick({ x, y });
       }
     }
@@ -319,7 +402,7 @@
       const origin = view.origin || view.query || view.prediction || null;
       const hollowName = view.hollowName || 'Validierungspunkt';
 
-      // --- Layout: gleiche Skalierung in x und y -----------------------------
+      // --- Layout: gleiche Skalierung in x und y (oder getrennt, view.fit) ------
       const coords = points.slice();
       if (view.query) {
         coords.push(view.query);
@@ -329,13 +412,19 @@
       } else if (view.band) {
         coords.push({ x: view.band.x, y: points.length > 0 ? points[0].y : 0 });
       }
-      const b = computeBounds(coords);
+      const fit = view.fit === true;
+      const b = fit ? computeFitBounds(coords) : computeBounds(coords);
       const xSpan = b.xMax - b.xMin;
       const ySpan = b.yMax - b.yMin;
       const unit = PLOT_SIZE / Math.max(xSpan, ySpan);
-      const width = xSpan * unit;
-      const height = ySpan * unit;
-      this.layout = { xMin: b.xMin, xMax: b.xMax, yMin: b.yMin, yMax: b.yMax, unit, width, height };
+      const xUnit = fit ? FIT_WIDTH / xSpan : unit;
+      const yUnit = fit ? FIT_HEIGHT / ySpan : unit;
+      const width = xSpan * xUnit;
+      const height = ySpan * yUnit;
+      this.layout = {
+        xMin: b.xMin, xMax: b.xMax, yMin: b.yMin, yMax: b.yMax, xUnit, yUnit, width, height,
+        fit, xStep: b.xStep || 1, yStep: b.yStep || 1
+      };
       const totalW = MARGIN.left + width + MARGIN.right;
       const totalH = MARGIN.top + height + MARGIN.bottom;
       svg.setAttribute('viewBox', '0 0 ' + fmt(totalW) + ' ' + fmt(totalH));
@@ -357,7 +446,10 @@
       const labelStep = chooseLabelStep(unit, 28);
       const drawMinor = unit >= 3;
       const grid = dom.svgEl('g', { class: 'grid', 'aria-hidden': 'true' });
-      for (let x = b.xMin; x <= b.xMax; x++) {
+      if (fit) {
+        this.renderFitGrid(grid, b, top, bottom, left, right);
+      }
+      for (let x = b.xMin; !fit && x <= b.xMax; x++) {
         const isMajor = x % labelStep === 0;
         if (!drawMinor && !isMajor) {
           continue;
@@ -371,7 +463,7 @@
           grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(sx), y: fmt(bottom + 16), 'text-anchor': 'middle' }, dom.formatNumber(x)));
         }
       }
-      for (let y = b.yMin; y <= b.yMax; y++) {
+      for (let y = b.yMin; !fit && y <= b.yMax; y++) {
         const isMajor = y % labelStep === 0;
         if (!drawMinor && !isMajor) {
           continue;
@@ -403,7 +495,7 @@
       // Regression: Streifen x ± |Δx| des k-ten Nachbarn, senkrechte Linie beim x-Wert.
       if (view.band) {
         const bx = this.toSvg(view.band.x, 0).sx;
-        const half = Math.max(0, view.band.radius) * unit;
+        const half = Math.max(0, view.band.radius) * xUnit;
         if (half > 0) {
           overlay.appendChild(dom.svgEl('rect', { class: 'x-band', x: fmt(bx - half), y: fmt(top), width: fmt(2 * half), height: fmt(height) }));
         }
@@ -506,6 +598,29 @@
     }
 
     /**
+     * Gitter und Beschriftung bei getrennt skalierten Achsen (view.fit):
+     * Linien bei jedem Vielfachen des Schritts, Nulllinie hervorgehoben.
+     * @param {SVGElement} grid - Zielgruppe.
+     * @param {{xMin:number, xMax:number, yMin:number, yMax:number, xStep:number, yStep:number}} b - Wertebereich.
+     * @param {number} top - Oberer Rand der Zeichenfläche.
+     * @param {number} bottom - Unterer Rand.
+     * @param {number} left - Linker Rand.
+     * @param {number} right - Rechter Rand.
+     */
+    renderFitGrid(grid, b, top, bottom, left, right) {
+      for (const x of ticks(b.xMin, b.xMax, b.xStep)) {
+        const sx = this.toSvg(x, 0).sx;
+        grid.appendChild(dom.svgEl('line', { class: x === 0 ? 'axis-zero' : 'grid-major', x1: fmt(sx), y1: fmt(top), x2: fmt(sx), y2: fmt(bottom) }));
+        grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(sx), y: fmt(bottom + 16), 'text-anchor': 'middle' }, dom.formatNumber(x)));
+      }
+      for (const y of ticks(b.yMin, b.yMax, b.yStep)) {
+        const sy = this.toSvg(0, y).sy;
+        grid.appendChild(dom.svgEl('line', { class: y === 0 ? 'axis-zero' : 'grid-major', x1: fmt(left), y1: fmt(sy), x2: fmt(right), y2: fmt(sy) }));
+        grid.appendChild(dom.svgEl('text', { class: 'tick', x: fmt(left - 6), y: fmt(sy + 4), 'text-anchor': 'end' }, dom.formatNumber(y)));
+      }
+    }
+
+    /**
      * Baut die Legende unterhalb des Diagramms auf.
      * @param {Object} view - Darzustellender Zustand (siehe render).
      * @param {Array} points - Datenpunkte.
@@ -597,5 +712,5 @@
     container.appendChild(svg);
   }
 
-  ns.chart = { ScatterChart, renderBarChart, markerIcon, markerPath, computeBounds };
+  ns.chart = { ScatterChart, renderBarChart, markerIcon, markerPath, computeBounds, computeFitBounds };
 })(window.KNN = window.KNN || {});

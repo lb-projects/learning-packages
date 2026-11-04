@@ -6,7 +6,8 @@
  *   - Eingabe eines x-Werts über das Eingabefeld oder Klick ins Diagramm.
  *   - Einstellung von k (Zahlenfeld + Schieberegler, 1 … Anzahl Trainingspunkte).
  *   - Berechnung: Mittelwert oder gewichteter Mittelwert (Gewicht 1/|Δx|).
- *   - Diagramm: alle Trainingspunkte einheitlich (das Label spielt keine Rolle),
+ *   - Diagramm mit getrennt skalierten Achsen (füllt die Fläche auch bei verschiedenen
+ *     Größenordnungen von x und y); alle Trainingspunkte einheitlich (das Label spielt keine Rolle),
  *     Streifen x ± |Δx| des k-ten Nachbarn, Nachbarn mit Rangnummer,
  *     prognostizierter Punkt; optional die Regressionskurve.
  *   - Ergebnis: prognostizierter y-Wert, Rechenweg, Tabelle der Nachbarn.
@@ -132,7 +133,7 @@
   /** Zeichnet die Seite neu. */
   function render() {
     const points = ds.getPoints();
-    const base = Object.assign(common.baseView(), { uniform: true });
+    const base = Object.assign(common.baseView(), { uniform: true, fit: true });
     if (points.length === 0) {
       common.showNotice(ui.notice, 'Es sind noch keine Trainingsdaten vorhanden.', true);
       kControl.setMax(1);
@@ -148,7 +149,7 @@
     const prediction = result ? { x: state.x, y: result.y } : null;
     let curve = null;
     if (state.showCurve) {
-      const b = ns.chart.computeBounds(prediction ? points.concat([prediction]) : points);
+      const b = ns.chart.computeFitBounds(prediction ? points.concat([prediction]) : points);
       curve = knn.regressionCurve(points, k, weighting, b.xMin, b.xMax, CURVE_STEPS);
     }
     if (!result) {

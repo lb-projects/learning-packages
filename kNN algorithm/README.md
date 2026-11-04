@@ -57,6 +57,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
   - **Gewichteter Mittelwert:** ŷ = Σ(wᵢ·yᵢ) / Σwᵢ mit wᵢ = 1 / |Δxᵢ|. Haben Nachbarn denselben x-Wert (|Δx| = 0), zählen nur diese, jeweils mit gleichem Gewicht.
   - Bei gleichem Abstand zählt die Reihenfolge der Eingabe (mit Hinweis an der Grenze des k-ten Nachbarn).
   - Die Regressionskurve zeigt die Prognose für jeden x-Wert des Diagramms (beim Mittelwert eine Treppenfunktion).
+  - Im Diagramm sind die Achsen getrennt skaliert, damit Daten mit verschiedenen Größenordnungen (z. B. Uhrzeit und kW) die Fläche füllen. Abstände werden auf dieser Seite nur in x-Richtung gemessen. Auf den Seiten 1 bis 7 bleiben die Achsen gleich skaliert, weil dort Abstände in beiden Richtungen zählen.
 
 ## Aufbau
 
@@ -205,7 +206,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des SQL-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (72) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (74) im Browser, mit simulierter SCORM-Schnittstelle:
 - Algorithmus mit Handrechnungen: Metriken, Gleichstände, gleiche Abstände, Leave One Out; schrittweise Auswertung für alle k im Abgleich mit der Einzelklassifizierung; Regression (Mittelwert, gewichtet, |Δx| = 0, Kurve);
 - Datenzustand: Zahlen- und Labelprüfung, stabile IDs, Grenzen, Validierungsauswahl, getrennte Testdaten;
 - Parser, DEFLATE und ZIP-Grenzen; Import aller Szenario- und Regressionsdateien sowie von XLSX- und ODS-Dateien;
