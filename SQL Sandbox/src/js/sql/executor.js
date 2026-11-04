@@ -49,6 +49,13 @@
     importTotalMs: 30000
   });
 
+  /**
+   * Grenzen des Mitschreibers für Seite 4 „Schritt für Schritt“: Je Schritt werden höchstens
+   * so viele Zeilen gespeichert (die echte Anzahl steht in total), das Raster der Verknüpfung
+   * nur bis gridSide × gridSide, je Gruppe und Aggregatfunktion höchstens aggValues Einzelwerte.
+   */
+  const TRACE_LIMITS = Object.freeze({ rows: 200, gridSide: 20, aggValues: 30 });
+
   const AGGREGATES = new Set(['COUNT', 'SUM', 'AVG', 'MIN', 'MAX']);
   const FUNCTION_NAMES = ['COUNT', 'SUM', 'AVG', 'MIN', 'MAX', 'ROUND', 'ROW_NUMBER', 'RANK', 'DENSE_RANK', 'LAG', 'LEAD'];
   /** Reine Fensterfunktionen (nur mit OVER). */
@@ -662,25 +669,25 @@
       const cte = findCte(scope.cteEnv, item.name, item.pos);
       if (cte) {
         const srcIndex = addSource(scope, derivedSource(cte.name, item.alias, cte.out), item.pos);
-        return { type: 'derived', query: cte.query, cte, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
+        return { type: 'derived', query: cte.query, cte, range: [srcIndex, srcIndex + 1, srcIndex + 1], span: item.span, derivedKind: 'cte', name: cte.name };
       }
       const view = rt.db.views.get(item.name.toLowerCase());
       if (view) {
         ns.sql.requireExactName(item.name, view.name, 'Die Tabelle bzw. Sicht „' + item.name + '“ gibt es nicht.', item.pos);
         const bound = bindView(view, item.pos);
         const srcIndex = addSource(scope, derivedSource(view.name, item.alias, bound.out), item.pos);
-        return { type: 'derived', query: bound.query, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
+        return { type: 'derived', query: bound.query, range: [srcIndex, srcIndex + 1, srcIndex + 1], span: item.span, derivedKind: 'view', name: view.name };
       }
       const table = rt.db.requireTable(item.name, item.pos);
       const srcIndex = addSource(scope, tableSource(table, item.alias), item.pos);
-      return { type: 'table', table, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
+      return { type: 'table', table, range: [srcIndex, srcIndex + 1, srcIndex + 1], span: item.span };
     }
     if (item.type === 'subquery') {
       bindSelect(item.query, null, scope.cteEnv);
       const out = derivedColumns(item.alias, null, item.query, item.pos, { dat: 'der Unterabfrage', acc: 'die Unterabfrage' });
       const source = { key: item.alias.toLowerCase(), label: item.alias, tableKey: null, tableName: null, aliasGiven: false, columns: out.columns, colIndex: out.colIndex, pk: null };
       const srcIndex = addSource(scope, source, item.pos);
-      return { type: 'derived', query: item.query, range: [srcIndex, srcIndex + 1, srcIndex + 1] };
+      return { type: 'derived', query: item.query, range: [srcIndex, srcIndex + 1, srcIndex + 1], span: item.span, derivedKind: 'subquery', name: item.alias };
     }
     // Verknüpfung
     const start = scope.sources.length;
@@ -693,7 +700,7 @@
     if (item.on) {
       on = bindExpr(item.on, scope, Object.assign({}, flags, { clause: 'ON', allowAgg: false }));
     }
-    const plan = { type: 'join', kind: item.kind, left, right, on, range, hash: null, implicit: item.implicit };
+    const plan = { type: 'join', kind: item.kind, left, right, on, range, hash: null, implicit: item.implicit, span: item.span };
     if (on) {
       plan.hash = findHashCondition(conjuncts(on, []), range, scope);
     }
@@ -861,6 +868,8 @@
     assignWhereHashes(plan.right, conds, scope);
     if (!plan.hash && (plan.kind === 'cross' || plan.kind === 'inner')) {
       plan.hash = findHashCondition(conds, plan.range, scope);
+      // Die Abkürzung stammt aus WHERE: Seite 4 zeigt stattdessen das vollständige Kreuzprodukt.
+      plan.hashFromWhere = plan.hash !== null;
     }
   }
 
@@ -1796,6 +1805,230 @@
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Mitschreiber für Seite 4 „Schritt für Schritt“
+  // ---------------------------------------------------------------------------
+  //
+  // Nur die äußerste Abfrage wird mitgeschrieben (rt.trace). Die Schritte stammen aus der
+  // echten Ausführung; der letzte Schritt liefert damit dasselbe Ergebnis wie Seite 3.
+  // Zusätzliche Auswertungen (Raster, Teilbedingungen, Einzelwerte der Aggregate) betreffen
+  // nur die gespeicherten Zeilen und ändern das Ergebnis nicht.
+
+  /** @returns {string|null} Text eines Bereichs aus dem Quelltext (Leerraum zusammengefasst). */
+  function spanText(tr, span) {
+    return span ? tr.source.slice(span.start, span.end).replace(/\s+/g, ' ').trim() : null;
+  }
+
+  /**
+   * Tabelle aus Frames für den Mitschreiber.
+   *
+   * @param {Object} tr - Mitschreiber (mit scope).
+   * @param {Array} frames - Frames; frame[k] gehört zur Quelle r0 + k.
+   * @param {number} r0 - Erste Quelle.
+   * @param {number} r2 - Ende (exklusiv).
+   * @returns {Object} {sources:[{label, width}], columns, types, rows, ids, total}; ids je Zeile und Quelle
+   *   die Nummer des Datensatzes in seiner Quelle (-1 = mit NULL aufgefüllt).
+   */
+  function traceTable(tr, frames, r0, r2) {
+    const sources = tr.scope.sources.slice(r0, r2);
+    const columns = [];
+    const types = [];
+    sources.forEach((src) => src.columns.forEach((c) => {
+      columns.push(c.name);
+      types.push(c.type || null);
+    }));
+    const shown = frames.length > TRACE_LIMITS.rows ? frames.slice(0, TRACE_LIMITS.rows) : frames;
+    return {
+      sources: sources.map((src) => ({ label: src.label, width: src.columns.length })),
+      columns,
+      types,
+      total: frames.length,
+      rows: shown.map((f) => {
+        const out = [];
+        sources.forEach((src, k) => {
+          const row = f[k];
+          src.columns.forEach((c, col) => out.push(row ? row[col] : null));
+        });
+        return out;
+      }),
+      ids: shown.map((f) => sources.map((src, k) => (f[k] ? tr.rowIndex.get(f[k]) : -1)))
+    };
+  }
+
+  /** @returns {Object} Ergebnistabelle (nach der SELECT-Liste) für den Mitschreiber. */
+  function resultTable(q, rows) {
+    return {
+      columns: q.outputs.map((o) => o.name),
+      types: q.outputs.map((o) => o.type || null),
+      rows: rows.length > TRACE_LIMITS.rows ? rows.slice(0, TRACE_LIMITS.rows) : rows,
+      total: rows.length
+    };
+  }
+
+  /** Schritt: Tabelle, Sicht oder Unterabfrage in FROM. */
+  function traceSource(tr, plan, frames) {
+    frames.forEach((f, i) => tr.rowIndex.set(f[0], i));
+    const r0 = plan.range[0];
+    tr.steps.push({
+      kind: 'source', span: plan.span || null, label: tr.scope.sources[r0].label,
+      name: plan.type === 'table' ? plan.table.name : plan.name, derivedKind: plan.derivedKind || null,
+      table: traceTable(tr, frames, r0, r0 + 1)
+    });
+  }
+
+  /**
+   * Schritt: Verknüpfung (JOIN, CROSS JOIN, Komma).
+   * pairs: Herkunft der gespeicherten Ergebniszeilen; grid: Wert der ON-Bedingung für jedes Paar
+   * (nur bei kleinen Tabellen, sonst null).
+   */
+  function traceJoin(tr, plan, L, R, out, pairs, onCtx, whereShortcut) {
+    const [r0, r1, r2] = plan.range;
+    let grid = null;
+    if (L.length <= TRACE_LIMITS.gridSide && R.length <= TRACE_LIMITS.gridSide) {
+      grid = L.map((lf) => R.map((rf) => {
+        if (!plan.on) {
+          return true;
+        }
+        onCtx.frame = lf.concat(rf);
+        return V.truth(evalExpr(plan.on, onCtx));
+      }));
+    }
+    tr.steps.push({
+      kind: 'join', joinKind: plan.kind, implicit: !!plan.implicit, span: plan.span || null,
+      left: traceTable(tr, L, r0, r1), right: traceTable(tr, R, r1, r2), table: traceTable(tr, out, r0, r2),
+      pairs, grid, whereShortcut: !!whereShortcut
+    });
+  }
+
+  /** Wertet eine Teilbedingung für die Anzeige aus (Fehler ergeben undefined). */
+  function partTruth(node, ctx) {
+    try {
+      return V.truth(evalExpr(node, ctx));
+    } catch (error) {
+      if (error instanceof SqlError) {
+        return undefined;
+      }
+      throw error;
+    }
+  }
+
+  /** Schritt: WHERE mit dem Wert der Bedingung und ihrer AND-Teile je Zeile. */
+  function traceWhere(tr, q, frames, truths, kept, outerCtx) {
+    const step = { kind: 'where', span: q.spans.where || null, table: traceTable(tr, frames, 0, q.width), truths, kept, parts: null, partValues: null };
+    const parts = conjuncts(q.where, []);
+    if (parts.length > 1) {
+      step.parts = parts.map((p, i) => spanText(tr, p.textSpan) || ('Teilbedingung ' + (i + 1)));
+      const ctx = { frame: null, parent: outerCtx, offset: 0 };
+      step.partValues = frames.slice(0, TRACE_LIMITS.rows).map((f) => {
+        ctx.frame = f;
+        return parts.map((p) => partTruth(p, ctx));
+      });
+    }
+    tr.steps.push(step);
+  }
+
+  /** @returns {Array<Object>} Aggregatfunktionen der Abfrage (SELECT, HAVING, ORDER BY), ohne Doppelungen. */
+  function collectAggregates(tr, q) {
+    const found = [];
+    const seen = new Set();
+    const texts = new Set();
+    const walk = (node) => {
+      if (!node || seen.has(node)) {
+        return;
+      }
+      seen.add(node);
+      if (node.type === 'func' && node.agg === true) {
+        const text = spanText(tr, node.textSpan) || (node.name + '(' + (node.star ? '*' : '…') + ')');
+        if (!texts.has(text)) {
+          texts.add(text);
+          found.push({ node, text });
+        }
+        return;
+      }
+      exprChildren(node).forEach(walk);
+    };
+    q.outputs.forEach((o) => walk(o.expr));
+    walk(q.having);
+    q.orderPlan.forEach((p) => walk(p.expr));
+    return found;
+  }
+
+  /** @returns {Object} Ergebnis einer Aggregatfunktion für eine Gruppe mit den verwendeten Einzelwerten. */
+  function aggregateDetail(node, ctx) {
+    const result = evalAggregate(node, ctx);
+    if (node.star) {
+      return { result, star: true, values: null, count: ctx.group.length, nulls: 0, distinct: false };
+    }
+    const rowCtx = { frame: null, parent: ctx.parent, offset: 0 };
+    const seen = node.distinct ? new Set() : null;
+    const values = [];
+    let count = 0;
+    let nulls = 0;
+    for (const frame of ctx.group) {
+      tick();
+      rowCtx.frame = frame;
+      const v = evalExpr(node.args[0], rowCtx);
+      if (v === null) {
+        nulls++;
+        continue;
+      }
+      if (seen) {
+        const k = V.valueKey(v);
+        if (seen.has(k)) {
+          continue;
+        }
+        seen.add(k);
+      }
+      count++;
+      if (values.length < TRACE_LIMITS.aggValues) {
+        values.push(v);
+      }
+    }
+    return { result, star: false, values, count, nulls, distinct: !!node.distinct };
+  }
+
+  /** Schritt: Gruppieren (GROUP BY bzw. eine Gruppe für Aggregatfunktionen ohne GROUP BY). */
+  function traceGroup(tr, q, frames, groupOf, ctxs) {
+    const aggs = collectAggregates(tr, q);
+    tr.steps.push({
+      kind: 'group', span: q.spans.group || null, implicit: q.groupExprs.length === 0,
+      table: traceTable(tr, frames, 0, q.width), groupOf,
+      keyTexts: q.groupBy.map((g, i) => spanText(tr, g.textSpan) || ('Ausdruck ' + (i + 1))),
+      aggTexts: aggs.map((a) => a.text),
+      groups: ctxs.slice(0, TRACE_LIMITS.rows).map((c) => ({
+        key: q.groupExprs.map((g) => evalExpr(g, c)),
+        size: c.group.length,
+        aggs: aggs.map((a) => aggregateDetail(a.node, c))
+      })),
+      total: ctxs.length
+    });
+  }
+
+  /** Schritt: HAVING (bei Gruppen bezieht sich truths auf die Gruppen des vorigen Schritts). */
+  function traceHaving(tr, q, before, frames, truths, kept) {
+    tr.steps.push({
+      kind: 'having', span: q.spans.having || null, grouped: q.aggregated, truths, kept, total: before.length,
+      table: q.aggregated ? null : traceTable(tr, frames, 0, q.width)
+    });
+  }
+
+  /** @returns {{start:number, end:number}|null} Textbereich einer ganzen Abfrage. */
+  function querySpan(q) {
+    const list = q.compound ? [querySpan(q.compound.left), querySpan(q.compound.right)] : [];
+    Object.values(q.spans || {}).forEach((sp) => list.push(sp));
+    const valid = list.filter(Boolean);
+    if (valid.length === 0) {
+      return null;
+    }
+    return { start: Math.min.apply(null, valid.map((sp) => sp.start)), end: Math.max.apply(null, valid.map((sp) => sp.end)) };
+  }
+
+  /** Schritte: die beiden Teilabfragen einer Mengenoperation. */
+  function traceParts(tr, q, L, R) {
+    tr.steps.push({ kind: 'part', which: 'left', span: querySpan(q.compound.left), table: resultTable(q, L) });
+    tr.steps.push({ kind: 'part', which: 'right', span: querySpan(q.compound.right), table: resultTable(q, R) });
+  }
+
   /** Fehler bei zu großem Zwischenergebnis. */
   function tooLarge(plan) {
     return new SqlError('Das Zwischenergebnis der Verknüpfung hat mehr als ' + EXEC_LIMITS.maxJoinRows.toLocaleString('de-DE') + ' Zeilen.', null,
@@ -1812,9 +2045,13 @@
    * @param {Object|null} outerCtx - Kontext der umgebenden Abfrage.
    * @returns {Array<Array<Array<*>|null>>} Frames.
    */
-  function runFrom(plan, outerCtx) {
+  function runFrom(plan, outerCtx, tr) {
     if (plan.type === 'table') {
-      return plan.table.rows.map((r) => [r]);
+      const frames = plan.table.rows.map((r) => [r]);
+      if (tr) {
+        traceSource(tr, plan, frames);
+      }
+      return frames;
     }
     if (plan.type === 'derived') {
       // Abgeleitete Quellen sind nie korreliert: einmal je Anweisung berechnen (WITH-Abfragen
@@ -1823,10 +2060,13 @@
       if (!holder.cachedFrames) {
         holder.cachedFrames = runSelect(plan.query, null, false).rows.map((r) => [r]);
       }
+      if (tr) {
+        traceSource(tr, plan, holder.cachedFrames);
+      }
       return holder.cachedFrames;
     }
-    const L = runFrom(plan.left, outerCtx);
-    const R = runFrom(plan.right, outerCtx);
+    const L = runFrom(plan.left, outerCtx, tr);
+    const R = runFrom(plan.right, outerCtx, tr);
     const [r0, r1, r2] = plan.range;
     const nullsL = new Array(r1 - r0).fill(null);
     const nullsR = new Array(r2 - r1).fill(null);
@@ -1839,13 +2079,28 @@
       return V.truth(evalExpr(plan.on, onCtx)) === true;
     };
     const out = [];
-    const push = (frame) => {
+    /** Mitschreiber: Herkunft der ersten Ergebniszeilen [Index links, Index rechts] (-1 = mit NULL aufgefüllt). */
+    const pairs = tr ? [] : null;
+    const push = (frame, li, ri) => {
       out.push(frame);
+      if (pairs && pairs.length < TRACE_LIMITS.rows) {
+        pairs.push([li, ri]);
+      }
       if (out.length > EXEC_LIMITS.maxJoinRows) {
         throw tooLarge(plan);
       }
     };
-    const hash = plan.hash;
+    let hash = plan.hash;
+    let whereShortcut = false;
+    if (tr && hash && plan.hashFromWhere) {
+      // Mitschreiben: Das Kreuzprodukt wird vollständig gebildet, WHERE filtert danach –
+      // so wie die logische Reihenfolge es beschreibt. Nur bei zu großem Kreuzprodukt bleibt die Abkürzung.
+      if (L.length * R.length <= EXEC_LIMITS.maxJoinRows) {
+        hash = null;
+      } else {
+        whereShortcut = true;
+      }
+    }
     const hashKey = (v) => (hash.category === 'number' ? (typeof v === 'number' ? v : V.numericValue(String(v))) : V.textKey(String(v)));
     const buildIndex = (frames, ref, base) => {
       const map = new Map();
@@ -1875,43 +2130,53 @@
     if (plan.kind === 'right') {
       // Äußere Schleife über die rechte Seite, damit die Reihenfolge der rechten Tabelle folgt.
       const index = hash ? buildIndex(L, hash.left, r0) : null;
-      for (const rf of R) {
+      for (let ri = 0; ri < R.length; ri++) {
+        const rf = R[ri];
         let matched = false;
         const k = hash ? keyOf(rf, hash.right, r1) : null;
         const list = hash ? (k === null ? EMPTY : (index.get(k) || EMPTY)) : null;
         const count = hash ? list.length : L.length;
         for (let x = 0; x < count; x++) {
           tick();
-          const frame = L[hash ? list[x] : x].concat(rf);
+          const li = hash ? list[x] : x;
+          const frame = L[li].concat(rf);
           if (test(frame)) {
             matched = true;
-            push(frame);
+            push(frame, li, ri);
           }
         }
         if (!matched) {
-          push(nullsL.concat(rf));
+          push(nullsL.concat(rf), -1, ri);
         }
+      }
+      if (tr) {
+        traceJoin(tr, plan, L, R, out, pairs, onCtx, whereShortcut);
       }
       return out;
     }
 
     const index = hash ? buildIndex(R, hash.right, r1) : null;
-    for (const lf of L) {
+    for (let li = 0; li < L.length; li++) {
+      const lf = L[li];
       let matched = false;
       const k = hash ? keyOf(lf, hash.left, r0) : null;
       const list = hash ? (k === null ? EMPTY : (index.get(k) || EMPTY)) : null;
       const count = hash ? list.length : R.length;
       for (let x = 0; x < count; x++) {
         tick();
-        const frame = lf.concat(R[hash ? list[x] : x]);
+        const ri = hash ? list[x] : x;
+        const frame = lf.concat(R[ri]);
         if (test(frame)) {
           matched = true;
-          push(frame);
+          push(frame, li, ri);
         }
       }
       if (!matched && plan.kind === 'left') {
-        push(lf.concat(nullsR));
+        push(lf.concat(nullsR), li, -1);
       }
+    }
+    if (tr) {
+      traceJoin(tr, plan, L, R, out, pairs, onCtx, whereShortcut);
     }
     return out;
   }
@@ -2081,6 +2346,10 @@
     const c = q.compound;
     const L = runSelect(c.left, outerCtx, false).rows;
     const R = runSelect(c.right, outerCtx, false).rows;
+    const tr = isTop && rt.trace ? rt.trace : null;
+    if (tr) {
+      traceParts(tr, q, L, R);
+    }
     if (L.length + R.length > EXEC_LIMITS.maxJoinRows) {
       throw new SqlError('Das Zwischenergebnis der Mengenoperation ' + c.op + ' hat mehr als ' + EXEC_LIMITS.maxJoinRows.toLocaleString('de-DE') + ' Zeilen.',
         q.opPos || null, 'Grenzen Sie die Teilabfragen mit WHERE oder LIMIT ein.');
@@ -2127,6 +2396,9 @@
         }
       }
     }
+    if (tr) {
+      tr.steps.push({ kind: 'compound', op: c.op, all: c.all, span: q.spans.op, table: resultTable(q, rows), leftCount: L.length, rightCount: R.length });
+    }
     if (q.orderPlan.length > 0) {
       const indexed = rows.map((row, i) => ({ row, i }));
       indexed.sort((a, b) => {
@@ -2139,8 +2411,14 @@
         return a.i - b.i;
       });
       rows = indexed.map((x) => x.row);
+      if (tr) {
+        tr.steps.push({ kind: 'order', span: q.spans.order, table: resultTable(q, rows), before: indexed.slice(0, TRACE_LIMITS.rows).map((x) => x.i) });
+      }
     }
     if (q.limit) {
+      if (tr) {
+        tr.steps.push({ kind: 'limit', span: q.spans.limit, table: resultTable(q, rows), offset: q.limit.offset, count: q.limit.count });
+      }
       rows = rows.slice(q.limit.offset, q.limit.offset + q.limit.count);
     }
     if (isTop && rows.length > EXEC_LIMITS.maxResultRows) {
@@ -2162,16 +2440,25 @@
     if (q.compound) {
       return runCompound(q, outerCtx, isTop);
     }
-    let frames = q.fromPlan ? runFrom(q.fromPlan, outerCtx) : [[]];
+    const tr = isTop && rt.trace ? Object.assign({ scope: q.scope }, rt.trace) : null;
+    let frames = q.fromPlan ? runFrom(q.fromPlan, outerCtx, tr) : [[]];
     if (q.where) {
       const kept = [];
       const ctx = { frame: null, parent: outerCtx, offset: 0 };
+      const truths = tr ? [] : null;
       for (const f of frames) {
         tick();
         ctx.frame = f;
-        if (V.truth(evalExpr(q.where, ctx)) === true) {
+        const t = V.truth(evalExpr(q.where, ctx));
+        if (truths && truths.length < TRACE_LIMITS.rows) {
+          truths.push(t);
+        }
+        if (t === true) {
           kept.push(f);
         }
+      }
+      if (tr) {
+        traceWhere(tr, q, frames, truths, kept.length, outerCtx);
       }
       frames = kept;
     }
@@ -2179,8 +2466,13 @@
     let ctxs;
     if (q.aggregated) {
       let groups;
+      /** Mitschreiber: Gruppennummer der ersten Zeilen. */
+      const groupOf = tr ? [] : null;
       if (q.groupExprs.length === 0) {
         groups = [frames];
+        if (groupOf) {
+          frames.slice(0, TRACE_LIMITS.rows).forEach(() => groupOf.push(0));
+        }
       } else {
         const map = new Map();
         const ctx = { frame: null, parent: outerCtx, offset: 0 };
@@ -2194,9 +2486,13 @@
           let list = map.get(key);
           if (!list) {
             list = [];
+            list.index = map.size;
             map.set(key, list);
           }
           list.push(f);
+          if (groupOf && groupOf.length < TRACE_LIMITS.rows) {
+            groupOf.push(list.index);
+          }
         }
         groups = Array.from(map.values());
       }
@@ -2204,15 +2500,27 @@
         frame: g.length ? g[0] : new Array(q.width).fill(null),
         parent: outerCtx, offset: 0, group: g, aggCache: new Map()
       }));
+      if (tr) {
+        traceGroup(tr, q, frames, groupOf, ctxs);
+      }
     } else {
       ctxs = frames.map((f) => ({ frame: f, parent: outerCtx, offset: 0 }));
     }
 
     if (q.having) {
+      const truths = tr ? [] : null;
+      const before = ctxs;
       ctxs = ctxs.filter((c) => {
         tick();
-        return V.truth(evalExpr(q.having, c)) === true;
+        const t = V.truth(evalExpr(q.having, c));
+        if (truths && truths.length < TRACE_LIMITS.rows) {
+          truths.push(t);
+        }
+        return t === true;
       });
+      if (tr) {
+        traceHaving(tr, q, before, frames, truths, ctxs.length);
+      }
     }
 
     if (q.scope.windows.length > 0) {
@@ -2223,18 +2531,29 @@
       tick();
       return q.outputs.map((o) => evalExpr(o.expr, c));
     });
+    if (tr) {
+      tr.steps.push({ kind: 'select', span: q.spans.select, table: resultTable(q, rows), aggregated: q.aggregated, windows: q.scope.windows.length });
+    }
 
     let order = rows.map((r, i) => i);
     if (q.distinct) {
       const seen = new Set();
+      const removed = tr ? [] : null;
       order = order.filter((i) => {
         const key = rows[i].map(V.valueKey).join('\u0001');
-        if (seen.has(key)) {
+        const dup = seen.has(key);
+        if (removed && removed.length < TRACE_LIMITS.rows) {
+          removed.push(dup);
+        }
+        if (dup) {
           return false;
         }
         seen.add(key);
         return true;
       });
+      if (tr) {
+        tr.steps.push({ kind: 'distinct', span: q.spans.distinct, table: resultTable(q, rows), removed, kept: order.length });
+      }
     }
     if (q.orderPlan.length > 0) {
       const keys = new Map();
@@ -2242,6 +2561,7 @@
         tick();
         keys.set(i, q.orderPlan.map((p) => (p.position !== undefined ? rows[i][p.position] : evalExpr(p.expr, ctxs[i]))));
       }
+      const positionBefore = tr ? new Map(order.map((i, p) => [i, p])) : null;
       order.sort((a, b) => {
         const ka = keys.get(a);
         const kb = keys.get(b);
@@ -2253,8 +2573,17 @@
         }
         return a - b;
       });
+      if (tr) {
+        tr.steps.push({
+          kind: 'order', span: q.spans.order, table: resultTable(q, order.map((i) => rows[i])),
+          before: order.slice(0, TRACE_LIMITS.rows).map((i) => positionBefore.get(i))
+        });
+      }
     }
     if (q.limit) {
+      if (tr) {
+        tr.steps.push({ kind: 'limit', span: q.spans.limit, table: resultTable(q, order.map((i) => rows[i])), offset: q.limit.offset, count: q.limit.count });
+      }
       order = order.slice(q.limit.offset, q.limit.offset + q.limit.count);
     }
     if (isTop && order.length > EXEC_LIMITS.maxResultRows) {
@@ -2661,7 +2990,8 @@
     const totalFirst = total !== null && total.deadline < now + timeMs;
     rt = {
       db, deadline: totalFirst ? total.deadline : now + timeMs, timeMs, totalMs: totalFirst ? total.ms : 0,
-      steps: 0, warnings: [], literalChecks: [], topQuery: null, viewDepth: 0
+      steps: 0, warnings: [], literalChecks: [], topQuery: null, viewDepth: 0,
+      trace: opts.trace ? { steps: [], rowIndex: new Map(), source: opts.trace.source } : null
     };
     try {
       let result;
@@ -2708,6 +3038,9 @@
       }
       literalCaseHints();
       result.warnings = rt.warnings;
+      if (rt.trace) {
+        result.steps = rt.trace.steps;
+      }
       return result;
     } finally {
       rt = null;
@@ -2775,6 +3108,42 @@
   }
 
   /**
+   * Wertet eine SELECT-Abfrage für Seite 4 „Schritt für Schritt“ aus und schreibt dabei die
+   * Zwischenstände mit. Die Datenbank wird nicht verändert.
+   *
+   * @param {Object} db - Aktuelle Datenbank.
+   * @param {string} source - Eingabe (genau eine SELECT-Abfrage, auch mit WITH).
+   * @returns {{result:Object, steps:Array<Object>, text:string, base:number, keywordCase:Array<Object>}}
+   *   Ergebnis wie bei runQueries, die Schritte, der Text der Abfrage und seine Position in der Eingabe
+   *   (Textbereiche der Schritte beziehen sich auf die ganze Eingabe).
+   * @throws {SqlError} Bei Fehlern oder anderen Befehlen als SELECT.
+   */
+  function traceQuery(db, source) {
+    const statements = ns.sql.parse(source);
+    if (statements.length === 0) {
+      throw new SqlError('Bitte geben Sie eine SELECT-Abfrage ein.', null);
+    }
+    if (statements.length > 1) {
+      throw withIndex(new SqlError('Hier wird genau eine Abfrage Schritt für Schritt ausgewertet – die Eingabe enthält ' + statements.length + ' Befehle.',
+        statements[1].pos, 'Entfernen Sie die weiteren Befehle oder führen Sie sie auf Seite 3 aus.'), 2);
+    }
+    const s = statements[0];
+    if (s.type !== 'select') {
+      const name = s.type === 'ignored' ? s.keyword : (TYPE_NAMES.get(s.type) || s.type);
+      throw withIndex(new SqlError('„' + name + '“ kann hier nicht Schritt für Schritt ausgewertet werden. Diese Seite zeigt nur Abfragen mit SELECT.', s.pos,
+        'Daten ändern Sie auf Seite 3 (SQL-Befehle).'), 1);
+    }
+    try {
+      const result = executeStatement(db, s, { total: timeBudget(EXEC_LIMITS.totalTimeMs), trace: { source } });
+      result.statementIndex = 1;
+      result.text = s.text;
+      return { result, steps: result.steps, text: s.text, base: s.pos.offset, keywordCase: statements.keywordCase || [] };
+    } catch (error) {
+      throw withIndex(error, 1);
+    }
+  }
+
+  /**
    * Baut eine neue Datenbank aus einem SQL-Skript (Beispieldatenbank oder hochgeladene Datei).
    * Erlaubt sind DROP TABLE, CREATE TABLE, INSERT INTO sowie ALTER TABLE und
    * CREATE INDEX aus Exporten; typische Export-Anweisungen (SET, LOCK …) werden übersprungen.
@@ -2814,6 +3183,8 @@
   ns.sql.EXEC_LIMITS = EXEC_LIMITS;
   ns.sql.executeStatement = executeStatement;
   ns.sql.runQueries = runQueries;
+  ns.sql.traceQuery = traceQuery;
+  ns.sql.TRACE_LIMITS = TRACE_LIMITS;
   ns.sql.timeBudget = timeBudget;
   ns.sql.buildDatabase = buildDatabase;
   ns.sql.likeMatch = likeMatch;

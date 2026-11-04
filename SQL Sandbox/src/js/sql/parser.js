@@ -140,6 +140,14 @@
       return (tok.type === 'punct' || tok.type === 'op') && tok.value === value;
     }
 
+    /**
+     * @param {Object} startTok - Erstes Token des Bereichs.
+     * @returns {{start:number, end:number}} Textbereich vom Token bis zum zuletzt gelesenen Token.
+     */
+    span(startTok) {
+      return { start: startTok.pos.offset, end: this.lastEnd };
+    }
+
     acceptSym(value) {
       return this.isSym(value) ? this.next() : null;
     }
@@ -364,7 +372,7 @@
       if (!this.isKw('WITH')) {
         return this.parseSetExpr();
       }
-      this.next();
+      const withTok = this.next();
       this.enter();
       if (this.isKw('RECURSIVE')) {
         throw new SqlError('WITH RECURSIVE (rekursive Abfragen) wird in der SQL Sandbox nicht unterstützt.', this.peek().pos);
@@ -393,6 +401,7 @@
         this.expectSym(')', 'Die WITH-Abfrage wird nicht mit „)“ geschlossen');
         ctes.push({ name: name.name, pos: name.pos, columns, query });
       } while (this.acceptSym(','));
+      const withSpan = this.span(withTok);
       if (this.isKw('INSERT') && options && options.allowInsert) {
         // WITH … INSERT INTO t (…) SELECT … (wie in PostgreSQL; in MySQL: INSERT … WITH … SELECT)
         const insertTok = this.peek();
@@ -413,6 +422,7 @@
       }
       const node = this.parseSetExpr();
       node.with = ctes;
+      node.spans.with = withSpan;
       this.leave();
       return node;
     }
@@ -479,7 +489,8 @@
       this.enter();
       const right = parseRight();
       this.leave();
-      return { type: 'select', compound: { op: tok.upper, all, left, right }, orderBy: [], limit: null, with: null, pos: left.pos, opPos: tok.pos };
+      return { type: 'select', compound: { op: tok.upper, all, left, right }, orderBy: [], limit: null, with: null, pos: left.pos, opPos: tok.pos,
+        spans: { op: { start: tok.pos.offset, end: tok.end } } };
     }
 
     /**
@@ -502,6 +513,12 @@
         node.limit = last.limit;
         last.orderBy = [];
         last.limit = null;
+        for (const key of ['order', 'limit']) {
+          if (last.spans && last.spans[key]) {
+            node.spans[key] = last.spans[key];
+            delete last.spans[key];
+          }
+        }
       } else {
         this.parseOrderLimit(node);
       }
@@ -530,8 +547,11 @@
 
     /** Liest [ORDER BY …] [LIMIT …] in einen Abfrageknoten. */
     parseOrderLimit(node) {
+      if (!node.spans) {
+        node.spans = {};
+      }
       if (this.isKw('ORDER')) {
-        this.next();
+        const kw = this.next();
         this.expectKw('BY', 'Nach ORDER wird „BY“ erwartet');
         do {
           const expr = this.parseExpr();
@@ -544,18 +564,26 @@
           this.checkListLength(node.orderBy, 'ORDER-BY-Liste');
           node.orderBy.push({ expr, desc });
         } while (this.acceptSym(','));
+        node.spans.order = this.span(kw);
       }
+      const limitKw = this.peek();
       if (this.acceptKw('LIMIT')) {
-        const a = this.parseLimitNumber();
-        if (this.acceptSym(',')) {
-          node.limit = { offset: a, count: this.parseLimitNumber() };
-        } else {
-          let offset = 0;
-          if (this.acceptKw('OFFSET')) {
-            offset = this.parseLimitNumber();
-          }
-          node.limit = { offset, count: a };
+        this.parseLimitClause(node);
+        node.spans.limit = this.span(limitKw);
+      }
+    }
+
+    /** Liest die Zahlen nach LIMIT: "a", "a, b" oder "a OFFSET b". */
+    parseLimitClause(node) {
+      const a = this.parseLimitNumber();
+      if (this.acceptSym(',')) {
+        node.limit = { offset: a, count: this.parseLimitNumber() };
+      } else {
+        let offset = 0;
+        if (this.acceptKw('OFFSET')) {
+          offset = this.parseLimitNumber();
         }
+        node.limit = { offset, count: a };
       }
     }
 
@@ -564,10 +592,13 @@
       const start = this.expectKw('SELECT');
       const node = {
         type: 'select', pos: start.pos, distinct: false, columns: [], from: null, where: null,
-        groupBy: [], having: null, orderBy: [], limit: null
+        groupBy: [], having: null, orderBy: [], limit: null,
+        /** Textbereiche der Klauseln {start, end} (Zeichenpositionen im Quelltext), für Seite 4. */
+        spans: {}
       };
       if (this.acceptKw('DISTINCT')) {
         node.distinct = true;
+        node.spans.distinct = this.span(this.tokens[this.i - 1]);
       } else {
         this.acceptKw('ALL');
       }
@@ -580,23 +611,34 @@
         this.checkListLength(node.columns, 'SELECT-Liste');
         node.columns.push(this.parseSelectItem());
       } while (this.acceptSym(','));
+      node.spans.select = this.span(start);
 
-      if (this.acceptKw('FROM')) {
+      let kw = this.acceptKw('FROM');
+      if (kw) {
         node.from = this.parseFromList();
+        node.spans.from = this.span(kw);
       }
-      if (this.acceptKw('WHERE')) {
+      kw = this.acceptKw('WHERE');
+      if (kw) {
         node.where = this.parseExpr();
+        node.spans.where = this.span(kw);
       }
       if (this.isKw('GROUP')) {
-        this.next();
+        kw = this.next();
         this.expectKw('BY', 'Nach GROUP wird „BY“ erwartet');
         do {
           this.checkListLength(node.groupBy, 'GROUP-BY-Liste');
-          node.groupBy.push(this.parseExpr());
+          const startTok = this.peek();
+          const expr = this.parseExpr();
+          expr.textSpan = this.span(startTok);
+          node.groupBy.push(expr);
         } while (this.acceptSym(','));
+        node.spans.group = this.span(kw);
       }
-      if (this.acceptKw('HAVING')) {
+      kw = this.acceptKw('HAVING');
+      if (kw) {
         node.having = this.parseExpr();
+        node.spans.having = this.span(kw);
       }
       this.parseOrderLimit(node);
       const after = this.peek();
@@ -662,7 +704,7 @@
       while (this.isSym(',')) {
         const comma = this.next();
         const right = this.parseJoinChain();
-        left = { type: 'join', kind: 'cross', implicit: true, left, right, on: null, pos: comma.pos };
+        left = { type: 'join', kind: 'cross', implicit: true, left, right, on: null, pos: comma.pos, span: this.span(comma) };
       }
       return left;
     }
@@ -706,7 +748,7 @@
         if (kind === 'cross' && on) {
           kind = 'inner';
         }
-        left = { type: 'join', kind, implicit: false, left, right, on, pos: tok.pos };
+        left = { type: 'join', kind, implicit: false, left, right, on, pos: tok.pos, span: this.span(tok) };
       }
       return left;
     }
@@ -726,7 +768,7 @@
         } else {
           throw new SqlError('Eine Unterabfrage in FROM braucht einen Alias, z. B. (SELECT …) AS t.', this.peek().pos);
         }
-        return { type: 'subquery', query, alias, pos: tok.pos };
+        return { type: 'subquery', query, alias, pos: tok.pos, span: this.span(tok) };
       }
       let name = this.parseName('ein Tabellenname');
       if (this.isSym('.')) {
@@ -742,7 +784,7 @@
         alias = this.parseName('ein Alias (Name)').name;
         this.lastImplicitAlias = { name: alias, pos: aliasTok.pos };
       }
-      return { type: 'table', name: name.name, alias, pos: name.pos };
+      return { type: 'table', name: name.name, alias, pos: name.pos, span: this.span(tok) };
     }
 
     // ----- Ausdrücke -----
@@ -761,10 +803,18 @@
     }
 
     parseAnd() {
+      let startTok = this.peek();
       let left = this.parseNot();
       while (this.isKw('AND')) {
+        // Textbereich der Teilbedingungen (Seite 4 zeigt ihre Werte je Zeile).
+        if (!left.textSpan) {
+          left.textSpan = this.span(startTok);
+        }
         const op = this.next();
-        left = { type: 'binary', op: 'AND', left, right: this.parseNot(), pos: op.pos };
+        startTok = this.peek();
+        const right = this.parseNot();
+        right.textSpan = this.span(startTok);
+        left = { type: 'binary', op: 'AND', left, right, pos: op.pos };
       }
       return left;
     }
@@ -990,6 +1040,7 @@
       if (this.isKw('OVER')) {
         node.over = this.parseOver(nameTok.upper);
       }
+      node.textSpan = this.span(nameTok);
       this.leave();
       return node;
     }

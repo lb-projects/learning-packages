@@ -1083,6 +1083,7 @@
   ns.sql.createTableSql = createTableSql;
   ns.sql.createViewSql = createViewSql;
   ns.sql.quoteName = quoteName;
+  ns.sql.sqlLiteral = sqlLiteral;
   ns.sql.Database = Database;
   ns.sql.Table = Table;
   ns.sql.coerceValue = coerceValue;

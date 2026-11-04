@@ -104,7 +104,7 @@ Das SQL-Paket enthält keinen Code von Dritten: Lexer, Parser und Ausführung de
 - **Betrifft:**
   - `SQL Sandbox/testdata/*.sql`
   - die inhaltsgleichen eingebauten Beispieldatenbanken `SQL Sandbox/src/js/samples/*.js`
-- **Inhalt:** Schule, Bibliothek, Online-Shop, Sportverein, ein Beispiel im Stil eines Datenbank-Exports (Musikschule) und eine absichtlich fehlerhafte Übungsdatei.
+- **Inhalt:** Schule, Bibliothek, Online-Shop, Sportverein, die absichtlich nicht normalisierte Kursbuchung, sieben Übungsdateien zu den Normalformen (Kontaktliste, Ausleihe, Vereinsmitglieder, Projektmitarbeit, Arztpraxis, Bestellungen, normalisierte Vereinsverwaltung), ein Beispiel im Stil eines Datenbank-Exports (Musikschule) und eine absichtlich fehlerhafte Übungsdatei.
 - **Herkunft:** frei erfunden für dieses Projekt, MIT-Lizenz:
   - Namen sind frei kombinierte, gängige Vor- und Nachnamen.
   - Orte sind erfunden („Musterstadt“, „Beispielhausen“, „Waldmusterdorf“), ebenso Adressen, Schul-, Vereins- und Mannschaftsnamen.

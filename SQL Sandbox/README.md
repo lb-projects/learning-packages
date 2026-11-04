@@ -7,15 +7,50 @@ Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausfüh
 
 | Seite | Inhalt |
 |---|---|
-| 1 Datenbank laden | Eine von vier Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO` auch mit `SELECT`/`WITH`, `CREATE VIEW`) |
+| 1 Datenbank laden | Eine von fünf Beispieldatenbanken wählen (Schule, Bibliothek, Online-Shop, Sportverein sowie die absichtlich nicht normalisierte Kursbuchung) oder eine eigene SQL-Datei hochladen (`DROP TABLE`, `CREATE TABLE` auch mit `CHECK`, `INSERT INTO` auch mit `SELECT`/`WITH`, `CREATE VIEW`) |
 | 2 Tabellen | Aufbau (Spalten, Datentypen, Primär-/Fremdschlüssel, NOT NULL, CHECK-Bedingungen) und Inhalt aller Tabellen; je Tabelle sind etwa fünf Datensätze sichtbar, der Rest durch Scrollen. Unter jeder Tabelle lässt sich der `CREATE TABLE`-Befehl aufklappen (anfangs zugeklappt). Sichten (Views) stehen in einem eigenen Abschnitt mit ihrem aktuellen Ergebnis und dem aufklappbaren `CREATE VIEW`-Befehl |
 | 3 SQL-Befehle | Eingabemaske (anfangs leer) mit „Ausführen“ (auch Strg + Enter) für Abfragen, Datenänderungen und `CREATE/DROP VIEW`; Fehlermeldungen erscheinen unter der Eingabe mit Zeile, Spalte, markierter Fehlerstelle und Hinweisen wie „Meinten Sie …?“; Ergebnistabellen haben Platz für zehn Zeilen, weitere durch Scrollen. Hinweise (ohne Abbruch) bei vermutlich vergessener Verknüpfungsbedingung, bei Texten in falscher Groß-/Kleinschreibung und bei kleingeschriebenen Schlüsselwörtern. Kurzreferenz der unterstützten Befehle |
-| 4 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm, zur Veranschaulichung (ein Hinweis über dem Diagramm stellt klar, dass es nicht den in Unterricht und Leistungsnachweisen geforderten Zeichenkonventionen entspricht): Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten (`1`, `0..1`, `n`, bei n:m `n` und `m`), Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien, bei genügend Platz in die Breite, sonst in die Tiefe (auch fest wählbar); Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Einzelne Klassen lassen sich samt ihren Beziehungen aus- und einblenden. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
+| 4 Schritt für Schritt | Eine `SELECT`-Abfrage wird in der Reihenfolge ihrer Auswertung gezeigt (FROM/JOIN → WHERE → GROUP BY → HAVING → SELECT → DISTINCT → ORDER BY → LIMIT): Abspieler mit Schrittliste, Anfang/Zurück/Weiter/Ende und Pfeiltasten; der zugehörige Teil der Abfrage ist im SQL-Text markiert; zu jedem Schritt die Zwischentabelle. Herausfallende Zeilen bleiben zunächst sichtbar (grau, durchgestrichen). Eigene Eingabe oder „Befehl von Seite 3 übernehmen“; die Datenbank wird nicht verändert |
+| 5 Klassendiagramm | Das Tabellenschema als UML-Klassendiagramm, zur Veranschaulichung (ein Hinweis über dem Diagramm stellt klar, dass es nicht den in Unterricht und Leistungsnachweisen geforderten Zeichenkonventionen entspricht): Klassen mit Attributen, Beziehungen als Assoziationen mit Multiplizitäten (`1`, `0..1`, `n`, bei n:m `n` und `m`), Verbindungstabellen als n:m-Beziehung (mit eigenen Spalten als Assoziationsklasse). Übersichtliche Anordnung mit rechtwinkligen Linien, bei genügend Platz in die Breite, sonst in die Tiefe (auch fest wählbar); Klassenkarten lassen sich mit Maus, Touch und Tastatur verschieben. Einzelne Klassen lassen sich samt ihren Beziehungen aus- und einblenden. Hinweise bei Fremdschlüsseln auf nicht vorhandene Tabellen. Textfassung zum Aufklappen |
+| 6 Redundanzen | Normalformen je Tabelle (1. bis 3. NF) nach den funktionalen Abhängigkeiten, die die Lernenden selbst eintragen (geprüft gegen die Daten, Widersprüche werden angezeigt); Markierung mehrwertiger Spalten für die 1. NF mit Hinweisen auf Listen und Wiederholungsgruppen; Bewertung mit Begründung (Teilabhängigkeit, transitive Abhängigkeit); zu jedem Verstoß je ein Beispiel für Einfüge-, Änderungs- und Löschanomalie mit SQL-Befehl und Vorher/Nachher, simuliert auf einer Kopie; „Auf Seite 3 übernehmen“ |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Eingaben, Ergebnisse und die Datenbank bleiben dabei erhalten. Die Registerkarten tragen keine Abschlussmarkierung; die Fußzeile zeigt, ob eine Verbindung zur Lernplattform besteht.
-Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her. Wird eine andere Datenbank geladen, zeigt Seite 4 sofort deren Klassendiagramm.
+Änderungen durch `INSERT`, `UPDATE` und `DELETE` sind sofort auf Seite 2 sichtbar. „Datenbank zurücksetzen“ stellt den Stand nach dem Laden wieder her. Wird eine andere Datenbank geladen, zeigt Seite 5 sofort deren Klassendiagramm.
 
-### Klassendiagramm (Seite 4)
+### Schritt für Schritt (Seite 4)
+
+Die Zwischenstände stammen aus der echten Ausführung (keine zweite, vereinfachte Auswertung). Der letzte Schritt „Ergebnis“ ist deshalb immer genau das Ergebnis von Seite 3; die Tests prüfen das für über hundert Abfragen.
+
+- **Tabellen in FROM:** je Tabelle, Sicht, WITH-Abfrage oder Unterabfrage ein Schritt mit allen Zeilen.
+- **Verknüpfungen** (`JOIN`, `LEFT/RIGHT JOIN`, `CROSS JOIN`, Komma), umschaltbar:
+  - *Farbige Zuordnung:* beide Ausgangstabellen nebeneinander, Zeilen nummeriert (L1, L2 … farbig; R1, R2 …), Spalte „Partner“; darunter das Ergebnis mit der Herkunft jeder Zeile. Mit `NULL` aufgefüllte Zellen sind gestrichelt umrandet.
+  - *Kreuzprodukt-Raster:* Zeilen links × Zeilen rechts mit dem Wert der ON-Bedingung (✓ wahr, ✗ falsch, ? unbekannt), bei `LEFT/RIGHT JOIN` mit der Angabe, welche Zeilen mit `NULL` erhalten bleiben. Nur bis 20 × 20 Zeilen.
+  - Beim Komma (`FROM a, b WHERE …`) entsteht zuerst das vollständige Kreuzprodukt; die Bedingung wirkt erst im WHERE-Schritt. Wäre es zu groß (über 200.000 Zeilen), werden nur die Kombinationen gezeigt, die die Gleichheitsbedingung aus WHERE erfüllen, mit Hinweis.
+- **WHERE und HAVING:** je Zeile bzw. Gruppe der Wert der Bedingung (wahr, falsch, unbekannt bei `NULL`), bei `AND` auch der Wert jeder Teilbedingung. Herausfallende Zeilen lassen sich ausblenden.
+- **GROUP BY:** Zeilen nach Gruppen geordnet und eingefärbt (G1, G2 …), eine Tabelle der Gruppen mit den Aggregatwerten und der Rechenweg je Gruppe, z. B. `AVG(Note) = (2 + 3 + 1) / 3 = 2`; `NULL`-Werte und `DISTINCT` werden genannt. Aggregatfunktionen ohne `GROUP BY` bilden eine Gruppe.
+- **SELECT, DISTINCT, ORDER BY, LIMIT:** berechnete Spalten; entfernte Duplikate; Platz vor und nach dem Sortieren; übersprungene und entfallende Zeilen.
+- **Mengenoperationen:** beide Abfragen als eigene Schritte, dann `UNION`/`INTERSECT`/`EXCEPT`, danach `ORDER BY` und `LIMIT` des Gesamtergebnisses.
+- **Grenzen:** Erlaubt ist genau eine Abfrage mit `SELECT` (auch mit `WITH`). Unterabfragen, WITH-Abfragen, Sichten und Fensterfunktionen erscheinen jeweils als ein Schritt mit ihrem Ergebnis, nicht mit eigener Schrittfolge. Je Schritt werden höchstens 200 Zeilen angezeigt (mit Hinweis), im Rechenweg höchstens 30 Werte je Gruppe.
+- Nach einer Datenänderung auf Seite 3 oder dem Laden einer anderen Datenbank wird die Auswertung entfernt (mit Hinweis); die Eingabe bleibt erhalten.
+
+### Redundanzen (Seite 6)
+
+Die Seite erkennt **keine** Abhängigkeiten selbst: In den vorhandenen Daten gelten oft zufällige Abhängigkeiten (in der Schule z. B. `Datum → fach_id` bei den Noten), die als Verstoß gemeldet würden. Die Lernenden tragen deshalb die Abhängigkeiten ein, die fachlich gelten.
+
+- **Funktionale Abhängigkeiten** `X → Y` je Tabelle: links 1 bis 3 Spalten, rechts mindestens eine; höchstens 30 je Tabelle. Triviale (eine Spalte links und rechts) und doppelte Abhängigkeiten werden abgelehnt. Jede Abhängigkeit wird an den Daten geprüft (Zeilen mit `NULL` links zählen nicht). Ein Widerspruch wird mit den betroffenen Werten angezeigt – gilt die Abhängigkeit fachlich, ist das eine bereits eingetretene Änderungsanomalie; bewertet wird trotzdem.
+- **Schlüsselkandidaten:** Primärschlüssel, `UNIQUE`-Schlüssel aus `NOT NULL`-Spalten und minimale Spaltenmengen (bis 3 Spalten), die nach den Abhängigkeiten alle Spalten bestimmen. Abgeleitete Schlüssel müssen in den Daten eindeutig sein (doppelte Datensätze widerlegen sie) und dürfen nicht einfach alle Spalten umfassen. Ein Hinweis erscheint, wenn der Primärschlüssel danach nicht minimal ist oder es gar keinen Schlüssel gibt.
+- **1. NF:** Die Lernenden markieren Spalten, die mehrere Werte enthalten oder zu einer Wiederholungsgruppe gehören. Die Seite weist nur auf Auffälligkeiten hin (Listen mit `,` `;` `/` in mindestens zwei Zeilen, Spalten wie `Telefon1`, `Telefon2`), markiert aber nichts selbst.
+- **2. NF:** 1. NF und kein Nichtschlüsselattribut hängt von einem echten Teil eines Schlüsselkandidaten ab – auch über mehrere Abhängigkeiten hinweg (z. B. `schueler_nr → Klasse → Klassenleitung`). Besteht jeder Schlüssel aus einer Spalte, ist sie automatisch erfüllt.
+- **3. NF:** 2. NF und keine eingetragene Abhängigkeit `X → A` mit Nichtschlüsselattribut `A`, bei der `X` kein Schlüssel ist (transitive Abhängigkeit).
+- Ist eine Normalform ohne Abhängigkeiten nicht entscheidbar (zusammengesetzter Schlüssel bzw. 3. NF), zeigt die Seite „offen“. Die Bewertung berücksichtigt nur die eingetragenen Abhängigkeiten.
+- **Anomalien** zu jedem Verstoß (Auswahl, wenn es mehrere gibt), mit Werten aus den Daten:
+  - *Änderungsanomalie:* ein Wert der linken Seite, der mehrfach vorkommt; `UPDATE` ändert die abhängige Spalte nur in einer Zeile, danach widersprechen sich die Zeilen (geänderte Zelle hervorgehoben).
+  - *Löschanomalie:* möglichst ein Wert, der nur in einem Datensatz steht. Gelöscht werden die betroffenen Datensätze über ihren Schlüssel (`DELETE … WHERE schueler_nr IN (3, 5)`); die Seite zeigt sie vollständig mit allen Angaben und hebt die Information hervor, die mit ihnen verloren geht. Als Nachweis zeigt eine Abfrage, dass zum Wert danach nichts mehr gespeichert ist.
+  - *Einfügeanomalie:* `INSERT` nur der neuen Information ohne die übrigen Schlüsselspalten. Gezeigt wird das echte Ergebnis: die Fehlermeldung (Schlüssel fehlt) oder bei `AUTO_INCREMENT` der unvollständige Datensatz mit `NULL`-Werten.
+  - Die drei Beispiele stehen untereinander in voller Breite. Die Befehle laufen auf einer Kopie; die Datenbank bleibt unverändert. „Auf Seite 3 übernehmen“ setzt Befehl und Prüfabfrage in die Eingabe von Seite 3, ohne sie auszuführen.
+- Abhängigkeiten und Markierungen bleiben beim Seitenwechsel und nach Änderungen auf Seite 3 erhalten. Beim Laden einer anderen Datenbank und beim Zurücksetzen werden sie geleert (mit Hinweis). Gespeichert wird nichts.
+
+### Klassendiagramm (Seite 5)
 
 Das Diagramm wird aus den Tabellendefinitionen abgeleitet:
 
@@ -84,7 +119,7 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Die SQL Sandbox verhäl
 - Aliase aus der SELECT-Liste sind in `GROUP BY`, `HAVING` und `ORDER BY` erlaubt, in `WHERE` nicht (mit Hinweis).
 - `UPDATE`: Alle Ausdrücke in `SET` verwenden die Werte **vor** der Änderung (wie im SQL-Standard).
 - **Datentypen** werden geprüft: `INT` (mit Wertebereich je Typ, auch `UNSIGNED`), `DECIMAL(p,s)`, `FLOAT/DOUBLE`, `CHAR/VARCHAR(n)` (Länge), `TEXT`, `ENUM(…)`, `DATE`, `DATETIME/TIMESTAMP`, `TIME`, `YEAR`, `BOOLEAN` (als 0/1).
-- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT`, `AUTO_INCREMENT` und `CHECK` werden durchgesetzt. **Fremdschlüssel** werden gespeichert und auf Seite 2 und 4 angezeigt, aber **nicht erzwungen**. Ihr Name aus `CONSTRAINT name FOREIGN KEY …` bleibt erhalten; doppelte Namen in einer Tabelle sind nicht erlaubt.
+- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT`, `AUTO_INCREMENT` und `CHECK` werden durchgesetzt. **Fremdschlüssel** werden gespeichert und auf Seite 2 und 5 angezeigt, aber **nicht erzwungen**. Ihr Name aus `CONSTRAINT name FOREIGN KEY …` bleibt erhalten; doppelte Namen in einer Tabelle sind nicht erlaubt.
 - **CHECK-Bedingungen**:
   - Sie stehen an einer Spalte (`Preis DECIMAL(8,2) CHECK (Preis >= 0)`) oder als Tabellenbedingung, auch mit Namen (`CONSTRAINT chk_rueckgabe CHECK (Rueckgabedatum IS NULL OR Rueckgabedatum >= Ausleihdatum)`). `ALTER TABLE … ADD [CONSTRAINT name] CHECK (…)` ist ebenfalls möglich.
   - Geprüft wird bei `INSERT` und `UPDATE`; beim Anlegen mit `ALTER TABLE` auch an den vorhandenen Datensätzen.
@@ -107,16 +142,42 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Die SQL Sandbox verhäl
 
 Alle Daten sind **frei erfunden** (Namen, Orte wie „Musterstadt“, Buchtitel, Artikel, Vereine). Ähnlichkeiten mit realen Personen, Schulen, Firmen, Werken oder Vereinen wären zufällig. Die Daten stehen unter der MIT-Lizenz.
 
+Eine ausführliche Beschreibung aller Dateien – bei den Übungsdateien für die Seite „Redundanzen“ mit den beabsichtigten funktionalen Abhängigkeiten, den Absichten hinter den Daten und den erwarteten Ergebnissen – steht in [`testdata/README.md`](testdata/README.md).
+
 | Datei in `testdata/` | Inhalt | Tabellen |
 |---|---|---|
 | `schule.sql` | Schulen, Lehrkräfte, Klassen, Schülerinnen und Schüler, Fächer, Noten | schule, lehrkraft, klasse, schueler, fach, note |
 | `bibliothek.sql` | Autorinnen und Autoren, Bücher, Leserinnen und Leser, Ausleihen (auch offene) | autor, buch, leser, ausleihe |
 | `online_shop.sql` | Kategorien, Artikel mit Preisen, Kundinnen und Kunden, Bestellungen, Bestellpositionen (zusammengesetzter Primärschlüssel) | kategorie, artikel, kunde, bestellung, bestellposition |
 | `sportverein.sql` | Abteilungen, Trainerinnen und Trainer, Mannschaften, Mitglieder mit Beiträgen, Spiele (auch ohne Ergebnis) | abteilung, trainer, mannschaft, mitglied, spiel |
+| `redundanz_kursbuchung.sql` | **Absichtlich nicht normalisiert:** Wahlkurse mit Schülerinnen, Schülern, Klassenleitung, Lehrkraft und Sprechstunde in einer Tabelle; Kontaktdaten mit Telefonliste und Wiederholungsgruppe; Räume (normalisiert, zum Vergleich) | belegung, kontakt, raum |
+| `redundanz_1nf_kontaktliste.sql` | Teilnehmerliste mit Listen in einer Spalte (Hobbys, Adresse) und Wiederholungsgruppe (Telefon1 bis Telefon3) | teilnehmer |
+| `redundanz_2nf_ausleihe.sql` | Ausleihen einer Schulbibliothek in einer Tabelle mit zusammengesetztem Schlüssel (leser_nr, buch_nr, Ausleihdatum) | ausleihe |
+| `redundanz_3nf_verein.sql` | Vereinsmitglieder mit Wohnort und Abteilung; enthält absichtlich einen Widerspruch (PLZ 12347 mit zwei Schreibweisen des Orts); `AUTO_INCREMENT`-Schlüssel | mitglied |
+| `redundanz_2nf_projekte.sql` | Mitarbeit an Projekten mit zusammengesetztem Schlüssel (mitarbeiter_nr, projekt_nr); Mitarbeiter 4 und Projekt 12 kommen nur einmal vor (Löschanomalie), die übrigen mehrfach (Änderungsanomalie) | projektmitarbeit |
+| `redundanz_3nf_praxis.sql` | Terminliste einer Arztpraxis mit Arzt (Fachgebiet, Zimmer) und Krankenkasse (Telefon) in jeder Zeile; `AUTO_INCREMENT`-Schlüssel, alle übrigen Spalten dürfen leer sein (Einfügeanomalie ergibt einen unvollständigen Datensatz); Dr. Lorenz kommt nur einmal vor | termin |
+| `redundanz_gemischt_bestellung.sql` | Bestellungen mit Kunden- und Artikeldaten in einer Tabelle (Teilabhängigkeiten und transitive Abhängigkeit, mehrere Verstöße zur Auswahl); dazu eine Tabelle **ohne Schlüssel** mit einem doppelten Datensatz | bestellung_flach, lieferant |
+| `redundanz_ok_vereinsverwaltung.sql` | **Gegenprobe:** dieselben Vereinsdaten wie in `redundanz_3nf_verein.sql`, aber auf vier Tabellen verteilt – mit den passenden Abhängigkeiten keine Verstöße und keine Anomalien | ort, abteilung, mitglied, mitgliedschaft |
 | `beispiel_phpmyadmin_export.sql` | Kursangebot einer Musikschule im Stil eines Datenbank-Exports (Backticks, `ENGINE=…`, `SET`, `CONSTRAINT … CHECK`, Schlüssel per `ALTER TABLE`) | kurs, teilnehmer, anmeldung |
 | `beispiel_fehlerhaft.sql` | Übungsdatei mit zwei absichtlichen Fehlern (fehlendes Komma, doppelter Primärschlüssel) | – |
 
-Die ersten vier Dateien sind identisch mit den eingebauten Beispieldatenbanken auf Seite 1 (der Build prüft das). Sie eignen sich als Vorlage für eigene Datenbanken. Jede enthält einige `CHECK`-Bedingungen, z. B. `Note BETWEEN 1 AND 6`, `Preis >= 0` oder `Menge > 0`; ein `INSERT` mit unzulässigem Wert zeigt die entsprechende Meldung. Die Daten enthalten bewusst `NULL`-Werte und Datensätze ohne Partner, z. B. Lehrkräfte ohne Klasse, Fächer ohne Noten, Kundinnen und Kunden ohne Bestellung. So lassen sich `LEFT JOIN` und `IS NULL` sinnvoll üben.
+Die ersten fünf Dateien sind identisch mit den eingebauten Beispieldatenbanken auf Seite 1 (der Build prüft das). Sie eignen sich als Vorlage für eigene Datenbanken. Jede enthält einige `CHECK`-Bedingungen, z. B. `Note BETWEEN 1 AND 6`, `Preis >= 0` oder `Menge > 0`; ein `INSERT` mit unzulässigem Wert zeigt die entsprechende Meldung. Die Daten enthalten bewusst `NULL`-Werte und Datensätze ohne Partner, z. B. Lehrkräfte ohne Klasse, Fächer ohne Noten, Kundinnen und Kunden ohne Bestellung. So lassen sich `LEFT JOIN` und `IS NULL` sinnvoll üben.
+
+**Lösungshinweise für Lehrkräfte (Seite 6):** Mit diesen Abhängigkeiten und Markierungen ergibt sich die angegebene höchste Normalform.
+
+| Datei | Tabelle | Abhängigkeiten | mehrwertig markieren | Ergebnis |
+|---|---|---|---|---|
+| `redundanz_kursbuchung.sql` | belegung | `schueler_nr → Schueler_Name, Klasse`; `Klasse → Klassenleitung`; `kurs_nr → Kurs_Titel, Lehrkraft`; `Lehrkraft → Sprechstunde` | – | 1. NF (Teilabhängigkeiten, transitive Abhängigkeiten) |
+| | kontakt | `PLZ → Ort` | Telefonnummern, Erziehungsberechtigte1, Erziehungsberechtigte2 | keine (1. NF verletzt; ohne Markierung: 2. NF) |
+| | raum | – | – | 2. NF, 3. NF offen (normalisiert) |
+| `redundanz_1nf_kontaktliste.sql` | teilnehmer | – | Telefon1, Telefon2, Telefon3, Hobbys, Adresse | keine (1. NF verletzt) |
+| `redundanz_2nf_ausleihe.sql` | ausleihe | `leser_nr → Leser_Name, Leser_Klasse`; `buch_nr → Buch_Titel, Autor` | – | 1. NF (Teilabhängigkeiten) |
+| `redundanz_3nf_verein.sql` | mitglied | `PLZ → Ort` (widerspricht den Daten); `Abteilung → Abteilungsleitung, Beitrag` | – | 2. NF (transitive Abhängigkeiten) |
+| `redundanz_2nf_projekte.sql` | projektmitarbeit | `mitarbeiter_nr → Mitarbeiter_Name, Abteilung`; `projekt_nr → Projekt_Titel, Auftraggeber, Budget` | – | 1. NF (Teilabhängigkeiten) |
+| `redundanz_3nf_praxis.sql` | termin | `Arzt → Fachgebiet, Zimmer`; `Versicherung → Versicherung_Telefon` | – | 2. NF (transitive Abhängigkeiten) |
+| `redundanz_gemischt_bestellung.sql` | bestellung_flach | `bestell_nr → Bestelldatum, Kunde_Nr`; `Kunde_Nr → Kunde_Name, Kunde_Ort`; `artikel_nr → Artikel_Bezeichnung, Einzelpreis` | – | 1. NF (Teilabhängigkeiten und transitive Abhängigkeit) |
+| | lieferant | – | – | 1. NF; 2. und 3. NF nicht beurteilbar (kein Schlüssel) |
+| `redundanz_ok_vereinsverwaltung.sql` | ort, abteilung, mitglied, mitgliedschaft | je „Schlüssel → übrige Spalten“, z. B. `PLZ → Ort`, `id → Name, PLZ`, `(mitglied_id, abteilung_id) → Eintritt` | – | 3. NF, keine Anomalien |
 
 ## Aufbau
 
@@ -124,7 +185,7 @@ Die ersten vier Dateien sind identisch mit den eingebauten Beispieldatenbanken a
 SQL Sandbox/
 ├─ src/                      NUR die Dateien des SCORM-Pakets (1:1 im ZIP)
 │  ├─ imsmanifest.xml        SCORM-1.2-Manifest (ein SCO, alle Dateien gelistet)
-│  ├─ index.html             Gerüst der vier Seiten, Content-Security-Policy
+│  ├─ index.html             Gerüst der sechs Seiten, Content-Security-Policy
 │  ├─ LICENSE.txt            MIT-Lizenz (wird mit ausgeliefert)
 │  ├─ css/style.css          Gestaltung (Systemschriften, feste Zeilenhöhen für die Scrollbereiche)
 │  └─ js/
@@ -136,13 +197,14 @@ SQL Sandbox/
 │     ├─ sql/parser.js       Syntaxbaum (rekursiver Abstieg, Tiefe begrenzt)
 │     ├─ sql/values.js       Vergleich, NULL-Logik, Sortierung, Anzeige von Werten
 │     ├─ sql/database.js     Tabellen, Datentypen, Schlüssel, CREATE/DROP/ALTER
-│     ├─ sql/executor.js     Namensauflösung, SELECT/INSERT/UPDATE/DELETE, Grenzwerte
+│     ├─ sql/executor.js     Namensauflösung, SELECT/INSERT/UPDATE/DELETE, Grenzwerte, Mitschreiben der Schritte (Seite 4)
 │     ├─ sql-import.js       Upload-Prüfung und Aufbau einer neuen Datenbank
 │     ├─ state.js            aktuelle Datenbank, Zurücksetzen, Änderungsereignisse
-│     ├─ samples/*.js        die vier Beispieldatenbanken (Inhalt = testdata/*.sql)
+│     ├─ normalization.js    Seite 6: Schlüssel, Normalformen, Prüfung der Abhängigkeiten, Anomalie-Beispiele
+│     ├─ samples/*.js        die fünf Beispieldatenbanken (Inhalt = testdata/*.sql)
 │     ├─ uml-model.js        Klassendiagramm: Ableitung aus dem Tabellenschema
 │     ├─ uml-layout.js       Klassendiagramm: Ebenenlayout mit rechtwinkligen Linien
-│     ├─ pages/*.js          die vier Seiten (+ gemeinsame Bausteine)
+│     ├─ pages/*.js          die sechs Seiten (+ gemeinsame Bausteine)
 │     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
 ├─ testdata/                 SQL-Dateien für den Unterricht (siehe oben)
 ├─ preview/                  Vorschau
@@ -228,7 +290,7 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - der SCORM-Wrapper von der Fassung des kNN-Pakets abweicht (abgesehen von Namensraum und Kommentaren);
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (200) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (252) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
 - jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;
@@ -237,10 +299,12 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - `UNION`, `INTERSECT` und `EXCEPT` (auch `ALL`, Rangfolge, `ORDER BY`/`LIMIT`, Klammern, in Unterabfragen, Sichten und Dateien);
 - `WITH`-Abfragen, `INSERT … SELECT` und Sichten (Anlegen, Ersetzen, Löschen, ungültige und zirkuläre Sichten, Import im Export-Stil);
 - erzeugter `CREATE TABLE`-Befehl: Er lässt sich für alle Beispieltabellen wieder einlesen und ergibt denselben Aufbau;
+- Schritt für Schritt: letzter Schritt gleich dem Ergebnis von Seite 3 (über hundert Abfragen über alle Beispieldatenbanken), Reihenfolge und markierte Klauseln, Wahrheitswerte je Zeile (auch `NULL`), Paare und Raster der Verknüpfungen, NULL-Auffüllung, vollständiges Kreuzprodukt beim Komma, Gruppen und Rechenweg, `DISTINCT`/`ORDER BY`/`LIMIT`, Mengenoperationen, Abspieler und Tastatur, Umschalter, Übernahme von Seite 3, Fehlerfälle, Datenbank unverändert;
+- Redundanzen: Hülle und Schlüsselkandidaten (deklariert, abgeleitet, nicht minimal), 2. NF bei einspaltigem Schlüssel, Teilabhängigkeiten (auch abgeleitet), transitive Abhängigkeiten, Schlüsselattribut rechts, „offen“ ohne Abhängigkeiten, Prüfung an den Daten mit Widersprüchen und `NULL`, 1NF-Hinweise ohne Fehlalarme in den normalisierten Beispielen, die Lösungshinweise aller Übungsdateien (für jeden der 16 Verstöße sind Einfüge-, Änderungs- und Löschbeispiel ausführbar, die Datenbank bleibt unverändert; die normalisierte Gegenprobe ergibt keine Verstöße; Tabelle ohne Schlüssel), abgeleitete Schlüssel nur bei Eindeutigkeit in den Daten, alle drei Anomalien mit ausführbarem SQL und Vorher/Nachher (auch `AUTO_INCREMENT`, Zahlen, Datumswerte, Sonderzeichen in Namen), Datenbank unverändert;
 - Import der Beispieldateien, eines Exports im phpMyAdmin-Stil und fehlerhafter Dateien; Grenzwerte;
 - Klassendiagramm: Ableitungsregeln (Namen, ausgeblendete und künstliche Schlüssel, Multiplizitäten, 1:1, Selbstbezug, parallele Beziehungen, Verbindungstabellen, Constraint-Namen, Hinweise) sowie das Layout aller Beispiele in beiden Ausrichtungen: keine überlappenden Karten, nur waagerechte und senkrechte Linien, keine Kreuzungen, keine Linie durch fremde Karten; 50 Tabellen; Verschieben mit Maus und Tastatur; Aus- und Einblenden von Klassen samt Beziehungen und Assoziationsklassen;
 - präparierte Angriffe: HTML-/Skript-Einschleusung in Werten und Namen, `__proto__` als Name, Richtungszeichen, kartesisches Produkt, tiefe Verschachtelung, langsame `LIKE`-Muster, getarnte Binärdateien, übergroße Dateien, schneller Doppel-Upload;
-- Klickpfade aller Seiten: Erhalt der Eingaben beim Seitenwechsel, Höhe der Scrollbereiche (5 bzw. 10 Zeilen), Strg + Enter, Zurücksetzen, Tastaturbedienung;
+- Klickpfade aller Seiten (Seite 4 und 6 auch mit eingeschleustem HTML-Code): Erhalt der Eingaben beim Seitenwechsel, Höhe der Scrollbereiche (5 bzw. 10 Zeilen), Strg + Enter, Zurücksetzen, Tastaturbedienung;
 - SCORM-Meldungen;
 - Härtung: keine externen Anfragen, keine CSP-Verstöße, Sperre durch Trusted Types, `eval` und Netzwerkzugriffe blockiert.
 

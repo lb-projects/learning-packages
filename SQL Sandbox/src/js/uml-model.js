@@ -278,7 +278,7 @@
   }
 
   /**
-   * Blendet Klassen aus (Auswahl auf Seite 4). Mit einer Klasse entfallen ihre Beziehungen.
+   * Blendet Klassen aus (Auswahl auf Seite 5). Mit einer Klasse entfallen ihre Beziehungen.
    * Eine Assoziationsklasse erscheint nur, wenn sie selbst gewählt ist und beide Enden ihrer
    * n:m-Beziehung sichtbar sind. Ist nur die Assoziationsklasse abgewählt, bleibt die
    * n:m-Linie und trägt den Namen der Verbindungstabelle.

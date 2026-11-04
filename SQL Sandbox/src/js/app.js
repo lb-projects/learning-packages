@@ -4,7 +4,7 @@
  *              Datenbankänderungen an alle Seiten und SCORM-Abschluss.
  *
  * Navigation:
- *   Die vier Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
+ *   Die sechs Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit
  *   frei anwählbar. Beim Wechsel bleibt der Zustand jeder Seite erhalten
  *   (Eingaben, Ergebnisse, Scrollpositionen in Tabellen), weil die Seiten nur
  *   aus- und eingeblendet werden. Bedienung per Maus, Tastatur (Pfeiltasten,
@@ -35,7 +35,9 @@
     { id: 'load', title: 'Datenbank laden' },
     { id: 'tables', title: 'Tabellen' },
     { id: 'query', title: 'SQL-Befehle' },
-    { id: 'diagram', title: 'Klassendiagramm' }
+    { id: 'steps', title: 'Schritt für Schritt' },
+    { id: 'diagram', title: 'Klassendiagramm' },
+    { id: 'redundancy', title: 'Redundanzen' }
   ];
 
   /** ID der sichtbaren Seite. */

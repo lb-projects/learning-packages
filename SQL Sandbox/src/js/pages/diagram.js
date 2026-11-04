@@ -1,6 +1,6 @@
 /**
  * @file pages/diagram.js
- * @description Seite 4 „Klassendiagramm“: das Tabellenschema der geladenen Datenbank als
+ * @description Seite 5 „Klassendiagramm“: das Tabellenschema der geladenen Datenbank als
  *              UML-Klassendiagramm (SVG).
  *
  * Das Modell kommt aus uml-model.js, die Anordnung aus uml-layout.js. Alle Linien bestehen
