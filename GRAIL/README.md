@@ -130,6 +130,16 @@ Alle Beispiele sind im Paket eingebaut (Auswahl auf Seite 1) und liegen zeicheng
 | `beispiel-negatives-gewicht.csv` | gerichtet, eine negative Kante C→B (−3), kein negativer Zyklus | Dijkstra liefert falsche Distanzen für B, D und E; Bellman-Ford die richtigen |
 | `beispiel-negativer-zyklus.csv` | gerichtet, Zyklus B → C → D → B mit Summe −1 | negativer Zyklus, keine kürzesten Wege |
 
+Weitere Übungsgraphen nur zum Hochladen (nicht in der Auswahlliste):
+
+| Datei | Inhalt |
+|---|---|
+| `beispiel-graph-01.csv` | ungerichtet, 6 Knoten (A bis F), 11 Kanten |
+| `beispiel-graph-02.csv` | ungerichtet, 11 Knoten (A bis K), 15 Kanten |
+| `beispiel-graph-03.csv` | gerichtet, 8 Knoten (A bis H), 13 Kanten, mehrere Kantenpaare in beiden Richtungen mit verschiedenen Gewichten |
+| `beispiel-graph-04.csv` | ungerichtet, 16 Knoten (A bis P), 31 Kanten |
+| `beispiel-graph-sigismund.csv` | ungerichtet, Wegeplan mit 17 Knoten (A bis Q) und 3 Hilfsknoten (X1 bis X3), 25 Kanten. Wo zwei Wege dieselben Knoten verbinden, liegt auf dem längeren ein Hilfsknoten, weil GRAIL keine Mehrfachkanten kennt: B–X1–F (4 + 4 = 8), J–X2–M (3 + 3 = 6), L–X3–Q (2 + 3 = 5) |
+
 ## Aufbau
 
 ```

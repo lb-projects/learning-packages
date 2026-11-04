@@ -34,7 +34,7 @@
    */
   function tripleCell(list, changed) {
     if (list.length === 0) {
-      return dom.el('span', { class: 'hint' }, 'leer');
+      return dom.el('span', { class: 'hint' }, '\u2013');
     }
     return dom.el('span', { class: 'triples' }, list.map((t) => tripleEl(t, changed.includes(t.name))));
   }
