@@ -206,8 +206,9 @@ Zu jedem Thema liegt in `testdata/` eine CSV-Datei (Kopfzeile, Semikolon, Dezima
 | `regression_3_lernzeit.csv` | Lernzeit | Lernzeit pro Woche (h) | Punkte in der Klassenarbeit | steigt und sättigt sich |
 | `regression_4_gebrauchtwagen.csv` | Gebrauchtwagen | Alter (Jahre) | Preis (1000 Euro) | fällt exponentiell, je nach Fahrzeugklasse verschieden hoch |
 | `regression_5_stromverbrauch.csv` | Stromverbrauch | Uhrzeit (h) | Verbrauch eines Haushalts (kW) | zwei Spitzen (morgens, abends); eignet sich gut, um den Einfluss von k zu zeigen |
+| `regression_6_taxifahrt.csv` | Taxifahrt | Fahrstrecke (km) | Fahrpreis (Euro) | nur 12 Punkte mit deutlichem Abstand: Nachbarn, Streifen und Rechenweg lassen sich gut nachvollziehen; zum Einstieg geeignet |
 
-Die Daten sind frei erfunden (zufällig um einen vorgegebenen Verlauf gestreut) und stehen unter der MIT-Lizenz.
+Die Daten sind frei erfunden (zufällig um einen vorgegebenen Verlauf gestreut bzw. bei der Taxifahrt von Hand gewählt) und stehen unter der MIT-Lizenz.
 
 ## Ausprobieren und Browser
 
