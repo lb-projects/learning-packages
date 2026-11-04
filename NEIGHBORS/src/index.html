@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<!--
+  NEIGHBORS – New Examples Inherit Group Habits By Observing Relevant Samples
+  ===========================================================================
+  SCORM-1.2-Lernpaket zum Verfahren k nächste Nachbarn (kNN).
+  Einstiegsseite des Lernpakets (im Manifest als SCO eingetragen).
+
+  Aufbau:
+    - Kopfbereich mit Registerkarten (Tabs) für die neun Seiten
+    - neun <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
+
+  Sicherheit:
+    - Content-Security-Policy nach dem Prinzip "alles verboten, außer":
+      default-src 'none' sperrt jede Ressourcenart (Bilder, Schriften, Medien,
+      Frames, Worker, Netzwerkverbindungen, Plugins); erlaubt sind nur Skripte
+      und Stylesheets aus dem Paket selbst. Keine Formularübertragung, kein <base>.
+    - Trusted Types (require-trusted-types-for 'script'): Browser mit
+      Unterstützung (Chromium) blockieren zur Laufzeit jede Übergabe von
+      Zeichenketten an HTML-Senken wie innerHTML. Einzige Ausnahme ist die
+      private Policy "lp-xml" in js/xml-utils.js für das Einlesen von XML-Daten.
+    - Es gibt kein Inline-JavaScript und keine Inline-Stile.
+    - Keine externen Ressourcen (keine CDNs, keine Webfonts).
+    - Alle dynamischen Inhalte werden per JavaScript als Text eingefügt (siehe js/dom-utils.js).
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types lp-xml">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>NEIGHBORS – k nächste Nachbarn</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Reihenfolge ist wichtig: Grundmodule zuerst, app.js zuletzt. "defer" = nach dem Aufbau des HTML ausführen. -->
+  <script src="js/dom-utils.js" defer></script>
+  <script src="js/format-utils.js" defer></script>
+  <script src="js/text-utils.js" defer></script>
+  <script src="js/tabs.js" defer></script>
+  <script src="js/scorm-api.js" defer></script>
+  <script src="js/inflate.js" defer></script>
+  <script src="js/zip-reader.js" defer></script>
+  <script src="js/xml-utils.js" defer></script>
+  <script src="js/csv-parser.js" defer></script>
+  <script src="js/xlsx-parser.js" defer></script>
+  <script src="js/ods-parser.js" defer></script>
+  <script src="js/dataset.js" defer></script>
+  <script src="js/data-import.js" defer></script>
+  <script src="js/knn.js" defer></script>
+  <script src="js/chart.js" defer></script>
+  <script src="js/pages/common.js" defer></script>
+  <script src="js/pages/training.js" defer></script>
+  <script src="js/pages/classify.js" defer></script>
+  <script src="js/pages/k-effect.js" defer></script>
+  <script src="js/pages/evaluation-page.js" defer></script>
+  <script src="js/pages/k-selection.js" defer></script>
+  <script src="js/pages/loo-manual.js" defer></script>
+  <script src="js/pages/loo-auto.js" defer></script>
+  <script src="js/pages/confusion.js" defer></script>
+  <script src="js/pages/normalization.js" defer></script>
+  <script src="js/pages/regression.js" defer></script>
+  <script src="js/progress.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>NEIGHBORS <span class="subtitle">New Examples Inherit Group Habits By Observing Relevant Samples</span></h1>
+    <nav class="tabs" role="tablist" aria-label="Seiten von NEIGHBORS">
+      <button type="button" role="tab" id="tab-training" aria-controls="page-training" aria-selected="true"><span class="tab-no">1</span> Training</button>
+      <button type="button" role="tab" id="tab-classify" aria-controls="page-classify" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Klassifizierung neuer Datenpunkte</button>
+      <button type="button" role="tab" id="tab-k-effect" aria-controls="page-k-effect" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> Auswirkungen des Parameters k</button>
+      <button type="button" role="tab" id="tab-k-selection" aria-controls="page-k-selection" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Auswahl eines passenden Wertes für k</button>
+      <button type="button" role="tab" id="tab-loo-manual" aria-controls="page-loo-manual" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Leave One Out – Verfahren</button>
+      <button type="button" role="tab" id="tab-loo-auto" aria-controls="page-loo-auto" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Leave One Out – automatisiert</button>
+      <button type="button" role="tab" id="tab-confusion" aria-controls="page-confusion" aria-selected="false" tabindex="-1"><span class="tab-no">7</span> Test und Konfusionsmatrix</button>
+      <button type="button" role="tab" id="tab-normalization" aria-controls="page-normalization" aria-selected="false" tabindex="-1"><span class="tab-no">8</span> Normalisierung</button>
+      <button type="button" role="tab" id="tab-regression" aria-controls="page-regression" aria-selected="false" tabindex="-1"><span class="tab-no">9</span> Regression</button>
+    </nav>
+  </header>
+
+  <noscript><p class="status status-error">NEIGHBORS benötigt JavaScript.</p></noscript>
+  <p id="app-error" class="status status-error" role="alert">Die Anwendung wird geladen … Falls diese Meldung bestehen bleibt, ist JavaScript deaktiviert oder der Browser zu alt.</p>
+
+  <main>
+    <!-- ===================================================================
+         Seite 1: Training
+         =================================================================== -->
+    <section id="page-training" class="page page-wide" role="tabpanel" aria-labelledby="tab-training">
+      <h2>Training</h2>
+      <p class="intro">Trainingsdaten sind Datenpunkte, deren Label (Klasse) bekannt ist. Laden Sie eine Datei oder die Beispieldaten, oder geben Sie einzelne Punkte ein. Änderungen wirken sich sofort auf alle anderen Seiten aus.</p>
+      <div class="layout">
+        <div class="controls">
+          <div class="card">
+            <h3>Trainingsdaten laden</h3>
+            <p class="hint">Erlaubt: <strong>.csv</strong>, <strong>.xlsx</strong> oder <strong>.ods</strong> (höchstens 2&nbsp;MB) mit drei Spalten: x-Wert, y-Wert, Label. Stehen in der ersten Zeile Bezeichner statt Zahlen, werden sie als Achsenbeschriftung verwendet. Die Datei ersetzt die vorhandenen Daten.</p>
+            <label class="file-label" for="file-input">Datei auswählen</label>
+            <input type="file" id="file-input" accept=".csv,.xlsx,.ods,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet">
+            <div class="sample-row">
+              <button type="button" id="btn-sample" class="btn">Beispieldaten laden</button>
+            </div>
+            <div id="import-status" class="status" role="status" aria-live="polite" hidden></div>
+          </div>
+
+          <form id="point-form" class="card" novalidate autocomplete="off">
+            <h3>Datenpunkt eingeben</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="in-x">x-Wert</label>
+                <input type="text" id="in-x" inputmode="decimal" maxlength="12" required>
+              </div>
+              <div class="field">
+                <label for="in-y">y-Wert</label>
+                <input type="text" id="in-y" inputmode="decimal" maxlength="12" required>
+              </div>
+              <div class="field field-wide">
+                <label for="in-label">Label</label>
+                <input type="text" id="in-label" maxlength="30" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Hinzufügen</button>
+            <p id="point-form-error" class="error" role="alert"></p>
+            <p id="point-form-info" class="hint" role="status" aria-live="polite"></p>
+          </form>
+
+          <form id="axis-form" class="card" novalidate autocomplete="off">
+            <h3>Achsenbeschriftung</h3>
+            <div class="field-row">
+              <div class="field field-wide">
+                <label for="axis-x">x-Achse</label>
+                <input type="text" id="axis-x" maxlength="40">
+              </div>
+              <div class="field field-wide">
+                <label for="axis-y">y-Achse</label>
+                <input type="text" id="axis-y" maxlength="40">
+              </div>
+            </div>
+            <button type="submit" class="btn">Übernehmen</button>
+          </form>
+
+          <div class="card button-row">
+            <button type="button" id="btn-clear" class="btn btn-danger">Alle Daten löschen</button>
+          </div>
+        </div>
+        <div class="visual">
+          <div id="chart-training"></div>
+          <p class="hint">Tipp: Klicken Sie auf einen Punkt, um ihn auszuwählen und ggf. zu entfernen.</p>
+          <div id="training-selection" class="selection-box" hidden></div>
+        </div>
+      </div>
+      <h3 id="training-table-heading" tabindex="-1">Trainingsdaten <span id="training-count" class="count"></span></h3>
+      <div class="table-wrap table-scroll">
+        <table class="data-table">
+          <caption>Alle Datenpunkte</caption>
+          <thead>
+            <tr><th scope="col">Nr.</th><th scope="col">x-Wert</th><th scope="col">y-Wert</th><th scope="col">Label</th><th scope="col">Verwendung</th><th scope="col"><span class="visually-hidden">Aktion</span></th></tr>
+          </thead>
+          <tbody id="training-tbody"></tbody>
+        </table>
+      </div>
+      <p id="training-empty" class="hint">Noch keine Datenpunkte vorhanden.</p>
+    </section>
+
+    <!-- ===================================================================
+         Seite 2: Klassifizierung neuer Datenpunkte
+         =================================================================== -->
+    <section id="page-classify" class="page page-wide" role="tabpanel" aria-labelledby="tab-classify" hidden>
+      <h2>Klassifizierung neuer Datenpunkte</h2>
+      <p class="intro">Ein neuer Datenpunkt mit unbekanntem Label erhält das Label, das unter seinen k nächsten Nachbarn am häufigsten vorkommt. Der Kreis (euklidische Metrik) bzw. die Raute (Manhattan-Metrik) zeigt den Abstand zum k-ten Nachbarn.</p>
+      <div id="notice-classify" class="notice" hidden></div>
+      <div class="layout">
+        <div class="controls">
+          <form id="query-form" class="card" novalidate autocomplete="off">
+            <h3>Neuer Datenpunkt</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="q-x">x-Wert</label>
+                <input type="text" id="q-x" inputmode="decimal" maxlength="12">
+              </div>
+              <div class="field">
+                <label for="q-y">y-Wert</label>
+                <input type="text" id="q-y" inputmode="decimal" maxlength="12">
+              </div>
+            </div>
+            <p class="hint">Oder: in das Diagramm klicken.</p>
+            <p id="q-error" class="error" role="alert"></p>
+          </form>
+          <div class="card">
+            <h3>Einstellungen</h3>
+            <div id="k-classify"></div>
+            <div id="metric-classify"></div>
+          </div>
+          <div id="classify-result" class="card result" role="status" aria-live="polite"></div>
+        </div>
+        <div class="visual">
+          <div id="chart-classify"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 3: Auswirkungen des Parameters k
+         =================================================================== -->
+    <section id="page-k-effect" class="page" role="tabpanel" aria-labelledby="tab-k-effect" hidden>
+      <h2>Auswirkungen des Parameters k</h2>
+      <p class="intro">Wählen Sie einen Trainingspunkt. Er wird für jedes k anhand der <strong>übrigen</strong> Trainingspunkte klassifiziert und mit seinem bekannten Label verglichen. Grün = korrekt klassifiziert, rot = falsch klassifiziert.</p>
+      <div id="notice-k-effect" class="notice" hidden></div>
+      <div class="layout">
+        <div class="controls">
+          <div class="card">
+            <h3>Einstellungen</h3>
+            <div class="field">
+              <label for="k3-point">Trainingspunkt</label>
+              <select id="k3-point"></select>
+            </div>
+            <div id="metric-k-effect"></div>
+          </div>
+          <div id="k3-table"></div>
+        </div>
+        <div class="visual">
+          <div id="chart-k-effect"></div>
+          <p id="k3-chart-info" class="hint" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 4: Auswahl eines passenden Wertes für k
+         =================================================================== -->
+    <section id="page-k-selection" class="page" role="tabpanel" aria-labelledby="tab-k-selection" hidden>
+      <h2>Auswahl eines passenden Wertes für k</h2>
+      <p class="intro">Ein wählbarer Anteil der Daten (Standard 20&nbsp;%) wird zufällig als <strong>Validierungsdaten</strong> zurückgehalten (Hohlmarker im Diagramm). Sie werden nur anhand der übrigen Trainingsdaten klassifiziert. Tragen Sie in der Tabelle ein <strong>x</strong> ein, wenn ein Validierungspunkt für das jeweilige k korrekt klassifiziert wird. Unten sehen Sie, wie viel Prozent korrekt erkannt wurden.</p>
+      <div class="card">
+        <div class="button-row fraction-row">
+          <div class="field">
+            <label for="k4-fraction">Anteil der Validierungsdaten (%)</label>
+            <input type="number" id="k4-fraction" class="k-number" min="1" max="90" step="1" value="20" inputmode="numeric">
+          </div>
+          <button type="button" id="btn-validation" class="btn btn-primary">Validierungsdaten auswählen</button>
+          <span id="k4-fraction-info" class="hint" role="status" aria-live="polite"></span>
+        </div>
+        <p id="k4-fraction-error" class="error" role="alert"></p>
+        <p id="k4-split" class="hint"></p>
+      </div>
+      <div id="k4-split-notice" class="notice" hidden></div>
+      <div id="notice-k-selection" class="notice" hidden></div>
+      <div id="k4-changed" class="notice" hidden></div>
+      <div id="k4-tools">
+        <div class="layout">
+          <div class="controls">
+            <div class="card">
+              <h3>Visualisierung</h3>
+              <div class="field">
+                <label for="k4-point">Validierungspunkt</label>
+                <select id="k4-point"></select>
+              </div>
+              <div id="k4-k"></div>
+              <div id="metric-k-selection"></div>
+            </div>
+          </div>
+          <div class="visual">
+            <div id="chart-k-selection"></div>
+            <p id="k4-chart-info" class="hint" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+        <div id="k4-table"></div>
+        <div class="button-row">
+          <button type="button" id="k4-check" class="btn btn-primary">Eintragungen prüfen</button>
+          <button type="button" id="k4-reset" class="btn">Eintragungen zurücksetzen</button>
+          <span id="k4-check-status" class="hint" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 5: Leave One Out – Verfahren
+         =================================================================== -->
+    <section id="page-loo-manual" class="page" role="tabpanel" aria-labelledby="tab-loo-manual" hidden>
+      <h2>Leave One Out – Verfahren</h2>
+      <p class="intro">Beim Leave-One-Out-Verfahren wird nacheinander <strong>jeder</strong> Punkt des gesamten Trainingsdatensatzes weggelassen und anhand aller übrigen Punkte klassifiziert. Wählen Sie einen Punkt, betrachten Sie seine Nachbarn und tragen Sie ein <strong>x</strong> ein, wenn er für das jeweilige k korrekt klassifiziert wird.</p>
+      <div id="notice-loo-manual" class="notice" hidden></div>
+      <div id="loo5-changed" class="notice" hidden></div>
+      <div id="loo5-tools">
+        <div class="layout">
+          <div class="controls">
+            <div class="card">
+              <h3>Visualisierung</h3>
+              <div class="field">
+                <label for="loo5-point">Weggelassener Punkt</label>
+                <select id="loo5-point"></select>
+              </div>
+              <div id="loo5-k"></div>
+              <div id="metric-loo-manual"></div>
+            </div>
+          </div>
+          <div class="visual">
+            <div id="chart-loo-manual"></div>
+            <p id="loo5-chart-info" class="hint" role="status" aria-live="polite"></p>
+          </div>
+        </div>
+        <div id="loo5-table"></div>
+        <div class="button-row">
+          <button type="button" id="loo5-check" class="btn btn-primary">Eintragungen prüfen</button>
+          <button type="button" id="loo5-reset" class="btn">Eintragungen zurücksetzen</button>
+          <span id="loo5-check-status" class="hint" role="status" aria-live="polite"></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 6: Leave One Out – automatisiert
+         =================================================================== -->
+    <section id="page-loo-auto" class="page" role="tabpanel" aria-labelledby="tab-loo-auto" hidden>
+      <h2>Leave One Out – automatisiert</h2>
+      <p class="intro">Das Leave-One-Out-Verfahren wird hier für alle möglichen k (1 bis Anzahl der Punkte − 1) automatisch durchgeführt. Die Genauigkeit gibt an, wie viel Prozent der Punkte korrekt klassifiziert werden.</p>
+      <div id="notice-loo-auto" class="notice" hidden></div>
+      <div class="card">
+        <div id="metric-loo-auto"></div>
+      </div>
+      <div id="loo6-results">
+        <div id="loo6-summary" class="result" role="status" aria-live="polite"></div>
+        <div id="loo6-bars" class="bar-chart"></div>
+        <div id="loo6-table"></div>
+        <details class="card">
+          <summary>Details: Ergebnis je Punkt und k</summary>
+          <p id="loo6-matrix-info" class="hint"></p>
+          <div id="loo6-matrix"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 7: Test und Konfusionsmatrix
+         =================================================================== -->
+    <section id="page-confusion" class="page" role="tabpanel" aria-labelledby="tab-confusion" hidden>
+      <h2>Test und Konfusionsmatrix</h2>
+      <p class="intro"><strong>Testdaten</strong> sind Datenpunkte mit bekanntem Label, die beim Training <strong>nicht</strong> verwendet werden. Jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert. Die <strong>Konfusionsmatrix</strong> zählt, wie oft ein tatsächliches Label (Zeile) als welches Label (Spalte) vorhergesagt wurde. Auf der Diagonalen stehen die korrekten Klassifizierungen.</p>
+      <div id="notice-confusion" class="notice" hidden></div>
+      <div class="layout">
+        <div class="controls">
+          <div class="card">
+            <h3>Testdaten hochladen</h3>
+            <p class="hint">Gleiches Format wie die Trainingsdaten: <strong>.csv</strong>, <strong>.xlsx</strong> oder <strong>.ods</strong> (höchstens 2&nbsp;MB) mit drei Spalten x-Wert, y-Wert, Label; Kopfzeile optional. Die Datei ersetzt die vorhandenen Testdaten. Die Trainingsdaten bleiben unverändert.</p>
+            <label class="file-label" for="test-file-input">Datei auswählen</label>
+            <input type="file" id="test-file-input" accept=".csv,.xlsx,.ods,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet">
+            <div id="test-import-status" class="status" role="status" aria-live="polite" hidden></div>
+          </div>
+
+          <form id="test-point-form" class="card" novalidate autocomplete="off">
+            <h3>Testpunkt eingeben</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="test-in-x">x-Wert</label>
+                <input type="text" id="test-in-x" inputmode="decimal" maxlength="12" required>
+              </div>
+              <div class="field">
+                <label for="test-in-y">y-Wert</label>
+                <input type="text" id="test-in-y" inputmode="decimal" maxlength="12" required>
+              </div>
+              <div class="field field-wide">
+                <label for="test-in-label">tatsächliches Label</label>
+                <input type="text" id="test-in-label" maxlength="30" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Hinzufügen</button>
+            <p id="test-form-error" class="error" role="alert"></p>
+            <p id="test-form-info" class="hint" role="status" aria-live="polite"></p>
+          </form>
+
+          <div class="card">
+            <h3>Einstellungen</h3>
+            <div id="k-confusion"></div>
+            <div id="metric-confusion"></div>
+          </div>
+
+          <div class="card button-row">
+            <button type="button" id="btn-test-clear" class="btn btn-danger">Alle Testdaten löschen</button>
+          </div>
+        </div>
+        <div class="visual">
+          <div id="chart-confusion"></div>
+          <p id="cm-chart-info" class="hint" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+
+      <div id="cm-results">
+        <h3>Konfusionsmatrix</h3>
+        <div id="cm-summary" class="result" role="status" aria-live="polite"></div>
+        <div id="cm-matrix"></div>
+      </div>
+
+      <h3 id="test-table-heading" tabindex="-1">Testdaten <span id="test-count" class="count"></span></h3>
+      <div class="table-wrap table-scroll">
+        <table class="data-table">
+          <caption>Alle Testpunkte mit vorhergesagtem Label</caption>
+          <thead>
+            <tr><th scope="col">Nr.</th><th scope="col">x-Wert</th><th scope="col">y-Wert</th><th scope="col">tatsächliches Label</th><th scope="col">vorhergesagtes Label</th><th scope="col">Ergebnis</th><th scope="col"><span class="visually-hidden">Aktion</span></th></tr>
+          </thead>
+          <tbody id="test-tbody"></tbody>
+        </table>
+      </div>
+      <p id="test-empty" class="hint">Noch keine Testpunkte vorhanden.</p>
+    </section>
+
+    <!-- ===================================================================
+         Seite 8: Normalisierung
+         =================================================================== -->
+    <section id="page-normalization" class="page" role="tabpanel" aria-labelledby="tab-normalization" hidden>
+      <h2>Normalisierung</h2>
+      <p class="intro">Haben die beiden Merkmale sehr unterschiedliche Größenordnungen, bestimmt das Merkmal mit den größeren Zahlen fast allein den Abstand – und damit, welche Punkte Nachbarn sind. Bei der <strong>Normalisierung</strong> werden beide Merkmale auf einen vergleichbaren Bereich umgerechnet. Links sehen Sie die aktuellen Trainingsdaten ohne, rechts mit Normalisierung – jeweils mit demselben neuen Punkt und seinen k nächsten Nachbarn. Darunter wird erklärt und durchgerechnet, wie normalisiert wird, und verglichen, wie sich das auf die Ergebnisse auswirkt.</p>
+      <div id="notice-normalization" class="notice" hidden></div>
+      <form id="norm-form" class="card norm-settings" novalidate autocomplete="off">
+        <div>
+          <h3>Neuer Datenpunkt</h3>
+          <div class="field-row">
+            <div class="field">
+              <label for="n-x">x-Wert</label>
+              <input type="text" id="n-x" inputmode="decimal" maxlength="12">
+            </div>
+            <div class="field">
+              <label for="n-y">y-Wert</label>
+              <input type="text" id="n-y" inputmode="decimal" maxlength="12">
+            </div>
+          </div>
+          <p class="hint">Originalwerte eingeben oder in eines der Diagramme klicken.</p>
+          <p id="n-error" class="error" role="alert"></p>
+        </div>
+        <div>
+          <h3>Einstellungen</h3>
+          <div id="k-normalization"></div>
+          <div class="regression-options">
+            <label class="radio"><input type="checkbox" id="n-highlight"> Anders klassifizierte Punkte hervorheben</label>
+            <p class="hint">Markiert Trainingspunkte, die bei Leave One Out mit diesem k ohne und mit Normalisierung unterschiedlich klassifiziert werden.</p>
+          </div>
+        </div>
+        <div id="method-normalization"></div>
+        <div id="metric-normalization"></div>
+      </form>
+      <div class="dual-charts">
+        <div class="card">
+          <h3>Ohne Normalisierung</h3>
+          <div id="chart-norm-raw"></div>
+          <p id="norm-raw-result" class="result-line" role="status" aria-live="polite"></p>
+        </div>
+        <div class="card">
+          <h3 id="norm-right-title">Mit Normalisierung</h3>
+          <div id="chart-norm-scaled"></div>
+          <p id="norm-scaled-result" class="result-line" role="status" aria-live="polite"></p>
+        </div>
+      </div>
+      <details id="norm-explain" class="card norm-section">
+        <summary>Wie wird normalisiert?</summary>
+        <div id="norm-explain-body"></div>
+      </details>
+      <details id="norm-worked" class="card norm-section">
+        <summary>Durchgerechnet für die aktuellen Daten</summary>
+        <div id="norm-worked-body"></div>
+      </details>
+      <details id="norm-neighbors" class="card norm-section">
+        <summary>Neuer Punkt: Ergebnis ohne und mit Normalisierung</summary>
+        <div id="norm-neighbors-body"></div>
+      </details>
+      <details id="norm-loo" class="card norm-section">
+        <summary>Genauigkeit je k (Leave One Out)</summary>
+        <div id="norm-loo-body"></div>
+      </details>
+      <details id="norm-diff" class="card norm-section">
+        <summary>Unterschiedlich klassifizierte Punkte</summary>
+        <div id="norm-diff-body"></div>
+      </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 9: Regression
+         =================================================================== -->
+    <section id="page-regression" class="page" role="tabpanel" aria-labelledby="tab-regression" hidden>
+      <h2>Regression</h2>
+      <p class="intro">Bei der <strong>Regression</strong> wird kein Label, sondern ein Zahlenwert vorhergesagt: Für einen neuen x-Wert wird der y-Wert prognostiziert. Dazu werden die k Trainingspunkte gesucht, deren x-Wert am nächsten liegt (Abstand |Δx|). Die Prognose ist der Mittelwert ihrer y-Werte – oder ein gewichteter Mittelwert, bei dem nähere Nachbarn stärker zählen. Der Streifen im Diagramm zeigt den Abstand zum k-ten Nachbarn. Das Label der Trainingspunkte spielt hier keine Rolle.</p>
+      <div id="notice-regression" class="notice" hidden></div>
+      <div class="layout">
+        <div class="controls">
+          <form id="regression-form" class="card" novalidate autocomplete="off">
+            <h3>Neuer Datenpunkt</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="r-x">x-Wert</label>
+                <input type="text" id="r-x" inputmode="decimal" maxlength="12">
+              </div>
+            </div>
+            <p class="hint">Oder: in das Diagramm klicken.</p>
+            <p id="r-error" class="error" role="alert"></p>
+          </form>
+          <div class="card">
+            <h3>Einstellungen</h3>
+            <div id="k-regression"></div>
+            <div id="weighting-regression"></div>
+            <div class="regression-options">
+              <label class="radio"><input type="checkbox" id="r-curve"> Regressionskurve anzeigen</label>
+            </div>
+          </div>
+          <div id="regression-result" class="card result" role="status" aria-live="polite"></div>
+        </div>
+        <div class="visual">
+          <div id="chart-regression"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p id="progress" role="status"></p>
+  </footer>
+</body>
+</html>

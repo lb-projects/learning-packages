@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<!--
+  GRAIL – GRaph Algorithm Interactive Lab
+  =======================================
+  SCORM-1.2-Lernpaket zu Graphalgorithmen. Einstiegsseite (im Manifest als SCO eingetragen).
+
+  Aufbau:
+    - Kopfbereich mit Registerkarten (Tabs) für die fünf Seiten
+    - fünf <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
+
+  Sicherheit:
+    - Content-Security-Policy nach dem Prinzip "alles verboten, außer":
+      default-src 'none' sperrt jede Ressourcenart (Bilder, Schriften, Medien,
+      Frames, Worker, Netzwerkverbindungen, Plugins); erlaubt sind nur Skripte
+      und Stylesheets aus dem Paket selbst. Keine Formularübertragung, kein <base>.
+    - Trusted Types (require-trusted-types-for 'script'): Browser mit
+      Unterstützung (Chromium) blockieren zur Laufzeit jede Übergabe von
+      Zeichenketten an HTML-Senken wie innerHTML. Einzige Ausnahme ist die
+      private Policy "lp-xml" in js/xml-utils.js für das Einlesen von XML-Daten.
+    - Es gibt kein Inline-JavaScript und keine Inline-Stile.
+    - Keine externen Ressourcen (keine CDNs, keine Webfonts).
+    - Alle dynamischen Inhalte werden per JavaScript als Text eingefügt (siehe js/dom-utils.js).
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types lp-xml">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GRAIL – Graphalgorithmen</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Reihenfolge ist wichtig: Grundmodule zuerst, app.js zuletzt. "defer" = nach dem Aufbau des HTML ausführen. -->
+  <script src="js/dom-utils.js" defer></script>
+  <script src="js/format-utils.js" defer></script>
+  <script src="js/text-utils.js" defer></script>
+  <script src="js/tabs.js" defer></script>
+  <script src="js/scorm-api.js" defer></script>
+  <script src="js/inflate.js" defer></script>
+  <script src="js/zip-reader.js" defer></script>
+  <script src="js/xml-utils.js" defer></script>
+  <script src="js/csv-parser.js" defer></script>
+  <script src="js/xlsx-parser.js" defer></script>
+  <script src="js/ods-parser.js" defer></script>
+  <script src="js/layout.js" defer></script>
+  <script src="js/graph.js" defer></script>
+  <script src="js/graph-import.js" defer></script>
+  <script src="js/samples.js" defer></script>
+  <script src="js/algorithms.js" defer></script>
+  <script src="js/graph-view.js" defer></script>
+  <script src="js/player.js" defer></script>
+  <script src="js/pages/common.js" defer></script>
+  <script src="js/pages/input.js" defer></script>
+  <script src="js/pages/representation.js" defer></script>
+  <script src="js/pages/bfs.js" defer></script>
+  <script src="js/pages/dfs.js" defer></script>
+  <script src="js/pages/dijkstra.js" defer></script>
+  <script src="js/progress.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>GRAIL <span class="subtitle">GRaph Algorithm Interactive Lab</span></h1>
+    <nav class="tabs" role="tablist" aria-label="Seiten von GRAIL">
+      <button type="button" role="tab" id="tab-input" aria-controls="page-input" aria-selected="true"><span class="tab-no">1</span> Graph eingeben</button>
+      <button type="button" role="tab" id="tab-representation" aria-controls="page-representation" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Darstellungen</button>
+      <button type="button" role="tab" id="tab-bfs" aria-controls="page-bfs" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> Breitensuche</button>
+      <button type="button" role="tab" id="tab-dfs" aria-controls="page-dfs" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Tiefensuche</button>
+      <button type="button" role="tab" id="tab-dijkstra" aria-controls="page-dijkstra" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Dijkstra</button>
+    </nav>
+  </header>
+
+  <noscript><p class="status status-error">GRAIL benötigt JavaScript.</p></noscript>
+  <p id="app-error" class="status status-error" role="alert">Die Anwendung wird geladen … Falls diese Meldung bestehen bleibt, ist JavaScript deaktiviert oder der Browser zu alt.</p>
+
+  <main>
+    <!-- ===================================================================
+         Seite 1: Graph eingeben
+         =================================================================== -->
+    <section id="page-input" class="page" role="tabpanel" aria-labelledby="tab-input">
+      <h2>Graph eingeben</h2>
+      <p class="intro">Ein Graph besteht aus Knoten und Kanten. Laden Sie eine Datei oder einen Beispielgraphen, oder geben Sie Knoten und Kanten einzeln ein. Der Graph wird sofort gezeichnet; Änderungen wirken auf alle anderen Seiten.</p>
+      <div class="layout">
+        <div class="controls">
+          <div class="card">
+            <h3>Graph laden</h3>
+            <p class="hint">Erlaubt: <strong>.csv</strong>, <strong>.xlsx</strong> oder <strong>.ods</strong> (höchstens 2&nbsp;MB) als Kantenliste oder Adjazenzmatrix. Die Datei ersetzt den vorhandenen Graphen.</p>
+            <label class="file-label" for="file-input">Datei auswählen</label>
+            <input type="file" id="file-input" accept=".csv,.xlsx,.ods,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.oasis.opendocument.spreadsheet">
+            <div class="sample-row">
+              <label for="sample-select">Beispielgraph</label>
+              <div class="inline-row">
+                <select id="sample-select"></select>
+                <button type="button" id="btn-sample" class="btn">Beispiel laden</button>
+              </div>
+            </div>
+            <div id="import-status" class="status" role="status" aria-live="polite" hidden></div>
+            <details class="format-help">
+              <summary>Dateiformat</summary>
+              <p><strong>Kantenliste:</strong> je Zeile <code>von;nach;Gewicht</code>, z. B. <code>A;B;4</code>. Das Gewicht ist freiwillig (Standard 1). Eine Zeile mit nur einem Namen legt einen Knoten ohne Kante an. Eine Kopfzeile wie <code>von;nach;gewicht</code> ist erlaubt. Eine Zeile mit nur <code>gerichtet</code> oder <code>ungerichtet</code> legt die Art des Graphen fest; fehlt sie, gilt die Einstellung auf dieser Seite.</p>
+              <p><strong>Adjazenzmatrix:</strong> erste Zeile mit leerer Ecke (oder <code>gerichtet</code>/<code>ungerichtet</code>) und den Knotennamen, darunter je Knoten eine Zeile mit Namen und Gewichten. Leere Zelle, <code>-</code> oder <code>x</code> bedeuten „keine Kante“; <code>0</code> ist eine Kante mit Gewicht 0. Ausnahme: Besteht die Matrix nur aus 0 und 1 (ungewichtete Adjazenzmatrix), bedeutet 0 „keine Kante“, ebenso 0 auf der Hauptdiagonalen. Ohne Angabe gilt eine symmetrische Matrix als ungerichtet, sonst als gerichtet.</p>
+              <p>Knotennamen: höchstens 12 Zeichen (Buchstaben, Ziffern, <code>_</code>, <code>-</code>). Gewichte: ganze Zahlen von −999 bis 999. Höchstens 26 Knoten und 150 Kanten. CSV-Trennzeichen: Semikolon, Komma oder Tabulator.</p>
+            </details>
+          </div>
+
+          <fieldset class="card direction-card">
+            <legend>Art des Graphen</legend>
+            <label class="radio"><input type="radio" name="direction" id="dir-undirected" value="0" checked> ungerichtet (Kante A–B gilt in beide Richtungen)</label>
+            <label class="radio"><input type="radio" name="direction" id="dir-directed" value="1"> gerichtet (Kante A→B nur von A nach B)</label>
+            <p id="direction-error" class="error" role="alert"></p>
+            <p id="direction-info" class="hint" role="status" aria-live="polite"></p>
+          </fieldset>
+
+          <form id="node-form" class="card" novalidate autocomplete="off">
+            <h3>Knoten hinzufügen</h3>
+            <div class="field-row">
+              <div class="field field-wide">
+                <label for="node-name">Name</label>
+                <input type="text" id="node-name" maxlength="12" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Hinzufügen</button>
+            <p id="node-form-error" class="error" role="alert"></p>
+            <p id="node-form-info" class="hint" role="status" aria-live="polite"></p>
+          </form>
+
+          <form id="edge-form" class="card" novalidate autocomplete="off">
+            <h3>Kante hinzufügen oder ändern</h3>
+            <div class="field-row">
+              <div class="field">
+                <label for="edge-from">von</label>
+                <select id="edge-from"></select>
+              </div>
+              <div class="field">
+                <label for="edge-to">nach</label>
+                <select id="edge-to"></select>
+              </div>
+              <div class="field">
+                <label for="edge-weight">Gewicht</label>
+                <input type="text" id="edge-weight" inputmode="numeric" maxlength="5" placeholder="1">
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Übernehmen</button>
+            <p class="hint">Ohne Gewicht gilt 1. Gibt es die Kante schon, wird ihr Gewicht geändert.</p>
+            <p id="edge-form-error" class="error" role="alert"></p>
+            <p id="edge-form-info" class="hint" role="status" aria-live="polite"></p>
+          </form>
+
+          <div class="card button-row">
+            <button type="button" id="btn-relayout" class="btn">Knoten neu anordnen</button>
+            <button type="button" id="btn-clear" class="btn btn-danger">Graph löschen</button>
+          </div>
+        </div>
+        <div class="visual">
+          <div id="graph-input" class="graph-box"></div>
+          <p class="hint">Knoten lassen sich mit Maus, Stift oder Finger verschieben.</p>
+          <div class="card">
+            <h3>Knoten <span id="node-count" class="count"></span></h3>
+            <ul id="node-list" class="chip-list"></ul>
+            <h3 class="mt">Kanten <span id="edge-count" class="count"></span></h3>
+            <div class="table-scroll">
+              <table class="data-table" id="edge-table">
+                <thead><tr><th scope="col">von</th><th scope="col">nach</th><th scope="col" class="num">Gewicht</th><th scope="col"><span class="visually-hidden">Aktion</span></th></tr></thead>
+                <tbody id="edge-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 2: Darstellungen
+         =================================================================== -->
+    <section id="page-representation" class="page" role="tabpanel" aria-labelledby="tab-representation" hidden>
+      <h2>Darstellungen</h2>
+      <p class="intro">Derselbe Graph auf drei Arten: als Zeichnung, als Adjazenzmatrix und als Adjazenzlisten. Zeigen Sie auf eine Kante oder eine Zelle der Matrix – die zugehörige Stelle in der anderen Darstellung wird hervorgehoben.</p>
+      <div class="repr-layout">
+        <div class="visual">
+          <div id="graph-repr" class="graph-box"></div>
+        </div>
+        <div class="card matrix-card">
+          <h3>Adjazenzmatrix</h3>
+          <p id="matrix-hint" class="hint"></p>
+          <div id="matrix" class="table-scroll"></div>
+        </div>
+      </div>
+      <details class="card" id="lists-details">
+        <summary>Adjazenzlisten</summary>
+        <p id="lists-hint" class="hint"></p>
+        <ul id="adj-lists" class="adj-lists"></ul>
+      </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 3: Breitensuche
+         =================================================================== -->
+    <section id="page-bfs" class="page" role="tabpanel" aria-labelledby="tab-bfs" hidden>
+      <h2>Breitensuche</h2>
+      <p class="intro">Die Breitensuche (BFS) besucht vom Startknoten aus zuerst alle direkten Nachbarn, dann deren Nachbarn usw. Entdeckte Knoten warten in einer Warteschlange (wer zuerst kommt, wird zuerst besucht). Gewichte spielen keine Rolle; der Abstand zählt die Kanten. Nachbarn werden alphabetisch abgearbeitet.</p>
+      <div class="algo-layout">
+        <div class="algo-controls">
+          <div class="card" id="bfs-settings"></div>
+          <div class="card" id="bfs-player"></div>
+        </div>
+        <div class="algo-info">
+          <div class="card step-text" id="bfs-step" role="status" aria-live="polite"></div>
+          <div class="card" id="bfs-data"></div>
+        </div>
+        <div class="visual">
+          <div id="graph-bfs" class="graph-box"></div>
+          <div id="bfs-legend"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 4: Tiefensuche
+         =================================================================== -->
+    <section id="page-dfs" class="page" role="tabpanel" aria-labelledby="tab-dfs" hidden>
+      <h2>Tiefensuche</h2>
+      <p class="intro">Die Tiefensuche (DFS) geht vom Startknoten aus so weit wie möglich in die Tiefe: Sie ruft sich für den ersten noch nicht besuchten Nachbarn selbst auf (Rekursion). Gibt es keinen solchen Nachbarn mehr, kehrt sie zum aufrufenden Knoten zurück. Der Aufrufstapel zeigt, welche Aufrufe noch laufen. Gewichte spielen keine Rolle; Nachbarn werden alphabetisch abgearbeitet.</p>
+      <div class="algo-layout">
+        <div class="algo-controls">
+          <div class="card" id="dfs-settings"></div>
+          <div class="card" id="dfs-player"></div>
+        </div>
+        <div class="algo-info">
+          <div class="card step-text" id="dfs-step" role="status" aria-live="polite"></div>
+          <div class="card" id="dfs-data"></div>
+        </div>
+        <div class="visual">
+          <div id="graph-dfs" class="graph-box"></div>
+          <div id="dfs-legend"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 5: Dijkstra
+         =================================================================== -->
+    <section id="page-dijkstra" class="page" role="tabpanel" aria-labelledby="tab-dijkstra" hidden>
+      <h2>Dijkstra</h2>
+      <p class="intro">Der Dijkstra-Algorithmus berechnet die kürzesten Wege vom Startknoten zu allen anderen Knoten. Er nimmt immer den Knoten mit der kleinsten Distanz aus der Warteschlange; dieser ist dann fertig. Danach prüft er dessen Kanten: Wird ein Knoten so erstmals erreicht oder auf kürzerem Weg, erhält er eine neue Distanz und einen neuen Vorgänger. Jeder Knoten steht als Tripel (Knoten, Vorgänger, Distanz zum Startknoten) in der Tabelle.</p>
+      <div id="dijkstra-negative" class="notice" hidden></div>
+      <div class="algo-layout algo-layout-dijkstra">
+        <div class="algo-controls">
+          <div class="card" id="dijkstra-settings"></div>
+          <div class="card" id="dijkstra-player"></div>
+        </div>
+        <div class="algo-info">
+          <div class="card step-text" id="dijkstra-step" role="status" aria-live="polite"></div>
+          <div class="card" id="dijkstra-data"></div>
+        </div>
+        <div class="visual">
+          <div id="graph-dijkstra" class="graph-box"></div>
+          <div id="dijkstra-legend"></div>
+        </div>
+        <div class="card algo-table" id="dijkstra-table-card">
+          <h3>Berechnungstabelle</h3>
+          <div id="dijkstra-table" class="table-scroll"></div>
+        </div>
+      </div>
+      <details class="card" id="dijkstra-bf" hidden>
+        <summary>Vergleich mit Bellman-Ford</summary>
+        <div id="dijkstra-bf-body"></div>
+      </details>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p id="progress" role="status"></p>
+  </footer>
+</body>
+</html>

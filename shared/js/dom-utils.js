@@ -7,7 +7,7 @@
  *   Funktionen. Dadurch gibt es genau eine Stelle, an der festgelegt ist, wie
  *   Elemente, Attribute und Texte in die Seite gelangen.
  *
- * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/dom-utils.js).
+ * Gemeinsamer Code der Lernpakete (Quelle: shared/js/dom-utils.js).
  *
  * Abhängigkeiten:
  *   Keine (nur Standard-DOM-API des Browsers).

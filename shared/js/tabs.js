@@ -2,7 +2,7 @@
  * @file tabs.js
  * @description Seitennavigation über Registerkarten (Tabs) und „Zurück/Weiter“-Schaltflächen.
  *
- * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/tabs.js).
+ * Gemeinsamer Code der Lernpakete (Quelle: shared/js/tabs.js).
  *
  * Aufbau im HTML (je Seite):
  *   - Tab-Schaltfläche   <button role="tab" id="tab-<id>" aria-controls="page-<id>">

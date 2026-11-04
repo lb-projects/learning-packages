@@ -13,7 +13,7 @@
  * Ablauf nach SCORM 1.2:
  *   LMSInitialize("") → LMSGetValue/LMSSetValue … → LMSCommit("") → LMSFinish("")
  *
- * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/scorm-api.js).
+ * Gemeinsamer Code der Lernpakete (Quelle: shared/js/scorm-api.js).
  *
  * Abhängigkeiten:
  *   Keine.

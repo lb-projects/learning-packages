@@ -1,5 +1,5 @@
 /*
- * base.css – gemeinsame Grundgestaltung beider Lernpakete
+ * base.css – gemeinsame Grundgestaltung der Lernpakete
  *
  * Gemeinsamer Code (Quelle: shared/css/base.css). Wird vor css/style.css geladen;
  * paketeigene Regeln und Farben stehen in style.css.
@@ -91,6 +91,12 @@ main {
   padding: 1rem;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+/* Seiten mit class="page page-wide" dürfen auf großen Bildschirmen breiter werden
+   (nur, solange die Seite sichtbar ist; ohne :has() bleibt es bei 1400 px). */
+main:has(> .page-wide:not([hidden])) {
+  max-width: 2400px;
 }
 
 .page[hidden] {

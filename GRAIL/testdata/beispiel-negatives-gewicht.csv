@@ -1,0 +1,8 @@
+gerichtet
+von;nach;gewicht
+A;B;1
+A;C;3
+B;D;2
+C;B;-3
+C;E;6
+D;E;1

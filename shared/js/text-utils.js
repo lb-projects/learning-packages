@@ -10,7 +10,7 @@
  *   verfälschen, z. B. U+202E "Right-to-Left Override" (Trojan-Source-Prinzip).
  *   Diese Zeichen werden hier entfernt bzw. sichtbar ersetzt.
  *
- * Gemeinsamer Code beider Lernpakete (Quelle: shared/js/text-utils.js).
+ * Gemeinsamer Code der Lernpakete (Quelle: shared/js/text-utils.js).
  *
  * Abhängigkeiten:
  *   Keine.
