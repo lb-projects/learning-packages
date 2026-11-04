@@ -15,7 +15,7 @@ keine externen Bibliotheken.
 | 5 Leave One Out – Verfahren | Wie Seite 4, aber jeder Punkt wird einmal weggelassen |
 | 6 Leave One Out – automatisiert | Genauigkeit für alle k = 1 … n−1 als Balkendiagramm und Tabelle, beste k hervorgehoben, Detailmatrix |
 | 7 Test und Konfusionsmatrix | Testdaten per Datei oder Eingabemaske erfassen und einzeln entfernen; jeder Testpunkt wird anhand aller Trainingsdaten klassifiziert (k und Metrik wählbar). Die Konfusionsmatrix (Zeilen = tatsächliches, Spalten = vorhergesagtes Label) passt ihre Größe an die Labels der Trainingsdaten an; dazu Genauigkeit und Ergebnis je Testpunkt |
-| 8 Normalisierung | Die aktuellen Trainingsdaten links ohne, rechts mit Normalisierung (Min-Max auf 0 bis 1 oder Z-Standardisierung, umschaltbar), jeweils mit einem neuen Punkt und seinen k nächsten Nachbarn. Aufklappbar: allgemeine Erklärung, Rechnung mit den aktuellen Kennwerten, Nachbarn des neuen Punkts im Vergleich, Genauigkeit je k (Leave One Out) ohne und mit Normalisierung, Punkte, deren Ergebnis sich ändert (in beiden Diagrammen markiert) |
+| 8 Normalisierung | Die aktuellen Trainingsdaten links ohne, rechts mit Normalisierung (Min-Max auf 0 bis 1 oder Z-Standardisierung, umschaltbar), jeweils mit einem neuen Punkt und seinen k nächsten Nachbarn. Aufklappbar: allgemeine Erklärung, Rechnung mit den aktuellen Kennwerten, Nachbarn des neuen Punkts im Vergleich, Genauigkeit je k (Leave One Out) ohne und mit Normalisierung, Punkte, deren Ergebnis sich ändert (per Schalter in beiden Diagrammen markierbar) |
 | 9 Regression | Für einen neuen x-Wert wird der y-Wert aus den k Trainingspunkten mit dem nächsten x-Wert prognostiziert (Mittelwert oder gewichteter Mittelwert, umschaltbar); Streifen = Abstand zum k-ten Nachbarn, Nachbarn und prognostizierter Punkt hervorgehoben, Rechenweg und Nachbartabelle; Regressionskurve zuschaltbar. Die Punkte erscheinen einheitlich, das Label spielt keine Rolle |
 
 Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsdaten wirken sofort auf alle Seiten:
@@ -59,6 +59,7 @@ Zwischen den Seiten kann jederzeit gewechselt werden. Änderungen der Trainingsd
   - Haben alle Trainingspunkte auf einer Achse denselben Wert, wird durch 1 geteilt; die umgerechneten Werte sind dann 0 (mit Hinweis).
   - Das linke Diagramm ist wie überall gleich skaliert – bei Merkmalen mit sehr unterschiedlichen Größenordnungen wirken die Daten dort zusammengedrückt; genau das zeigt die Verzerrung der Abstände. Das rechte Diagramm ist ebenfalls gleich skaliert.
   - Leave-One-Out-Vergleich für k = 1 … min(20, n − 1); die Liste der unterschiedlich klassifizierten Punkte verwendet das eingestellte k.
+  - Der Schalter „Anders klassifizierte Punkte hervorheben“ (unter k) markiert diese Punkte in beiden Diagrammen, unabhängig davon, ob der Abschnitt aufgeklappt ist. Er ist anfangs aus und bleibt beim Laden neuer Daten eingestellt.
   - Alle Abschnitte sind anfangs zugeklappt. Werden neue Trainingsdaten geladen (Datei oder Beispieldaten), wird die Seite zurückgesetzt: neuer Punkt und gewählter Beispielpunkt entfallen, alle Abschnitte werden zugeklappt. Verfahren, Metrik und k bleiben eingestellt.
 - **Seite 9 (Regression):**
   - Merkmal ist x, vorhergesagt wird y. Der Abstand ist |Δx|; eine Metrik-Auswahl gibt es deshalb nicht. Nachbarn sind alle Trainingspunkte.

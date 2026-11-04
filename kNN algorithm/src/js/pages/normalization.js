@@ -277,12 +277,14 @@
     let diffIds = new Set();
     let rawLoo = null;
     let scaledLoo = null;
-    if (ui.diffSection.open) {
+    const highlight = ui.highlight.checked;
+    if (ui.diffSection.open || highlight) {
       rawLoo = looLabels(points, k, metric);
       scaledLoo = looLabels(scaled, k, metric);
       diffIds = new Set(points.filter((p) => rawLoo.get(p.id) !== scaledLoo.get(p.id)).map((p) => p.id));
     }
-    const marked = { markedIds: diffIds, markedLegend: 'gestrichelter Ring = Ergebnis (Leave One Out, k = ' + k + ') ändert sich durch die Normalisierung' };
+    // Markiert wird nur, wenn der Schalter "Anders klassifizierte Punkte hervorheben" an ist.
+    const marked = { markedIds: highlight ? diffIds : new Set(), markedLegend: 'gestrichelter Ring = Ergebnis (Leave One Out, k = ' + k + ') ändert sich durch die Normalisierung' };
     const selected = state.exampleId !== null && ds.getPoint(state.exampleId) ? state.exampleId : null;
 
     let rawResult = null;
@@ -370,7 +372,7 @@
     if (ui.diffSection.open) {
       ui.diff.appendChild(dom.el('p', null, 'Jeder Trainingspunkt wird anhand der übrigen Punkte mit k = ' + k +
         ' klassifiziert (Leave One Out) – einmal ohne, einmal mit Normalisierung. Aufgeführt sind die Punkte, bei denen sich das Ergebnis unterscheidet; ' +
-        'sie sind in beiden Diagrammen mit einem gestrichelten Ring markiert.'));
+        'mit dem Schalter „Anders klassifizierte Punkte hervorheben“ (Einstellungen) werden sie in beiden Diagrammen mit einem gestrichelten Ring markiert.'));
       const list = points.filter((p) => diffIds.has(p.id));
       if (list.length === 0) {
         ui.diff.appendChild(dom.el('p', { class: 'result-main' }, 'Bei diesen Daten ändert die Normalisierung kein Ergebnis.'));
@@ -411,8 +413,10 @@
       loo: dom.byId('norm-loo-body'),
       diff: dom.byId('norm-diff-body'),
       looSection: dom.byId('norm-loo'),
-      diffSection: dom.byId('norm-diff')
+      diffSection: dom.byId('norm-diff'),
+      highlight: dom.byId('n-highlight')
     };
+    ui.highlight.addEventListener('change', render);
     const pickPoint = (point) => {
       state.exampleId = point.id;
       render();
