@@ -28,6 +28,11 @@
  *     Eine Zeile, die nur "gerichtet" oder "ungerichtet" enthält, legt die Richtung fest;
  *     sonst gilt die Einstellung auf der Seite.
  *     Ungerichtet: A;B;3 und B;A;3 beschreiben dieselbe Kante (wird zusammengefasst).
+ *     Optional folgt nach den Kanten ein Positionsblock: Kopfzeile "knoten;x;y", darunter je
+ *     Knoten Name; x; y (z. B. Pixel aus einer Abbildung, y nach unten). Die Positionen werden
+ *     auf die Zeichenfläche skaliert (Seitenverhältnis bleibt, mittig). Fehlt für einen Knoten
+ *     die Position, werden alle Knoten automatisch angeordnet (mit Hinweis). Unter einer
+ *     Adjazenzmatrix ist der Block nicht vorgesehen (Hinweis, automatische Anordnung).
  *   Ungültige Zeilen werden mit Zeilennummer gemeldet und übersprungen.
  *
  * Abhängigkeiten:
@@ -54,6 +59,12 @@
   const NO_EDGE = new Set(['', '-', '–', 'x', '∞']);
   /** Angaben zur Richtung. */
   const DIRECTION_WORDS = new Map([['gerichtet', true], ['ungerichtet', false]]);
+  /** Erste Zelle der Kopfzeile des Positionsblocks. */
+  const POSITION_HEADER = new Set(['knoten', 'node']);
+  /** Größter Betrag einer Koordinate im Positionsblock. */
+  const MAX_COORDINATE = 100000;
+  /** Freiraum am Rand der Zeichenfläche beim Skalieren (Platz für Beschriftungen über und unter den Knoten). */
+  const POSITION_PAD = Object.freeze({ x: 60, top: 70, bottom: 70 });
 
   /**
    * Ermittelt die Dateiendung in Kleinbuchstaben.
@@ -144,7 +155,7 @@
    * @returns {Object} Ergebnis.
    */
   function emptyResult() {
-    return { format: 'edges', directed: false, directionSource: 'setting', nodes: [], edges: [], errors: [], skipped: 0, merged: 0, truncated: false };
+    return { format: 'edges', directed: false, directionSource: 'setting', nodes: [], edges: [], errors: [], skipped: 0, merged: 0, truncated: false, positions: 'auto', positionNote: '' };
   }
 
   /**
@@ -401,21 +412,127 @@
   }
 
   /**
+   * Erkennt die Kopfzeile des Positionsblocks ("knoten;x;y").
+   * @param {Array} cells - Zellen (gekürzt).
+   * @returns {boolean} true bei Kopfzeile.
+   */
+  function isPositionHeader(cells) {
+    const t = cells.map((c) => cellText(c).toLocaleLowerCase('de'));
+    return cells.length === 3 && POSITION_HEADER.has(t[0]) && t[1] === 'x' && t[2] === 'y';
+  }
+
+  /**
+   * Koordinate einer Zelle (Zahlzellen aus XLSX/ODS direkt, sonst Text mit Punkt oder Komma).
+   * @param {{type:string, value:(number|string)}|undefined} cell - Zelle.
+   * @returns {number|null} Zahl oder null.
+   */
+  function coordinateOf(cell) {
+    let value = null;
+    if (cell && cell.type === 'number') {
+      value = cell.value;
+    } else {
+      const text = cellText(cell).replace('−', '-');
+      if (/^-?\d{1,6}([.,]\d{1,4})?$/.test(text)) {
+        value = Number(text.replace(',', '.'));
+      }
+    }
+    return Number.isFinite(value) && Math.abs(value) <= MAX_COORDINATE ? value : null;
+  }
+
+  /**
+   * Skaliert Positionen auf die Zeichenfläche (Seitenverhältnis bleibt erhalten, mittig).
+   * @param {Array<{x:number, y:number}>} points - Positionen (y nach unten).
+   * @returns {Array<{x:number, y:number}>} Positionen auf der Zeichenfläche.
+   */
+  function fitPositions(points) {
+    const area = ns.graph.AREA;
+    const minX = Math.min(...points.map((p) => p.x));
+    const maxX = Math.max(...points.map((p) => p.x));
+    const minY = Math.min(...points.map((p) => p.y));
+    const maxY = Math.max(...points.map((p) => p.y));
+    const boxW = area.width - 2 * POSITION_PAD.x;
+    const boxH = area.height - POSITION_PAD.top - POSITION_PAD.bottom;
+    const w = maxX - minX;
+    const h = maxY - minY;
+    const scale = Math.min(w > 0 ? boxW / w : Infinity, h > 0 ? boxH / h : Infinity);
+    const k = Number.isFinite(scale) ? scale : 0;
+    const offX = POSITION_PAD.x + (boxW - w * k) / 2;
+    const offY = POSITION_PAD.top + (boxH - h * k) / 2;
+    return points.map((p) => ({ x: Math.round(offX + (p.x - minX) * k), y: Math.round(offY + (p.y - minY) * k) }));
+  }
+
+  /**
+   * Übernimmt den Positionsblock in ein Ergebnis der Kantenliste.
+   * @param {Object} result - Ergebnis von readEdgeList.
+   * @param {Array<{row:number, cells:Array}>} rows - Zeilen des Blocks (ohne Kopfzeile).
+   */
+  function applyPositions(result, rows) {
+    const g = ns.graph;
+    const index = new Map(result.nodes.map((n, i) => [g.keyOf(n.name), i]));
+    const found = new Map();
+    for (const { row, cells: raw } of rows) {
+      const cells = trimCells(raw);
+      const v = g.validateName(cellText(cells[0]));
+      if (!v.ok) {
+        reject(result, row, v.error);
+        continue;
+      }
+      const key = g.keyOf(v.value);
+      if (!index.has(key)) {
+        reject(result, row, 'Der Knoten ' + v.value + ' kommt in der Kantenliste nicht vor.');
+        continue;
+      }
+      if (found.has(key)) {
+        reject(result, row, 'Die Position von ' + result.nodes[index.get(key)].name + ' ist doppelt angegeben.');
+        continue;
+      }
+      const x = coordinateOf(cells[1]);
+      const y = coordinateOf(cells[2]);
+      if (x === null || y === null || cells.length > 3) {
+        reject(result, row, 'Eine Position besteht aus Knoten; x; y (zwei Zahlen).');
+        continue;
+      }
+      found.set(key, { x, y });
+    }
+    const missing = result.nodes.filter((n) => !found.has(g.keyOf(n.name)));
+    if (missing.length > 0) {
+      result.positionNote = missing.length === result.nodes.length
+        ? 'Die Positionsliste enthält keine gültige Position – die Knoten werden automatisch angeordnet.'
+        : 'Für ' + ns.dom.joinNames(missing.slice(0, 5).map((n) => n.name)) + (missing.length > 5 ? ' und weitere' : '') +
+          ' fehlt die Position – alle Knoten werden automatisch angeordnet.';
+      return;
+    }
+    const fitted = fitPositions(result.nodes.map((n) => found.get(g.keyOf(n.name))));
+    result.nodes = result.nodes.map((n, i) => ({ name: n.name, x: fitted[i].x, y: fitted[i].y }));
+    result.positions = 'file';
+  }
+
+  /**
    * Wandelt geparste Zeilen in einen Graphen um.
    *
    * @param {Array<{row:number, cells:Array<{type:string, value:(number|string)}>}>} rows - Zeilen.
    * @param {boolean} defaultDirected - Richtung, falls die Datei keine angibt (Kantenliste).
-   * @returns {{format:string, directed:boolean, directionSource:string, nodes:Array<{name:string}>,
+   * @returns {{format:string, directed:boolean, directionSource:string, nodes:Array<{name:string, x?:number, y?:number}>,
    *            edges:Array<{from:string, to:string, weight:number}>, errors:string[], skipped:number,
-   *            merged:number, truncated:boolean}} Ergebnis.
+   *            merged:number, truncated:boolean, positions:('auto'|'file'), positionNote:string}} Ergebnis
+   *   (positions = 'file': Positionen aus dem Positionsblock; positionNote: Hinweis, warum er nicht gilt).
    * @throws {Error} Bei Fehlern, die die ganze Datei unbrauchbar machen (z. B. Matrix mit doppeltem Namen).
    */
   function rowsToGraph(rows, defaultDirected) {
     let fileDirection = null;
     const data = [];
+    let positionRows = null;
     for (const r of rows) {
       const cells = trimCells(r.cells);
       if (cells.length === 0) {
+        continue;
+      }
+      if (positionRows !== null) {
+        positionRows.push(r);
+        continue;
+      }
+      if (isPositionHeader(cells)) {
+        positionRows = [];
         continue;
       }
       const d = directionOf(cells);
@@ -428,10 +545,17 @@
       data.push(r);
     }
     if (looksLikeMatrix(data)) {
-      return readMatrix(data, fileDirection);
+      const matrix = readMatrix(data, fileDirection);
+      if (positionRows !== null) {
+        matrix.positionNote = 'Positionen werden nur bei einer Kantenliste übernommen – die Knoten werden automatisch angeordnet.';
+      }
+      return matrix;
     }
     const result = readEdgeList(data, fileDirection === null ? Boolean(defaultDirected) : fileDirection);
     result.directionSource = fileDirection === null ? 'setting' : 'file';
+    if (positionRows !== null) {
+      applyPositions(result, positionRows);
+    }
     return result;
   }
 
@@ -456,8 +580,8 @@
       throw new Error('Die Datei ist leer.');
     }
     const bytes = await readFileBytes(file);
-    // Kanten + Kopf- und Richtungszeile + Reserve für ungültige Zeilen.
-    const maxRows = ns.graph.LIMITS.maxEdges * 2 + 2;
+    // Kanten + Kopf- und Richtungszeile + Positionsblock + Reserve für ungültige Zeilen.
+    const maxRows = ns.graph.LIMITS.maxEdges * 2 + ns.graph.LIMITS.maxNodes + 3;
 
     let parsed;
     if (extension === 'csv') {
@@ -484,8 +608,8 @@
    * @returns {Object} Ergebnis von rowsToGraph.
    */
   function importText(text, defaultDirected) {
-    return rowsToGraph(ns.csv.parseCsv(text, ns.graph.LIMITS.maxEdges * 2 + 2, COLUMNS).rows, defaultDirected);
+    return rowsToGraph(ns.csv.parseCsv(text, ns.graph.LIMITS.maxEdges * 2 + ns.graph.LIMITS.maxNodes + 3, COLUMNS).rows, defaultDirected);
   }
 
-  ns.graphImport = { importFile, importText, rowsToGraph, extensionOf, MAX_FILE_BYTES };
+  ns.graphImport = { importFile, importText, rowsToGraph, fitPositions, extensionOf, MAX_FILE_BYTES };
 })(window.HG = window.HG || {});

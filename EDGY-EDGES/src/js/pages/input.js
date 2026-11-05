@@ -81,10 +81,14 @@
     if (result.truncated) {
       details.push('Die Höchstzahl von ' + g.LIMITS.maxEdges + ' Kanten wurde erreicht; weitere Zeilen wurden nicht gelesen.');
     }
+    if (result.positionNote) {
+      details.push(result.positionNote);
+    }
     const text = source + ' geladen: ' + (result.format === 'matrix' ? 'Adjazenzmatrix' : 'Kantenliste') + ', ' + directionText(result) + ', ' +
       dom.plural(g.nodeCount(), 'Knoten', 'Knoten') + ', ' + dom.plural(g.edgeCount(), 'Kante', 'Kanten') + '.' +
+      (result.positions === 'file' ? ' Die Knoten stehen an den Positionen aus der Datei.' : '') +
       (result.skipped > 0 ? ' ' + dom.plural(result.skipped, 'Eintrag wurde', 'Einträge wurden') + ' übersprungen:' : '');
-    showImportStatus(result.skipped > 0 ? 'info' : 'success', text, details);
+    showImportStatus(result.skipped > 0 || result.positionNote ? 'info' : 'success', text, details);
   }
 
   /** Zähler der Importe: Nur das Ergebnis des zuletzt gestarteten Imports wird übernommen. */

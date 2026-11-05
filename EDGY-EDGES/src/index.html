@@ -5,8 +5,8 @@
   SCORM-1.2-Lernpaket zu Graphalgorithmen. Einstiegsseite (im Manifest als SCO eingetragen).
 
   Aufbau:
-    - Kopfbereich mit Registerkarten (Tabs) für die fünf Seiten
-    - fünf <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Kopfbereich mit Registerkarten (Tabs) für die sechs Seiten
+    - sechs <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
     - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
 
   Sicherheit:
@@ -56,6 +56,8 @@
   <script src="js/pages/bfs.js" defer></script>
   <script src="js/pages/dfs.js" defer></script>
   <script src="js/pages/dijkstra.js" defer></script>
+  <script src="js/training.js" defer></script>
+  <script src="js/pages/training.js" defer></script>
   <script src="js/progress.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
@@ -68,6 +70,7 @@
       <button type="button" role="tab" id="tab-bfs" aria-controls="page-bfs" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> Breitensuche</button>
       <button type="button" role="tab" id="tab-dfs" aria-controls="page-dfs" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Tiefensuche</button>
       <button type="button" role="tab" id="tab-dijkstra" aria-controls="page-dijkstra" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Dijkstra</button>
+      <button type="button" role="tab" id="tab-training" aria-controls="page-training" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Training</button>
     </nav>
   </header>
 
@@ -266,6 +269,35 @@
         <summary>Vergleich mit Bellman-Ford</summary>
         <div id="dijkstra-bf-body"></div>
       </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 6: Training
+         =================================================================== -->
+    <section id="page-training" class="page" role="tabpanel" aria-labelledby="tab-training" hidden>
+      <h2>Training</h2>
+      <p class="intro">Hier führen Sie einen Algorithmus selbst aus. Breiten- und Tiefensuche: Klicken Sie die Knoten in der richtigen Reihenfolge an – der erste Klick besucht einen Knoten, der zweite schließt ihn ab. Dijkstra: Füllen Sie die Berechnungstabelle Zeile für Zeile aus und lassen Sie jede Zeile prüfen. Gezählt werden die richtigen Schritte und die Fehlentscheidungen; der Stand wird gespeichert.</p>
+      <div id="training-negative" class="notice" hidden></div>
+      <div class="algo-layout">
+        <div class="algo-controls">
+          <div class="card" id="training-settings"></div>
+        </div>
+        <div class="algo-info">
+          <div class="card">
+            <div id="training-status"></div>
+            <p id="training-feedback" class="feedback" role="status" aria-live="polite"></p>
+          </div>
+          <div class="card" id="training-data"></div>
+        </div>
+        <div class="visual">
+          <div id="graph-training" class="graph-box"></div>
+          <div id="training-legend"></div>
+        </div>
+        <div class="card algo-table" id="training-table-card" hidden>
+          <h3>Berechnungstabelle</h3>
+          <div id="training-table" class="table-scroll"></div>
+        </div>
+      </div>
     </section>
   </main>
 

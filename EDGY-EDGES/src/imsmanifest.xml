@@ -50,6 +50,8 @@
       <file href="js/pages/bfs.js"/>
       <file href="js/pages/dfs.js"/>
       <file href="js/pages/dijkstra.js"/>
+      <file href="js/training.js"/>
+      <file href="js/pages/training.js"/>
       <file href="js/progress.js"/>
       <file href="js/app.js"/>
     </resource>

@@ -4,7 +4,7 @@
  *              Graphänderungen an alle Seiten, Speicherung und SCORM-Abschluss.
  *
  * Navigation:
- *   Die fünf Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit frei anwählbar.
+ *   Die sechs Seiten sind als Registerkarten (Tabs) umgesetzt und jederzeit frei anwählbar.
  *   Beim Wechsel bleibt der Zustand jeder Seite erhalten; eine laufende Automatik
  *   (Seiten 3 bis 5) wird angehalten. Die Navigation steht im gemeinsamen Modul tabs.js.
  *
@@ -16,8 +16,8 @@
  *   - Das Lernpaket gilt mit dem Öffnen als abgeschlossen: Beim Start wird
  *     cmi.core.lesson_status = "completed" gemeldet (ein bereits gemeldeter Abschluss
  *     bzw. "passed" bleibt unverändert).
- *   - Der Graph wird in cmi.suspend_data gespeichert und beim nächsten Öffnen
- *     wiederhergestellt (siehe progress.js). Beim Verlassen: cmi.core.exit = "suspend",
+ *   - Der Graph und der Stand des Trainings werden in cmi.suspend_data gespeichert und
+ *     beim nächsten Öffnen wiederhergestellt (siehe progress.js). Beim Verlassen: cmi.core.exit = "suspend",
  *     wenn ein Graph gespeichert ist.
  *   - Übertragen werden nur cmi.core.lesson_status, cmi.core.exit und cmi.suspend_data.
  *
@@ -36,7 +36,8 @@
     { id: 'representation', title: 'Darstellungen' },
     { id: 'bfs', title: 'Breitensuche' },
     { id: 'dfs', title: 'Tiefensuche' },
-    { id: 'dijkstra', title: 'Dijkstra' }
+    { id: 'dijkstra', title: 'Dijkstra' },
+    { id: 'training', title: 'Training' }
   ];
 
   /** Tab-Navigation (gemeinsames Modul tabs.js); wird in start() eingerichtet. */
@@ -45,8 +46,8 @@
   /** Zeigt in der Fußzeile, ob eine Verbindung zur Lernplattform besteht. */
   function renderProgress() {
     dom.byId('progress').textContent = scorm.isConnected()
-      ? 'Verbunden mit der Lernplattform – das Lernpaket ist als abgeschlossen gemeldet. Der Graph wird gespeichert.' + ns.progress.statusText()
-      : 'Offline-Modus (keine Lernplattform gefunden) – der Graph wird nicht gespeichert.';
+      ? 'Verbunden mit der Lernplattform – das Lernpaket ist als abgeschlossen gemeldet. Der Graph und der Stand des Trainings werden gespeichert.' + ns.progress.statusText()
+      : 'Offline-Modus (keine Lernplattform gefunden) – Graph und Training werden nicht gespeichert.';
   }
 
   /** Stellt die SCORM-Verbindung her und meldet den Abschluss (bereits beim Öffnen). */

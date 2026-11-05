@@ -14,7 +14,9 @@
  * Bedienung:
  *   - Knoten lassen sich mit Maus, Stift oder Finger verschieben (Pointer Events).
  *     Die neue Position wird beim Loslassen im Graphen gespeichert und erscheint in allen Ansichten.
- *   - Ein Klick ohne Verschieben ruft options.onNodeClick auf.
+ *   - Ein Klick ohne Verschieben ruft options.onNodeClick auf. Sind die Knoten anklickbar
+ *     (view.clickable), lassen sie sich auch mit der Tastatur erreichen (Tabulator) und mit
+ *     Eingabe- oder Leertaste auswählen; view.nodeLabel(node) liefert dann den Text für Screenreader.
  *   - Optional melden Kanten, über denen der Zeiger steht (options.onEdgeHover).
  *
  * Abhängigkeiten:
@@ -213,11 +215,21 @@
 
     /** Zeichnet alle Knoten. */
     function drawNodes(view, list) {
+      // Fokus eines anklickbaren Knotens über das Neuzeichnen hinweg erhalten (Tastaturbedienung).
+      const active = document.activeElement;
+      const focusedId = active && nodeLayer.contains(active) ? active.getAttribute('data-node') : null;
       dom.clear(nodeLayer);
       for (const node of list) {
         const p = positionOf(node);
         const rx = nodeRx(node.name);
-        const group = dom.svg('g', { class: nodeClass(view, node.id), transform: 'translate(' + p.x + ',' + p.y + ')', 'data-node': node.id });
+        const group = dom.svg('g', {
+          class: nodeClass(view, node.id),
+          transform: 'translate(' + p.x + ',' + p.y + ')',
+          'data-node': node.id,
+          tabindex: view.clickable ? '0' : null,
+          role: view.clickable ? 'button' : null,
+          'aria-label': view.clickable ? (view.nodeLabel ? view.nodeLabel(node) : 'Knoten ' + node.name) : null
+        });
         if (view.start === node.id) {
           group.appendChild(dom.svg('ellipse', { rx: rx + 6, ry: NODE_RY + 6, class: 'node-ring node-ring-start' }));
         }
@@ -235,14 +247,28 @@
           group.appendChild(dom.svg('text', { y: String(-NODE_RY - 10), class: 'node-tag' }, tag));
         }
         group.addEventListener('pointerdown', (event) => startDrag(event, node));
+        if (view.clickable && opts.onNodeClick) {
+          group.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              opts.onNodeClick(node.id);
+            }
+          });
+        }
         nodeLayer.appendChild(group);
+      }
+      if (focusedId !== null) {
+        const again = nodeLayer.querySelector('[data-node="' + focusedId + '"]');
+        if (again && again.hasAttribute('tabindex')) {
+          again.focus();
+        }
       }
     }
 
     /**
      * Zeichnet den Graphen.
      * @param {Object} [view] - Zustände: {status, edges, activeEdge, labels, tree:Set, cycleEdges:Set,
-     *                          marked:Set, start, target, clickable}. Ohne Angabe: einfache Zeichnung.
+     *                          marked:Set, start, target, clickable, nodeLabel}. Ohne Angabe: einfache Zeichnung.
      */
     function render(view) {
       lastView = view || {};

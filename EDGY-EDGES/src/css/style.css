@@ -804,3 +804,120 @@ code {
   width: 40px;
   height: 24px;
 }
+
+/* Anklickbare Knoten: sichtbarer Tastaturfokus. */
+.node-clickable:focus {
+  outline: none;
+}
+
+.node-clickable:focus-visible .node-shape {
+  stroke: var(--primary);
+  stroke-width: 5;
+  stroke-dasharray: none;
+}
+
+/* Seite 6: Training */
+.counters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 2rem;
+  margin: 0.4rem 0 0;
+}
+
+.counters div {
+  display: flex;
+  flex-direction: column;
+}
+
+.counters dt {
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+.counters dd {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: bold;
+  font-variant-numeric: tabular-nums;
+}
+
+.feedback {
+  margin: 0.8rem 0 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  border-left: 5px solid var(--border);
+  background: #eef2f7;
+}
+
+.feedback[hidden],
+.feedback:empty {
+  display: none;
+}
+
+.feedback-ok {
+  background: var(--ok-bg);
+  border-left-color: #1e7b34;
+}
+
+.feedback-wrong {
+  background: var(--wrong-bg);
+  border-left-color: var(--danger);
+  font-weight: 600;
+}
+
+.training-table {
+  width: 100%;
+}
+
+.training-table td {
+  min-width: 9rem;
+}
+
+.training-table .check-cell {
+  min-width: 0;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.triple-input {
+  width: 100%;
+  min-width: 12rem;
+  box-sizing: border-box;
+  font: inherit;
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  padding: 0.3rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.triple-input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.data-table tbody tr.row-open > * {
+  background: #f7f9fc;
+}
+
+.check-ok {
+  color: #1e7b34;
+  font-weight: 600;
+}
+
+.row-hints td {
+  background: var(--surface);
+}
+
+.hints-title {
+  margin: 0 0 0.3rem;
+  font-weight: 600;
+}
+
+.hint-list {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.hint-calc li {
+  color: var(--danger);
+}
