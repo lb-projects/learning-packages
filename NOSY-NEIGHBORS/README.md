@@ -103,7 +103,7 @@ NOSY-NEIGHBORS/
 │     ├─ chart.js            SVG-Diagramme (gleiche Skalierung, 1er-Gitter)
 │     ├─ pages/*.js          die neun Seiten (+ gemeinsame Bausteine)
 │     ├─ progress.js         Speichern/Wiederherstellen der Eintragungen (Seiten 4 und 5) in Moodle
-│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
+│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Status
 ├─ testdata/                 Dateien für den Unterricht (Klassifikation: szenario_*.csv, szenario_*_test.csv; Regression: regression_*.csv)
 ├─ preview/                  Vorschau
 └─ README.md                 diese Datei
@@ -121,7 +121,8 @@ Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsma
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. `nosy-neighbors.zip` hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ wird bereits beim Öffnen des Lernpakets gemeldet. Ein bereits gemeldeter Abschluss (auch „passed“) bleibt unverändert.
+3. **Abschluss: In den Einstellungen der Aktivität unter *Aktivitätsabschluss* „Teilnehmer/innen können die Aktivität manuell als abgeschlossen markieren“ einstellen.** Nur so lässt sich die Aktivität als abgeschlossen erkennen. Das Lernpaket meldet beim Öffnen nämlich den Status „incomplete“ und nie „completed“: Ein abgeschlossener Versuch würde Moodle beim erneuten Öffnen in den *Überprüfungsmodus* schalten. Abschlussbedingungen, die den SCORM-Status auswerten („Status erforderlich“, „Alle Lernobjekte abgeschlossen“), werden deshalb nie erfüllt.
+   - Ein Status „completed“ bzw. „passed“ aus einer früheren Version des Pakets bleibt unverändert; für diese Lernenden erscheint der Überprüfungsmodus weiterhin. Abhilfe: das Paket in einer neuen Aktivität einbinden.
 4. Damit die Eintragungen der Seiten 4 und 5 in der nächsten Stunde wieder da sind, muss Moodle denselben Versuch fortsetzen: Einstellung **„Neuen Versuch erzwingen“ = „Nein“** (Standard). Sonst beginnt jeder Aufruf mit leerer Tabelle.
 
 ### Speicherung des Bearbeitungsstands
@@ -168,7 +169,7 @@ So wird das Paket in Moodle eingebunden:
 - Kein CDN, keine Webfonts (Systemschriften), keine Bibliotheken von Drittanbietern.
 
 **Datenschutz**
-- An Moodle gehen nur `cmi.core.lesson_status` (`completed`), `cmi.core.exit` und in `cmi.suspend_data` der Bearbeitungsstand: Trainings- und Testdaten, Validierungsauswahl und Kreuze der Seiten 4 und 5 (siehe „Speicherung des Bearbeitungsstands“). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
+- An Moodle gehen nur `cmi.core.lesson_status` (`incomplete`), `cmi.core.exit` und in `cmi.suspend_data` der Bearbeitungsstand: Trainings- und Testdaten, Validierungsauswahl und Kreuze der Seiten 4 und 5 (siehe „Speicherung des Bearbeitungsstands“). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
 - Einstellungen der übrigen Seiten (z. B. k, Metrik, gewählter Punkt) und besuchte Seiten verlassen den Browser nicht.
 - Der gespeicherte Stand wird beim Öffnen streng geprüft; ungültige Inhalte werden ignoriert.
 - Der Name der Lernenden wird nicht gelesen.

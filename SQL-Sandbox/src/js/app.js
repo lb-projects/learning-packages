@@ -16,9 +16,10 @@
  *   die gerade sichtbare Seite neu; die anderen zeichnen sich beim nächsten Aufruf neu.
  *
  * SCORM-Abschluss (Datensparsamkeit):
- *   - Das Lernpaket gilt mit dem Öffnen als abgeschlossen: Beim Start wird
- *     cmi.core.lesson_status = "completed" gemeldet (ein bereits gemeldeter
- *     Abschluss bzw. "passed" bleibt unverändert).
+ *   - Das Lernpaket meldet beim Öffnen cmi.core.lesson_status = "incomplete" (nicht
+ *     "completed"), damit Moodle beim erneuten Öffnen nicht den Überprüfungsmodus zeigt.
+ *     Den Abschluss stellt die Lehrkraft in Moodle als manuellen Abschluss ein. Ein bereits
+ *     gemeldeter Abschluss (completed, passed, failed) bleibt unverändert.
  *   - Übertragen werden nur cmi.core.lesson_status und cmi.core.exit. Besuchte
  *     Seiten, Datenbanken und SQL-Eingaben verlassen den Browser nicht.
  *
@@ -30,6 +31,9 @@
 
   const dom = ns.dom;
   const scorm = ns.scorm;
+
+  /** Status, die ein Versuch aus einer früheren Version schon haben kann; sie bleiben unverändert. */
+  const FINAL_STATES = new Set(['completed', 'passed', 'failed']);
 
   /** Reihenfolge und Titel der Seiten. */
   const PAGES = [
@@ -47,7 +51,7 @@
   /** Zeigt in der Fußzeile, ob eine Verbindung zur Lernplattform besteht. */
   function renderProgress() {
     dom.byId('progress').textContent = scorm.isConnected()
-      ? 'Verbunden mit der Lernplattform – das Lernpaket ist als abgeschlossen gemeldet.'
+      ? 'Verbunden mit der Lernplattform.'
       : 'Offline-Modus (keine Lernplattform gefunden).';
   }
 
@@ -61,14 +65,16 @@
     tabs.showPage(id, options);
   }
 
-  /** Stellt die SCORM-Verbindung her und meldet den Abschluss (bereits beim Öffnen). */
+  /** Stellt die SCORM-Verbindung her und meldet den Status „incomplete“ (siehe oben). */
   function initScorm() {
     if (!scorm.init()) {
       return;
     }
+    // "incomplete" statt "completed": Ein abgeschlossener Versuch würde Moodle beim erneuten Öffnen
+    // in den Überprüfungsmodus schalten. Ohne eigene Meldung setzt Moodle beim Beenden "completed".
     const status = scorm.getValue('cmi.core.lesson_status');
-    if (status !== 'completed' && status !== 'passed') {
-      scorm.setValue('cmi.core.lesson_status', 'completed');
+    if (!FINAL_STATES.has(status) && status !== 'incomplete') {
+      scorm.setValue('cmi.core.lesson_status', 'incomplete');
     }
     scorm.commit();
   }
