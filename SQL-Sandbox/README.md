@@ -122,7 +122,14 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Die SQL Sandbox verhäl
 - Aliase aus der SELECT-Liste sind in `GROUP BY`, `HAVING` und `ORDER BY` erlaubt, in `WHERE` nicht (mit Hinweis).
 - `UPDATE`: Alle Ausdrücke in `SET` verwenden die Werte **vor** der Änderung (wie im SQL-Standard).
 - **Datentypen** werden geprüft: `INT` (mit Wertebereich je Typ, auch `UNSIGNED`), `DECIMAL(p,s)`, `FLOAT/DOUBLE`, `CHAR/VARCHAR(n)` (Länge), `TEXT`, `ENUM(…)`, `DATE`, `DATETIME/TIMESTAMP`, `TIME`, `YEAR`, `BOOLEAN` (als 0/1).
-- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT`, `AUTO_INCREMENT` und `CHECK` werden durchgesetzt. **Fremdschlüssel** werden gespeichert und auf Seite 2 und 5 angezeigt, aber **nicht erzwungen**. Ihr Name aus `CONSTRAINT name FOREIGN KEY …` bleibt erhalten; doppelte Namen in einer Tabelle sind nicht erlaubt.
+- `PRIMARY KEY` (auch zusammengesetzt), `UNIQUE`, `NOT NULL`, `DEFAULT`, `AUTO_INCREMENT`, `CHECK` und **Fremdschlüssel** werden durchgesetzt. Der Name eines Fremdschlüssels aus `CONSTRAINT name FOREIGN KEY …` bleibt erhalten; doppelte Namen in einer Tabelle sind nicht erlaubt.
+- **Fremdschlüssel** (referenzielle Integrität, wie MySQL/InnoDB; geprüft wird am Ende jedes Befehls):
+  - `INSERT` und `UPDATE`: Ein neuer oder geänderter Wert muss in der referenzierten Tabelle vorkommen. Enthält eine Spalte des Fremdschlüssels `NULL`, wird nicht geprüft. Weil erst am Befehlsende geprüft wird, darf ein `INSERT` mit mehreren Zeilen auch auf eine Zeile verweisen, die im selben Befehl eingefügt wird (z. B. bei einem Selbstbezug).
+  - `DELETE` und `UPDATE` des Schlüssels in der referenzierten Tabelle: Es gilt die Angabe `ON DELETE` bzw. `ON UPDATE`. Ohne Angabe sowie bei `RESTRICT` und `NO ACTION` wird der Befehl mit einer Fehlermeldung verhindert (sie nennt Tabelle, Wert und die Anzahl der verweisenden Datensätze). `CASCADE` löscht bzw. ändert die abhängigen Datensätze mit, auch über mehrere Stufen; `SET NULL` und `SET DEFAULT` setzen die Spalten des Fremdschlüssels auf `NULL` bzw. ihren Standardwert. Die Erfolgsmeldung auf Seite 3 nennt, was so mitgelöscht oder mitgeändert wurde.
+  - Wie immer auf Seite 3 gilt: Scheitert ein Befehl, bleibt die Datenbank unverändert, auch wenn mehrere Befehle auf einmal ausgeführt werden.
+  - `REFERENCES tabelle` ohne Spaltenliste verweist auf den Primärschlüssel. Ein Fremdschlüssel auf eine Tabelle oder Spalte, die es nicht gibt, wird nicht geprüft; das Klassendiagramm weist darauf hin.
+  - Beim **Laden einer Datei** wird erst am Dateiende geprüft. Die Reihenfolge der Befehle spielt also keine Rolle, und Fremdschlüssel dürfen wie in phpMyAdmin-Exporten erst nach den Daten per `ALTER TABLE … ADD CONSTRAINT … FOREIGN KEY` folgen. Verweist ein Datensatz ins Leere, wird die Datei nicht geladen; die Meldung nennt den Wert und den Befehl, aus dem der Datensatz stammt.
+  - Seite 6 simuliert ihre Anomalie-Beispiele mit derselben Prüfung. Bei einer Tabelle, auf die andere verweisen, zeigt das Löschbeispiel deshalb gegebenenfalls die Fehlermeldung bzw. die Mitlöschung.
 - **CHECK-Bedingungen**:
   - Sie stehen an einer Spalte (`Preis DECIMAL(8,2) CHECK (Preis >= 0)`) oder als Tabellenbedingung, auch mit Namen (`CONSTRAINT chk_rueckgabe CHECK (Rueckgabedatum IS NULL OR Rueckgabedatum >= Ausleihdatum)`). `ALTER TABLE … ADD [CONSTRAINT name] CHECK (…)` ist ebenfalls möglich.
   - Geprüft wird bei `INSERT` und `UPDATE`; beim Anlegen mit `ALTER TABLE` auch an den vorhandenen Datensätzen.
@@ -161,7 +168,7 @@ Eine ausführliche Beschreibung aller Dateien – bei den Übungsdateien für di
 | `redundanz_3nf_praxis.sql` | Terminliste einer Arztpraxis mit Arzt (Fachgebiet, Zimmer) und Krankenkasse (Telefon) in jeder Zeile; `AUTO_INCREMENT`-Schlüssel, alle übrigen Spalten dürfen leer sein (Einfügeanomalie ergibt einen unvollständigen Datensatz); Dr. Lorenz kommt nur einmal vor | termin |
 | `redundanz_gemischt_bestellung.sql` | Bestellungen mit Kunden- und Artikeldaten in einer Tabelle (Teilabhängigkeiten und transitive Abhängigkeit, mehrere Verstöße zur Auswahl); dazu eine Tabelle **ohne Schlüssel** mit einem doppelten Datensatz | bestellung_flach, lieferant |
 | `redundanz_ok_vereinsverwaltung.sql` | **Gegenprobe:** dieselben Vereinsdaten wie in `redundanz_3nf_verein.sql`, aber auf vier Tabellen verteilt – mit den passenden Abhängigkeiten keine Verstöße und keine Anomalien | ort, abteilung, mitglied, mitgliedschaft |
-| `beispiel_phpmyadmin_export.sql` | Kursangebot einer Musikschule im Stil eines Datenbank-Exports (Backticks, `ENGINE=…`, `SET`, `CONSTRAINT … CHECK`, Schlüssel per `ALTER TABLE`) | kurs, teilnehmer, anmeldung |
+| `beispiel_phpmyadmin_export.sql` | Kursangebot einer Musikschule im Stil eines Datenbank-Exports (Backticks, `ENGINE=…`, `SET`, `CONSTRAINT … CHECK`, Schlüssel per `ALTER TABLE`). Der Fremdschlüssel von `anmeldung` auf `kurs` hat `ON DELETE CASCADE` (Löschen eines Kurses löscht seine Anmeldungen mit), der auf `teilnehmer` nicht (Löschen eines angemeldeten Teilnehmers wird verhindert) | kurs, teilnehmer, anmeldung |
 | `beispiel_fehlerhaft.sql` | Übungsdatei mit zwei absichtlichen Fehlern (fehlendes Komma, doppelter Primärschlüssel) | – |
 
 Die ersten fünf Dateien sind identisch mit den eingebauten Beispieldatenbanken auf Seite 1 (der Build prüft das). Sie eignen sich als Vorlage für eigene Datenbanken. Jede enthält einige `CHECK`-Bedingungen, z. B. `Note BETWEEN 1 AND 6`, `Preis >= 0` oder `Menge > 0`; ein `INSERT` mit unzulässigem Wert zeigt die entsprechende Meldung. Die Daten enthalten bewusst `NULL`-Werte und Datensätze ohne Partner, z. B. Lehrkräfte ohne Klasse, Fächer ohne Noten, Kundinnen und Kunden ohne Bestellung. So lassen sich `LEFT JOIN` und `IS NULL` sinnvoll üben.
@@ -203,6 +210,7 @@ SQL-Sandbox/
 │     ├─ sql/parser.js       Syntaxbaum (rekursiver Abstieg, Tiefe begrenzt)
 │     ├─ sql/values.js       Vergleich, NULL-Logik, Sortierung, Anzeige von Werten
 │     ├─ sql/database.js     Tabellen, Datentypen, Schlüssel, CREATE/DROP/ALTER
+│     ├─ sql/integrity.js    Fremdschlüssel: Prüfung bei INSERT/UPDATE/DELETE, ON DELETE/ON UPDATE, Prüfung beim Laden
 │     ├─ sql/executor.js     Namensauflösung, SELECT/INSERT/UPDATE/DELETE, Grenzwerte, Mitschreiben der Schritte (Seite 4)
 │     ├─ sql-import.js       Upload-Prüfung und Aufbau einer neuen Datenbank
 │     ├─ state.js            aktuelle Datenbank, Zurücksetzen, Änderungsereignisse
@@ -296,11 +304,12 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 - eine Kopie des gemeinsamen Codes (`base.css`, `dom-utils.js`, `text-utils.js`, `tabs.js`, `scorm-api.js`) von ihrer Quelle in `shared/` abweicht oder fehlt;
 - im Ordner des Teilprojekts etwas anderes als `src/`, `preview/`, `testdata/` und `README.md` liegt.
 
-**Automatisierte Tests** (252) im Browser, mit simulierter SCORM-Schnittstelle:
+**Automatisierte Tests** (267) im Browser, mit simulierter SCORM-Schnittstelle:
 - Lexer und Parser einschließlich Positionsangaben;
 - Abfragen mit Handrechnungen: alle Join-Arten, Gruppierung, `HAVING`, `NULL`-Logik, korrelierte Unterabfragen, Sortierung, `LIMIT`, `LIKE`;
 - jede Fehlerklasse mit ihrer Meldung und ihrem Hinweis, darunter falsch geschriebene Namen und die Hinweise zu fehlender Verknüpfung, Text-Schreibung und Schlüsselwörtern;
 - `INSERT`/`UPDATE`/`DELETE` mit Typ-, Schlüssel- und `CHECK`-Prüfungen sowie Atomarität;
+- Fremdschlüssel: `INSERT`/`UPDATE` ins Leere, `NULL`, Selbstbezug im selben Befehl, zusammengesetzte Schlüssel, `REFERENCES` ohne Spalten, `RESTRICT`/`NO ACTION`, `CASCADE` über mehrere Stufen, `SET NULL` (auch bei `NOT NULL`), `SET DEFAULT`, `ON UPDATE CASCADE`, Tausch von Schlüsselwerten, Atomarität, Prüfung beim Laden am Dateiende mit Befehlsangabe, Export mit `ON DELETE CASCADE`, Meldungen auf Seite 1 und 3;
 - `CASE` und Fensterfunktionen (Gleichstände, Partitionen, laufende Summen, `LAG`/`LEAD`, Fehlerfälle) sowie `WITH … INSERT`, darunter ein vollständiges Stundenplan-Beispiel als Datei-Import;
 - `UNION`, `INTERSECT` und `EXCEPT` (auch `ALL`, Rangfolge, `ORDER BY`/`LIMIT`, Klammern, in Unterabfragen, Sichten und Dateien);
 - `WITH`-Abfragen, `INSERT … SELECT` und Sichten (Anlegen, Ersetzen, Löschen, ungültige und zirkuläre Sichten, Import im Export-Stil);

@@ -6,13 +6,14 @@
  *   Database  – Tabellen und Sichten (Views) in Maps (Schlüssel: Name in Kleinbuchstaben);
  *               eine Sicht speichert nur ihren Abfragetext (nicht materialisiert).
  *   Table     – Spalten, Datensätze (Arrays von Werten), Primärschlüssel,
- *               UNIQUE-Schlüssel, Fremdschlüssel (nur zur Anzeige), AUTO_INCREMENT.
+ *               UNIQUE-Schlüssel, Fremdschlüssel, AUTO_INCREMENT.
  *
  * Datensätze sind unveränderlich: Änderungen erzeugen neue Arrays. Dadurch
  * ist clone() billig (Zeilen werden geteilt) und Seite 3 kann Befehle auf
  * einer Kopie ausführen und diese nur bei Erfolg übernehmen (atomar).
  *
- * Fremdschlüssel werden gespeichert und angezeigt, aber nicht erzwungen.
+ * Fremdschlüssel werden hier nur gespeichert; geprüft (samt ON DELETE/ON UPDATE) werden sie in
+ * sql/integrity.js nach jedem INSERT, UPDATE und DELETE bzw. beim Laden einer Datei am Dateiende.
  *
  * Sicherheit:
  *   - Namen aus der Eingabe werden nur als Map-Schlüssel verwendet, nie als
@@ -329,7 +330,8 @@
       this.primaryKey = null;
       /** @type {Array<Array<number>>} UNIQUE-Schlüssel (Spaltenindizes). */
       this.uniques = [];
-      /** @type {Array<{columns:Array<number>, refTable:string, refColumns:Array<string>, name:string|null}>} Fremdschlüssel (name aus CONSTRAINT name). */
+      /** @type {Array<{columns:Array<number>, refTable:string, refColumns:Array<string>, name:string|null, onDelete:string, onUpdate:string}>}
+       *  Fremdschlüssel (name aus CONSTRAINT name; onDelete/onUpdate z. B. 'RESTRICT', 'CASCADE', 'SET NULL'). */
       this.foreignKeys = [];
       /** @type {Array<Object>} CHECK-Bedingungen {name, text, expr, column, enforced, pos, bound}. */
       this.checks = [];
@@ -688,17 +690,18 @@
   }
 
   /**
-   * Fügt einen Fremdschlüssel hinzu (geprüft wird er erst beim Ändern von Daten bzw. im Diagramm).
+   * Fügt einen Fremdschlüssel hinzu. Hier wird nur gespeichert; die Daten prüft sql/integrity.js
+   * (nach INSERT/UPDATE/DELETE bzw. beim Laden am Dateiende).
    *
    * @param {Table} table - Tabelle.
-   * @param {Object} fk - {columns, refTable, refColumns, name}.
+   * @param {Object} fk - {columns, refTable, refColumns, name, onDelete, onUpdate}.
    * @param {Object|null} pos - Position.
    */
   function addForeignKey(table, fk, pos) {
     if (table.foreignKeys.length >= LIMITS.maxForeignKeys) {
       throw new SqlError('Eine Tabelle darf höchstens ' + LIMITS.maxForeignKeys + ' Fremdschlüssel haben.', pos);
     }
-    table.foreignKeys.push(fk);
+    table.foreignKeys.push(Object.assign({ onDelete: 'RESTRICT', onUpdate: 'RESTRICT' }, fk));
   }
 
   /**
@@ -724,7 +727,7 @@
         if (name !== null && table.foreignKeys.some((f) => f.name !== null && f.name.toLowerCase() === name.toLowerCase())) {
           throw new SqlError('Es gibt bereits einen Fremdschlüssel namens „' + name + '“ in der Tabelle „' + table.name + '“.', c.pos);
         }
-        addForeignKey(table, { columns: cols, refTable: c.refTable, refColumns: c.refColumns.slice(), name }, c.pos);
+        addForeignKey(table, { columns: cols, refTable: c.refTable, refColumns: c.refColumns.slice(), name, onDelete: c.onDelete, onUpdate: c.onUpdate }, c.pos);
         break;
       }
       case 'index':
@@ -791,7 +794,8 @@
         addUnique(table, [idx], def.pos);
       }
       if (def.references) {
-        addForeignKey(table, { columns: [idx], refTable: def.references.refTable, refColumns: def.references.refColumns.slice(), name: null }, def.pos);
+        addForeignKey(table, { columns: [idx], refTable: def.references.refTable, refColumns: def.references.refColumns.slice(), name: null,
+          onDelete: def.references.onDelete, onUpdate: def.references.onUpdate }, def.pos);
       }
       for (const c of def.checks) {
         addCheck(table, c, idx);
@@ -1059,7 +1063,9 @@
     }
     for (const fk of table.foreignKeys) {
       lines.push((fk.name ? 'CONSTRAINT ' + quoteName(fk.name) + ' ' : '') + 'FOREIGN KEY (' + names(fk.columns) + ') REFERENCES ' + quoteName(fk.refTable) +
-        (fk.refColumns.length ? ' (' + fk.refColumns.map(quoteName).join(', ') + ')' : ''));
+        (fk.refColumns.length ? ' (' + fk.refColumns.map(quoteName).join(', ') + ')' : '') +
+        (fk.onDelete && fk.onDelete !== 'RESTRICT' ? ' ON DELETE ' + fk.onDelete : '') +
+        (fk.onUpdate && fk.onUpdate !== 'RESTRICT' ? ' ON UPDATE ' + fk.onUpdate : ''));
     }
     for (const check of table.checks) {
       if (check.column === null) {

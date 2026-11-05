@@ -1483,7 +1483,13 @@
       return columns;
     }
 
-    /** Liest "REFERENCES t (spalten) [ON DELETE …] [ON UPDATE …]". */
+    /**
+     * Liest "REFERENCES t (spalten) [ON DELETE …] [ON UPDATE …]".
+     * Ohne Angabe gilt wie in MySQL RESTRICT (Löschen bzw. Ändern wird verhindert).
+     *
+     * @returns {{refTable:string, refColumns:Array<string>, onDelete:string, onUpdate:string}}
+     *   onDelete/onUpdate: 'RESTRICT' | 'NO ACTION' | 'CASCADE' | 'SET NULL' | 'SET DEFAULT'.
+     */
     parseReferences() {
       this.expectKw('REFERENCES', 'Erwartet wird „REFERENCES Tabelle (Spalte)“');
       const refTable = this.parseName('ein Tabellenname');
@@ -1491,27 +1497,33 @@
       if (this.isSym('(')) {
         refColumns = this.parseKeyColumns();
       }
+      const actions = { DELETE: 'RESTRICT', UPDATE: 'RESTRICT' };
       while (this.isKw('ON')) {
         this.next();
-        if (!this.acceptKw('DELETE') && !this.acceptKw('UPDATE')) {
+        const event = this.acceptKw('DELETE') ? 'DELETE' : (this.acceptKw('UPDATE') ? 'UPDATE' : null);
+        if (event === null) {
           this.fail('Nach ON wird DELETE oder UPDATE erwartet');
         }
-        if (this.acceptKw('CASCADE') || this.acceptKw('RESTRICT')) {
-          continue;
-        }
-        if (this.acceptKw('SET')) {
-          if (!this.acceptKw('NULL') && !this.acceptKw('DEFAULT')) {
+        if (this.acceptKw('CASCADE')) {
+          actions[event] = 'CASCADE';
+        } else if (this.acceptKw('RESTRICT')) {
+          actions[event] = 'RESTRICT';
+        } else if (this.acceptKw('SET')) {
+          if (this.acceptKw('NULL')) {
+            actions[event] = 'SET NULL';
+          } else if (this.acceptKw('DEFAULT')) {
+            actions[event] = 'SET DEFAULT';
+          } else {
             this.fail('Nach SET wird NULL oder DEFAULT erwartet');
           }
-          continue;
-        }
-        if (this.acceptKw('NO')) {
+        } else if (this.acceptKw('NO')) {
           this.expectKw('ACTION', 'Erwartet wird „NO ACTION“');
-          continue;
+          actions[event] = 'NO ACTION';
+        } else {
+          this.fail('Erwartet wird CASCADE, RESTRICT, SET NULL oder NO ACTION');
         }
-        this.fail('Erwartet wird CASCADE, RESTRICT, SET NULL oder NO ACTION');
       }
-      return { refTable: refTable.name, refColumns: refColumns.map((c) => c.name) };
+      return { refTable: refTable.name, refColumns: refColumns.map((c) => c.name), onDelete: actions.DELETE, onUpdate: actions.UPDATE };
     }
 
     /** Liest eine Spaltendefinition: Name Typ [Optionen]. */

@@ -36,6 +36,7 @@
       <file href="js/sql/parser.js"/>
       <file href="js/sql/values.js"/>
       <file href="js/sql/database.js"/>
+      <file href="js/sql/integrity.js"/>
       <file href="js/sql/executor.js"/>
       <file href="js/sql-import.js"/>
       <file href="js/normalization.js"/>

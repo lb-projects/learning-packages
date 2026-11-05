@@ -1,4 +1,4 @@
--- Titel: Kursbuchung (nicht normalisiert)
+-- Titel: Kursbuchung
 -- Beschreibung: Wahlkurse einer Schule – absichtlich nicht normalisiert, zum Üben von Normalformen und Anomalien.
 --
 -- Beispieldatenbank für die SQL Sandbox (Seite 6 „Redundanzen“).

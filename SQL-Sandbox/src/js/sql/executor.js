@@ -2781,7 +2781,13 @@
       }
     }
     db.insertRows(table, rows, positions);
-    return { kind: 'insert', count: rows.length, table: table.name };
+    const cascade = rt.deferForeignKeys ? [] : ns.sql.integrity.afterInsert(db, table, rows, positions, stmt.pos, integrityHooks());
+    return { kind: 'insert', count: rows.length, table: table.name, cascade };
+  }
+
+  /** Rückgriffe für sql/integrity.js: CHECK-Prüfung und Zeitbudget. */
+  function integrityHooks() {
+    return { checkRow: (table, row, pos) => checkRow(table, row, pos), tick };
   }
 
   /**
@@ -2923,6 +2929,7 @@
     }
     let count = 0;
     const ctx = { frame: null, parent: null, offset: 0 };
+    const before = table.rows;
     const newRows = table.rows.map((row) => {
       tick();
       ctx.frame = [row];
@@ -2950,20 +2957,33 @@
         }
       }
     }
-    return { kind: 'update', count, table: table.name };
+    const pairs = [];
+    newRows.forEach((row, i) => {
+      if (row !== before[i]) {
+        pairs.push([before[i], row]);
+      }
+    });
+    const cascade = ns.sql.integrity.afterUpdate(db, table, pairs, stmt.pos, integrityHooks());
+    return { kind: 'update', count, table: table.name, cascade };
   }
 
   function executeDelete(db, stmt) {
     const { table, where } = singleTableScope(db, stmt);
     const ctx = { frame: null, parent: null, offset: 0 };
+    const removed = [];
     const kept = table.rows.filter((row) => {
       tick();
       ctx.frame = [row];
-      return where ? V.truth(evalExpr(where, ctx)) !== true : false;
+      const keep = where ? V.truth(evalExpr(where, ctx)) !== true : false;
+      if (!keep) {
+        removed.push(row);
+      }
+      return keep;
     });
     const count = table.rows.length - kept.length;
     db.replaceRows(table, kept, stmt.pos);
-    return { kind: 'delete', count, table: table.name };
+    const cascade = ns.sql.integrity.afterDelete(db, table, removed, stmt.pos, integrityHooks());
+    return { kind: 'delete', count, table: table.name, cascade };
   }
 
   // ---------------------------------------------------------------------------
@@ -2975,7 +2995,8 @@
    *
    * @param {Object} db - Datenbank (wird verändert).
    * @param {Object} stmt - Anweisung.
-   * @param {Object} [options] - {timeMs, notices, total: {deadline, ms} – Gesamtbudget mehrerer Befehle}.
+   * @param {Object} [options] - {timeMs, notices, total: {deadline, ms} – Gesamtbudget mehrerer Befehle,
+   *   deferForeignKeys: Fremdschlüssel bei INSERT nicht prüfen (Laden einer Datei; geprüft wird am Dateiende)}.
    * @returns {Object} Ergebnis, z. B. {kind:'select', columns, types, rows} oder {kind:'insert', count}.
    */
   function executeStatement(db, stmt, options) {
@@ -2990,7 +3011,7 @@
     const totalFirst = total !== null && total.deadline < now + timeMs;
     rt = {
       db, deadline: totalFirst ? total.deadline : now + timeMs, timeMs, totalMs: totalFirst ? total.ms : 0,
-      steps: 0, warnings: [], literalChecks: [], topQuery: null, viewDepth: 0,
+      steps: 0, warnings: [], literalChecks: [], topQuery: null, viewDepth: 0, deferForeignKeys: Boolean(opts.deferForeignKeys),
       trace: opts.trace ? { steps: [], rowIndex: new Map(), source: opts.trace.source } : null
     };
     try {
@@ -3158,6 +3179,8 @@
     const notices = [];
     const skipped = new Map();
     const total = timeBudget(EXEC_LIMITS.importTotalMs);
+    // Herkunft der Datensätze (Befehl je Datensatz) für die Meldung bei verletzten Fremdschlüsseln.
+    const origins = new Map();
     for (const s of statements) {
       if (!IMPORT_TYPES.has(s.type)) {
         const err = new SqlError('In einer SQL-Datei zum Laden sind nur DROP TABLE, CREATE TABLE, INSERT INTO (auch INSERT INTO … SELECT bzw. WITH …) sowie CREATE VIEW und DROP VIEW erlaubt (gefunden: ' + (TYPE_NAMES.get(s.type) || s.type) + ').', s.pos,
@@ -3169,13 +3192,33 @@
         continue;
       }
       try {
-        executeStatement(db, s, { timeMs: EXEC_LIMITS.importTimeMs, notices, total });
+        executeStatement(db, s, { timeMs: EXEC_LIMITS.importTimeMs, notices, total, deferForeignKeys: true });
       } catch (error) {
         throw withIndex(error, s.statementIndex);
+      }
+      // In Ladedateien kommen nur INSERTs hinzu (angehängt); andere Befehle ändern die Anzahl nicht.
+      for (const t of db.tables.values()) {
+        const list = origins.get(t) || [];
+        while (list.length < t.rows.length) {
+          list.push(s);
+        }
+        origins.set(t, list);
       }
     }
     if (db.tables.size === 0) {
       throw new SqlError('Die Datei enthält keine Tabelle (es fehlt CREATE TABLE).', null);
+    }
+    // Fremdschlüssel erst am Dateiende prüfen: Reihenfolge der Befehle und ALTER TABLE … ADD FOREIGN KEY sind egal.
+    const violation = ns.sql.integrity.firstViolation(db);
+    if (violation) {
+      const origin = (origins.get(violation.table) || [])[violation.rowIndex];
+      const error = violation.error;
+      if (origin) {
+        error.pos = origin.pos;
+        error.message = error.message.replace(/\.$/, '') + ' (Datensatz aus Befehl ' + origin.statementIndex + ').';
+        throw withIndex(error, origin.statementIndex);
+      }
+      throw error;
     }
     return { db, notices, skipped, statements: statements.length };
   }

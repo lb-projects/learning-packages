@@ -1,6 +1,6 @@
 /**
  * @file samples/kursbuchung.js
- * @description Beispieldatenbank „Kursbuchung (nicht normalisiert)“ für die SQL Sandbox –
+ * @description Beispieldatenbank „Kursbuchung“ für die SQL Sandbox –
  *              absichtlich nicht normalisiert, zum Üben auf Seite 6 „Redundanzen“.
  *
  * Der SQL-Text ist identisch mit testdata/redundanz_kursbuchung.sql (der Build prüft das).
@@ -12,9 +12,9 @@
   ns.samples = ns.samples || [];
   ns.samples.push({
     id: 'kursbuchung',
-    title: 'Kursbuchung (nicht normalisiert)',
-    description: 'Wahlkurse mit Schülerinnen, Schülern, Lehrkräften und Kontaktdaten – absichtlich mit Redundanzen, zum Üben der Normalformen (Seite 6).',
-    sql: `-- Titel: Kursbuchung (nicht normalisiert)
+    title: 'Kursbuchung',
+    description: 'Wahlkurse mit Schülerinnen, Schülern, Lehrkräften und Kontaktdaten.',
+    sql: `-- Titel: Kursbuchung
 -- Beschreibung: Wahlkurse einer Schule – absichtlich nicht normalisiert, zum Üben von Normalformen und Anomalien.
 --
 -- Beispieldatenbank für die SQL Sandbox (Seite 6 „Redundanzen“).

@@ -507,7 +507,7 @@
   function render() {
     const db = ns.state.db();
     if (!db) {
-      ui.notice.textContent = 'Es ist noch keine Datenbank geladen. Wählen Sie auf Seite 1 eine Beispieldatenbank – zum Üben eignet sich „Kursbuchung (nicht normalisiert)“.';
+      ui.notice.textContent = 'Es ist noch keine Datenbank geladen. Wählen Sie auf Seite 1 eine Beispieldatenbank – zum Üben eignet sich „Kursbuchung“.';
       ui.notice.hidden = false;
       ui.body.hidden = true;
       return;

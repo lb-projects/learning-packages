@@ -71,7 +71,10 @@
       return ns.text.cleanCellText(r.message);
     }
     const verb = r.kind === 'insert' ? 'eingefügt' : (r.kind === 'update' ? 'geändert' : 'gelöscht');
-    return dom.plural(r.count, 'Datensatz', 'Datensätze') + ' in „' + ns.text.cleanCellText(r.table) + '“ ' + verb + '.';
+    const follow = (r.cascade || []).map((c) => dom.plural(c.count, 'Datensatz', 'Datensätze') + ' in „' + ns.text.cleanCellText(c.table) + '“ ' +
+      (c.kind === 'delete' ? 'mitgelöscht' : 'mitgeändert') + ' (' + c.rule + ')');
+    return dom.plural(r.count, 'Datensatz', 'Datensätze') + ' in „' + ns.text.cleanCellText(r.table) + '“ ' + verb + '.' +
+      (follow.length ? ' Über Fremdschlüssel: ' + follow.join(', ') + '.' : '');
   }
 
   const warningBox = (text) => ns.ui.warningBox(text);

@@ -42,6 +42,7 @@
   <script src="js/sql/parser.js" defer></script>
   <script src="js/sql/values.js" defer></script>
   <script src="js/sql/database.js" defer></script>
+  <script src="js/sql/integrity.js" defer></script>
   <script src="js/sql/executor.js" defer></script>
   <script src="js/sql-import.js" defer></script>
   <script src="js/normalization.js" defer></script>
@@ -104,7 +105,7 @@
          =================================================================== -->
     <section id="page-tables" class="page" role="tabpanel" aria-labelledby="tab-tables" hidden>
       <h2>Tabellen</h2>
-      <p class="intro">Hier sehen Sie den Aufbau und den Inhalt aller Tabellen der geladenen Datenbank. <strong>PK</strong> kennzeichnet den Primärschlüssel, <strong>FK</strong> einen Fremdschlüssel mit der Spalte, auf die er verweist. Je Tabelle sind etwa fünf Datensätze sichtbar; weitere erreichen Sie durch Scrollen innerhalb der Tabelle. Unter jeder Tabelle lässt sich der <code>CREATE TABLE</code>-Befehl aufklappen, der die Tabelle erzeugt. Sichten (Views) stehen mit ihrem aktuellen Ergebnis in einem eigenen Abschnitt darunter.</p>
+      <p class="intro">Hier sehen Sie den Aufbau und den Inhalt aller Tabellen der geladenen Datenbank. <strong>PK</strong> kennzeichnet den Primärschlüssel, <strong>FK</strong> einen Fremdschlüssel mit der Spalte, auf die er verweist (Fremdschlüssel werden bei Datenänderungen geprüft). Je Tabelle sind etwa fünf Datensätze sichtbar; weitere erreichen Sie durch Scrollen innerhalb der Tabelle. Unter jeder Tabelle lässt sich der <code>CREATE TABLE</code>-Befehl aufklappen, der die Tabelle erzeugt. Sichten (Views) stehen mit ihrem aktuellen Ergebnis in einem eigenen Abschnitt darunter.</p>
       <div id="tables-notice" class="notice" hidden></div>
       <p id="tables-info" class="hint"></p>
       <nav id="tables-toc" class="button-row" aria-label="Zu einer Tabelle springen"></nav>
@@ -161,6 +162,7 @@ LIMIT Anzahl [OFFSET Start];</pre>
 UPDATE tabelle SET Spalte2 = 'Neu' WHERE Spalte1 = 1;
 DELETE FROM tabelle WHERE Spalte1 = 2;
 INSERT INTO tabelle (Spalte1, Spalte2) SELECT id + 100, Name FROM andere;</pre>
+          <p class="hint"><strong>Fremdschlüssel</strong> werden geprüft: Ein neuer oder geänderter Wert muss in der referenzierten Tabelle vorkommen (<code>NULL</code> ist erlaubt, wenn die Spalte es zulässt). Ein Datensatz, auf den noch verwiesen wird, lässt sich nur löschen oder im Schlüssel ändern, wenn der Fremdschlüssel <code>ON DELETE</code> bzw. <code>ON UPDATE</code> mit <code>CASCADE</code> (abhängige Datensätze werden mitgelöscht bzw. mitgeändert) oder <code>SET NULL</code> hat. Welche Angabe gilt, zeigt der <code>CREATE TABLE</code>-Befehl auf Seite&nbsp;2.</p>
           <h4>Sichten (Views)</h4>
           <pre class="sql-example">CREATE VIEW teure_artikel AS SELECT Bezeichnung, Preis FROM artikel WHERE Preis &gt; 50;
 CREATE OR REPLACE VIEW teure_artikel AS SELECT …;

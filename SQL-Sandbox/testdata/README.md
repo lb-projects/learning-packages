@@ -9,7 +9,7 @@ Alle Namen, Orte, Firmen, Titel und Werte sind **frei erfunden** (Orte wie „Mu
 | Datei | Zweck | Eingebaut |
 |---|---|---|
 | `schule.sql`, `bibliothek.sql`, `online_shop.sql`, `sportverein.sql` | Normalisierte Beispieldatenbanken zum Abfragen (Seiten 2 bis 5) | ja |
-| `redundanz_kursbuchung.sql` | Absichtlich nicht normalisiert, zum Üben auf Seite 6 „Redundanzen“ | ja („Kursbuchung (nicht normalisiert)“) |
+| `redundanz_kursbuchung.sql` | Absichtlich nicht normalisiert, zum Üben auf Seite 6 „Redundanzen“ | ja („Kursbuchung“) |
 | `redundanz_1nf_kontaktliste.sql` | Verstoß gegen die 1. Normalform | nein |
 | `redundanz_2nf_ausleihe.sql` | Verstoß gegen die 2. Normalform (Schlüssel mit drei Spalten) | nein |
 | `redundanz_2nf_projekte.sql` | Verstoß gegen die 2. Normalform (zusammengesetzter Schlüssel) | nein |
