@@ -1,0 +1,143 @@
+/*
+ * clusters.css – Farben der Cluster (cl-0 bis cl-99), erzeugt von den Entwicklungswerkzeugen.
+ * Eine statische Datei, weil die Content-Security-Policy keine Inline-Stile erlaubt.
+ * Die ersten 12 Farben sind auf Unterscheidbarkeit geprüft; bei mehr Clustern helfen Nummern und Formen.
+ */
+
+.plot-marker.pt-cluster,
+.plot-marker.pt-center,
+.plot-marker.pt-trail {
+  fill: var(--cl);
+}
+
+.cl-area {
+  fill: var(--cl-area);
+  stroke: var(--surface);
+  stroke-width: 1;
+}
+
+.sil-bar {
+  fill: var(--cl);
+}
+
+.sil-bar.sil-edged {
+  stroke: #fff;
+  stroke-width: 1;
+}
+
+.plot-line.cl-trail {
+  stroke: var(--cl);
+  stroke-width: 2.5;
+  stroke-dasharray: 5 3;
+}
+
+.plot-line.cl-distance {
+  stroke: var(--cl);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.swatch.cl-swatch {
+  background: var(--cl);
+}
+
+.cl-0 { --cl: #2a78d6; --cl-area: #c3d9f4; }
+.cl-1 { --cl: #eb6834; --cl-area: #f9d5c6; }
+.cl-2 { --cl: #1baf7a; --cl-area: #bfe9da; }
+.cl-3 { --cl: #eda100; --cl-area: #fae5b8; }
+.cl-4 { --cl: #e87ba4; --cl-area: #f9dae6; }
+.cl-5 { --cl: #008300; --cl-area: #b8dcb8; }
+.cl-6 { --cl: #6250d6; --cl-area: #d3cef4; }
+.cl-7 { --cl: #e34948; --cl-area: #f7cccc; }
+.cl-8 { --cl: #00a0c8; --cl-area: #b8e4f0; }
+.cl-9 { --cl: #a0307a; --cl-area: #e4c5da; }
+.cl-10 { --cl: #8fa800; --cl-area: #e0e7b8; }
+.cl-11 { --cl: #9c4fd0; --cl-area: #e3cef2; }
+.cl-12 { --cl: #b8511e; --cl-area: #ebcec0; }
+.cl-13 { --cl: #3adfa1; --cl-area: #c8f6e5; }
+.cl-14 { --cl: #8b1895; --cl-area: #dfbee1; }
+.cl-15 { --cl: #98b81e; --cl-area: #e2ebc0; }
+.cl-16 { --cl: #3a8cdf; --cl-area: #c8dff6; }
+.cl-17 { --cl: #951832; --cl-area: #e1bec6; }
+.cl-18 { --cl: #1eb82b; --cl-area: #c0ebc4; }
+.cl-19 { --cl: #783adf; --cl-area: #d9c8f6; }
+.cl-20 { --cl: #956c18; --cl-area: #e1d6be; }
+.cl-21 { --cl: #1eb8b2; --cl-area: #c0ebe9; }
+.cl-22 { --cl: #df3ab5; --cl-area: #f6c8ea; }
+.cl-23 { --cl: #519518; --cl-area: #cee1be; }
+.cl-24 { --cl: #1e37b8; --cl-area: #c0c7eb; }
+.cl-25 { --cl: #df4f3a; --cl-area: #f6cec8; }
+.cl-26 { --cl: #18954d; --cl-area: #bee1cd; }
+.cl-27 { --cl: #8c1eb8; --cl-area: #dfc0eb; }
+.cl-28 { --cl: #dfdf3a; --cl-area: #f6f6c8; }
+.cl-29 { --cl: #187095; --cl-area: #bed7e1; }
+.cl-30 { --cl: #b81e5e; --cl-area: #ebc0d2; }
+.cl-31 { --cl: #4edf3a; --cl-area: #cdf6c8; }
+.cl-32 { --cl: #2d1895; --cl-area: #c4bee1; }
+.cl-33 { --cl: #b8651e; --cl-area: #ebd4c0; }
+.cl-34 { --cl: #3adfb6; --cl-area: #c8f6eb; }
+.cl-35 { --cl: #951890; --cl-area: #e1bee0; }
+.cl-36 { --cl: #84b81e; --cl-area: #ddebc0; }
+.cl-37 { --cl: #3a77df; --cl-area: #c8d9f6; }
+.cl-38 { --cl: #951822; --cl-area: #e1bec1; }
+.cl-39 { --cl: #1eb83f; --cl-area: #c0ebc9; }
+.cl-40 { --cl: #8d3adf; --cl-area: #dfc8f6; }
+.cl-41 { --cl: #957c18; --cl-area: #e1dabe; }
+.cl-42 { --cl: #1eabb8; --cl-area: #c0e7eb; }
+.cl-43 { --cl: #df3aa0; --cl-area: #f6c8e4; }
+.cl-44 { --cl: #419518; --cl-area: #cae1be; }
+.cl-45 { --cl: #1e24b8; --cl-area: #c0c2eb; }
+.cl-46 { --cl: #df643a; --cl-area: #f6d4c8; }
+.cl-47 { --cl: #18955c; --cl-area: #bee1d1; }
+.cl-48 { --cl: #9f1eb8; --cl-area: #e4c0eb; }
+.cl-49 { --cl: #c9df3a; --cl-area: #f0f6c8; }
+.cl-50 { --cl: #186095; --cl-area: #bed2e1; }
+.cl-51 { --cl: #b81e4a; --cl-area: #ebc0cc; }
+.cl-52 { --cl: #3adf3b; --cl-area: #c8f6c8; }
+.cl-53 { --cl: #3d1895; --cl-area: #c9bee1; }
+.cl-54 { --cl: #b8791e; --cl-area: #ebd9c0; }
+.cl-55 { --cl: #3adfcb; --cl-area: #c8f6f0; }
+.cl-56 { --cl: #951880; --cl-area: #e1bedb; }
+.cl-57 { --cl: #71b81e; --cl-area: #d7ebc0; }
+.cl-58 { --cl: #3a62df; --cl-area: #c8d3f6; }
+.cl-59 { --cl: #951e18; --cl-area: #e1c0be; }
+.cl-60 { --cl: #1eb852; --cl-area: #c0ebcf; }
+.cl-61 { --cl: #a23adf; --cl-area: #e5c8f6; }
+.cl-62 { --cl: #958c18; --cl-area: #e1dfbe; }
+.cl-63 { --cl: #1e97b8; --cl-area: #c0e2eb; }
+.cl-64 { --cl: #df3a8b; --cl-area: #f6c8df; }
+.cl-65 { --cl: #319518; --cl-area: #c5e1be; }
+.cl-66 { --cl: #2c1eb8; --cl-area: #c4c0eb; }
+.cl-67 { --cl: #df793a; --cl-area: #f6d9c8; }
+.cl-68 { --cl: #18956c; --cl-area: #bee1d6; }
+.cl-69 { --cl: #b31eb8; --cl-area: #eac0eb; }
+.cl-70 { --cl: #b4df3a; --cl-area: #eaf6c8; }
+.cl-71 { --cl: #185195; --cl-area: #becee1; }
+.cl-72 { --cl: #b81e36; --cl-area: #ebc0c7; }
+.cl-73 { --cl: #3adf50; --cl-area: #c8f6ce; }
+.cl-74 { --cl: #4d1895; --cl-area: #cdbee1; }
+.cl-75 { --cl: #b88d1e; --cl-area: #ebdfc0; }
+.cl-76 { --cl: #3adddf; --cl-area: #c8f5f6; }
+.cl-77 { --cl: #951870; --cl-area: #e1bed7; }
+.cl-78 { --cl: #5db81e; --cl-area: #d2ebc0; }
+.cl-79 { --cl: #3a4ddf; --cl-area: #c8cdf6; }
+.cl-80 { --cl: #952e18; --cl-area: #e1c4be; }
+.cl-81 { --cl: #1eb866; --cl-area: #c0ebd4; }
+.cl-82 { --cl: #b73adf; --cl-area: #ebc8f6; }
+.cl-83 { --cl: #8f9518; --cl-area: #e0e1be; }
+.cl-84 { --cl: #1e83b8; --cl-area: #c0dceb; }
+.cl-85 { --cl: #df3a76; --cl-area: #f6c8d9; }
+.cl-86 { --cl: #219518; --cl-area: #c1e1be; }
+.cl-87 { --cl: #401eb8; --cl-area: #cac0eb; }
+.cl-88 { --cl: #df8e3a; --cl-area: #f6dfc8; }
+.cl-89 { --cl: #18957c; --cl-area: #bee1da; }
+.cl-90 { --cl: #b81eaa; --cl-area: #ebc0e7; }
+.cl-91 { --cl: #9fdf3a; --cl-area: #e4f6c8; }
+.cl-92 { --cl: #184195; --cl-area: #becae1; }
+.cl-93 { --cl: #b81e23; --cl-area: #ebc0c1; }
+.cl-94 { --cl: #3adf65; --cl-area: #c8f6d4; }
+.cl-95 { --cl: #5d1895; --cl-area: #d2bee1; }
+.cl-96 { --cl: #b8a01e; --cl-area: #ebe4c0; }
+.cl-97 { --cl: #3ac8df; --cl-area: #c8f0f6; }
+.cl-98 { --cl: #951860; --cl-area: #e1bed2; }
+.cl-99 { --cl: #49b81e; --cl-area: #ccebc0; }

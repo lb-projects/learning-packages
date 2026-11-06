@@ -1,6 +1,6 @@
 # Gemeinsamer Code der Lernpakete
 
-Dieser Ordner enthält den Quelltext, den die Lernpakete **NOSY NEIGHBORS**, **SQL Sandbox**, **EDGY EDGES** und **BUSY BIAS** gemeinsam nutzen. Er ist die **einzige Stelle**, an der dieser Code bearbeitet wird.
+Dieser Ordner enthält den Quelltext, den die Lernpakete **NOSY NEIGHBORS**, **SQL Sandbox**, **EDGY EDGES**, **BUSY BIAS** und **CLEVER CLUSTERS** gemeinsam nutzen. Er ist die **einzige Stelle**, an der dieser Code bearbeitet wird.
 
 | Datei | Inhalt |
 |---|---|
@@ -10,7 +10,7 @@ Dieser Ordner enthält den Quelltext, den die Lernpakete **NOSY NEIGHBORS**, **S
 | `js/tabs.js` | Seitennavigation über Registerkarten (Maus, Tastatur, „Zurück/Weiter“) |
 | `css/base.css` | gemeinsame Grundgestaltung: Grundfarben, Kopf und Tabs, Schaltflächen, Meldungen, Seitennavigation, Fußzeile; Inhaltsbreite höchstens 1400 px, für Seiten mit `class="page page-wide"` bis 2400 px (solange die Seite sichtbar ist, per `:has()`) |
 
-Datei-Import (**NOSY NEIGHBORS** und **EDGY EDGES**; **BUSY BIAS** nutzt nur `csv-parser.js`):
+Datei-Import (**NOSY NEIGHBORS** und **EDGY EDGES**; **BUSY BIAS** und **CLEVER CLUSTERS** nutzen nur `csv-parser.js`):
 
 | Datei | Inhalt |
 |---|---|
@@ -21,7 +21,7 @@ Datei-Import (**NOSY NEIGHBORS** und **EDGY EDGES**; **BUSY BIAS** nutzt nur `cs
 | `js/inflate.js` | DEFLATE-Dekoder (RFC 1951) + CRC-32; enthält Code unter der zlib-Lizenz (siehe THIRD_PARTY_NOTICES.md) |
 | `js/xml-utils.js` | XML ohne DOCTYPE/ENTITY, begrenzte Elementzahl; einzige Trusted-Types-Policy `lp-xml` (die CSP der Pakete erlaubt genau diesen Namen) |
 
-Simulator-Bausteine (**BUSY BIAS**; vorgesehen auch für den geplanten Simulator für neuronale Netze). Sie kennen kein bestimmtes Modell; die Lernregel und die Texte bleiben im Paket:
+Simulator-Bausteine (**BUSY BIAS**; vorgesehen auch für den geplanten Simulator für neuronale Netze; **CLEVER CLUSTERS** nutzt `sim-format`, `point-data`, `point-import`, `coord-plot`, `training-controls` und `sim.css`). Sie kennen kein bestimmtes Modell; die Lernregel und die Texte bleiben im Paket:
 
 | Datei | Inhalt | Schnittstelle |
 |---|---|---|
@@ -29,9 +29,9 @@ Simulator-Bausteine (**BUSY BIAS**; vorgesehen auch für den geplanten Simulator
 | `js/activations.js` | Aktivierungsfunktionen als einheitliche Einträge | `{id, name, output(net), fires(y), symbol}`; bisher nur Heaviside |
 | `js/point-data.js` | Datensatz: Punkte, Attributnamen, Labels, positives Label, Prüfungen, Änderungsmeldung | `pointData.create({maxLabels})`, `minMaxScaler(points)` (Min-Max auf 0 bis 1), `selectTestIndices(points, fraction)` (zufällig, je Label getrennt), `shuffled(list)`, `randomInt(max)` |
 | `js/number-wheel.js` | Wert eines Zahlenfelds mit dem Mausrad ändern, nur im Feld mit Fokus | `numberWheel.attach(input, {min, max, step, fallback})`, `decadeStep` |
-| `js/point-import.js` | CSV lesen und prüfen; Kopfzeile `Attribut x;Attribut y;Label` ist Pflicht | `pointImport.importFile`, `parseText` |
+| `js/point-import.js` | CSV lesen und prüfen; Kopfzeile `Attribut x;Attribut y;Label` ist Pflicht | `pointImport.importFile`, `parseText`; `readTextFile` und `readBytes` für paketeigene Formate |
 | `js/data-panel.js` | Upload, Ersetzen/Ergänzen, Beispielauswahl mit Stufen, Punktmaske und -tabelle, Stufenkarte | `dataPanel.create(container, {data, samples, idPrefix, formatHelp, formContainer, listContainer})`; Punktmaske und Tabelle können in eigenen Behältern stehen; `restoreSample(id, stage)` zum Wiederherstellen; Form der Beispiele im Dateikopf |
-| `js/coord-plot.js` | Koordinatensystem mit Flächen, Linien und Punkten | `coordPlot.create`, `render({view, xLabel, yLabel, regions, lines, points})`, `fitView(coords, {includeOrigin})`; Achsen mit Pfeilspitzen, sobald 0 im Ausschnitt liegt |
+| `js/coord-plot.js` | Koordinatensystem mit Flächen, Linien und Punkten | `coordPlot.create(box, {ariaLabel, onClick})`, `render({view, xLabel, yLabel, xTicks, regions, lines, labels, points})`, `screenOf(x, y)`, `fitView(coords, {includeOrigin})`; Achsen mit Pfeilspitzen, sobald 0 im Ausschnitt liegt; Punkte auch als Stern, mit eigener Größe `r` und Text `text` |
 | `js/net-view.js` | Zeichnung von Eingängen, Kanten, zweigeteilten Neuronen und Ausgängen | `netView.create`, `draw({inputs, neurons, edges, outputs})`; leere Texte entfallen (leerer Eingang = leerer Kreis), ein Schwellenwert kommt als Pfeil von unten |
 | `js/training-controls.js` | Weiter, N Iterationen, Automatik mit Tempo, Zurücksetzen | steuert jedes Objekt mit `step()`, `runIterations(n)`, `isFinished()`, `reset()`, `isReady()`, `hasStarted()` |
 | `js/protocol-view.js` | Scrollbares Protokoll, älteste Einträge oben; erzeugt nur neue Einträge | `protocolView.create`, `sync(list, toLines, notice)` |
@@ -51,7 +51,7 @@ In `js/activations.js` einen Eintrag nach dem Muster im Dateikopf ergänzen. `sy
 
 ## So werden die Dateien verwendet
 
-Jedes SCORM-Paket muss alle Dateien selbst enthalten. Deshalb liegen in `NOSY-NEIGHBORS/src/`, `SQL-Sandbox/src/`, `EDGY-EDGES/src/` und `BUSY-BIAS/src/` **Kopien** dieser Dateien (welche Dateien ein Paket erhält, legt `sync-shared.mjs` fest). Jede Kopie trägt in der ersten Zeile den Hinweis „Kopie aus shared/… – nicht hier bearbeiten“. So bleibt `src/` vollständig: `index.html` lässt sich direkt im Browser öffnen, und das ZIP lässt sich weiterhin von Hand erstellen.
+Jedes SCORM-Paket muss alle Dateien selbst enthalten. Deshalb liegen in `NOSY-NEIGHBORS/src/`, `SQL-Sandbox/src/`, `EDGY-EDGES/src/`, `BUSY-BIAS/src/` und `CLEVER-CLUSTERS/src/` **Kopien** dieser Dateien (welche Dateien ein Paket erhält, legt `sync-shared.mjs` fest). Jede Kopie trägt in der ersten Zeile den Hinweis „Kopie aus shared/… – nicht hier bearbeiten“. So bleibt `src/` vollständig: `index.html` lässt sich direkt im Browser öffnen, und das ZIP lässt sich weiterhin von Hand erstellen.
 
 Ablauf bei Änderungen:
 1. Die Datei **hier** in `shared/` ändern.
@@ -60,14 +60,14 @@ Ablauf bei Änderungen:
 
 ## Namensraum
 
-Die JavaScript-Dateien enden mit `})(window.LP = window.LP || {});`. In der Kopie wird diese Zeile durch den Namensraum des Pakets ersetzt (`window.KNN`, `window.SQLSIM`, `window.HG` bzw. `window.BB`). Sonst sind die Kopien zeichengleich.
+Die JavaScript-Dateien enden mit `})(window.LP = window.LP || {});`. In der Kopie wird diese Zeile durch den Namensraum des Pakets ersetzt (`window.KNN`, `window.SQLSIM`, `window.HG`, `window.BB` bzw. `window.CC`). Sonst sind die Kopien zeichengleich.
 
 `dom-utils.js` stellt nur die gemeinsamen Funktionen bereit. Die paketeigenen Formatierer ergänzt jeweils `src/js/format-utils.js` unter demselben Objekt `dom`:
 - kNN: `formatNumber`, `formatPercent`, `describePoint`
 - SQL: `formatCount`, `plural`
 - EDGY EDGES: `formatInt`, `formatDistance`, `formatTriple`, `plural`, `joinNames`
 
-BUSY BIAS ergänzt `dom` nicht: Zahlen kommen aus `sim-format.js`, die Texte des Perzeptrons aus dem eigenen Objekt `fmt` in `src/js/format-utils.js`.
+BUSY BIAS ergänzt `dom` nicht: Zahlen kommen aus `sim-format.js`, die Texte des Perzeptrons aus dem eigenen Objekt `fmt` in `src/js/format-utils.js`. CLEVER CLUSTERS ergänzt `dom` ebenfalls nicht.
 
 ## Was hier nicht hingehört
 

@@ -1,0 +1,388 @@
+/*
+ * style.css – Gestaltung von CLEVER CLUSTERS
+ *
+ * Die Grundgestaltung steht in css/base.css, die Gestaltung der Simulator-Bausteine in
+ * css/sim.css (beides Kopien aus shared/), die Farben der Cluster in css/clusters.css.
+ * Hier stehen nur die Regeln dieses Pakets.
+ *
+ * Grundsätze:
+ *   - Nur Systemschriften, keine externen Ressourcen.
+ *   - Zweispaltig ab 900 px Breite, sonst einspaltig.
+ */
+
+[hidden] {
+  display: none !important;
+}
+
+h1, h2, h3 {
+  line-height: 1.25;
+}
+
+.subtitle {
+  font-weight: normal;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.tabs button {
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: var(--bg);
+  color: var(--text);
+  padding: 0.45rem 0.75rem;
+  border-radius: 6px 6px 0 0;
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.sim-layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) minmax(320px, 1.25fr);
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .sim-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Breite Tabellen scrollen in ihrem Behälter und dürfen die Spalte nicht aufweiten. */
+.sim-layout > * {
+  min-width: 0;
+}
+
+.plot-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.coord-plot.is-clickable {
+  cursor: crosshair;
+}
+
+.card-subtitle {
+  margin: 0.8rem 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.result-box {
+  min-height: 3rem;
+}
+
+.result-box p {
+  margin: 0.1rem 0;
+  overflow-wrap: anywhere;
+}
+
+.result-title {
+  font-weight: 600;
+}
+
+.counters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.4rem 1rem;
+  margin: 0;
+}
+
+.counters dt {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.counters dd {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.3rem 0;
+}
+
+.switch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.5rem;
+}
+
+.switch-field {
+  align-items: end;
+}
+
+details.card > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.curve-box {
+  max-width: 720px;
+}
+
+.slider-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0.6rem 0;
+}
+
+.slider-row input[type="range"] {
+  flex: 1 1 14rem;
+  max-width: 28rem;
+}
+
+.detail-table {
+  margin-top: 0.6rem;
+}
+
+.cluster-objects {
+  list-style: none;
+  margin: 0.6rem 0 0;
+  padding: 0;
+}
+
+.cluster-objects li {
+  margin-bottom: 0.4rem;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- Zeichnungen ---------- */
+
+.plot-marker.pt-neutral {
+  fill: #6b7683;
+}
+
+.plot-marker.pt-center {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.plot-point-text {
+  font-size: 11px;
+  font-weight: 700;
+  fill: #fff;
+  paint-order: stroke;
+  stroke: var(--text);
+  stroke-width: 2.5px;
+  pointer-events: none;
+}
+
+.plot-marker.pt-trail {
+  stroke: var(--text);
+  stroke-width: 0.8;
+}
+
+.plot-label {
+  font-size: 13px;
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+}
+
+.plot-label.label-strong {
+  font-weight: 700;
+}
+
+.plot-marker.pt-curve,
+.plot-point.ring-current .plot-marker {
+  stroke-width: 1.5;
+}
+
+#sil-chart .coord-plot {
+  cursor: pointer;
+}
+
+.plot-region.sil-selected {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+/* ---------- Von Hand rechnen, nach BUSY BIAS ---------- */
+
+.hand-table td.num {
+  text-align: left;
+}
+
+.hand-table td,
+.hand-table th {
+  white-space: nowrap;
+}
+
+.hand-table thead th {
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+.hand-input {
+  width: 5.2rem;
+  font: inherit;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+}
+
+.hand-input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.hand-input.input-wrong {
+  border: 2px solid var(--wrong-border);
+  background: var(--wrong-bg);
+}
+
+.hand-given {
+  font-weight: 600;
+}
+
+.hand-original {
+  display: block;
+  font-weight: normal;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.hand-pair label {
+  margin-left: 0.4rem;
+}
+
+.hand-iteration th {
+  background: var(--bg);
+  text-align: left;
+  font-weight: 600;
+}
+
+.data-table tbody tr.row-open > * {
+  background: #f7f9fc;
+}
+
+.check-ok {
+  color: #1e7b34;
+  font-weight: 600;
+}
+
+.check-cell {
+  white-space: nowrap;
+}
+
+.row-hints td {
+  background: var(--surface);
+  white-space: normal;
+}
+
+.hints-title {
+  margin: 0 0 0.3rem;
+  font-weight: 600;
+}
+
+.hint-list {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.hint-calc li {
+  color: var(--danger);
+}
+
+.help-box {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-left: 4px solid var(--primary);
+  background: var(--info-bg);
+}
+
+.help-box p {
+  margin: 0.1rem 0;
+}
+
+.hand-center-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 1.5rem;
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Bilder und Objekte ---------- */
+
+.img-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 2rem;
+  align-items: end;
+}
+
+.img-controls .inline-row select {
+  min-width: 12rem;
+}
+
+.image-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 700px) {
+  .image-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+.image-pair figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.image-pair figcaption {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.image-pair canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.img-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+
+.img-color {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.55rem;
+}
+
+.img-color.is-background {
+  background: var(--bg);
+  color: var(--muted);
+  border-style: dashed;
+  border-color: var(--muted);
+}
+
+.img-swatch {
+  display: block;
+}

@@ -132,14 +132,13 @@
   }
 
   /**
-   * Liest eine hochgeladene Datei ein. Der Datensatz wird hier nicht verändert.
+   * Prüft eine hochgeladene CSV-Datei und liest sie als Text.
    *
    * @param {File} file - Datei.
-   * @param {Object} [options] - Siehe {@link parseText}.
-   * @returns {Promise<Object>} Ergebnis von {@link parseText}.
+   * @returns {Promise<string>} Inhalt.
    * @throws {Error} Bei unzulässiger, zu großer oder beschädigter Datei.
    */
-  async function importFile(file, options) {
+  async function readTextFile(file) {
     if (!/\.csv$/i.test(file.name)) {
       throw new Error('Nur Dateien vom Typ .csv sind erlaubt.');
     }
@@ -154,8 +153,20 @@
     if (isZip || bytes.includes(0)) {
       throw new Error('Die Datei ist keine Textdatei im CSV-Format.');
     }
-    return parseText(decodeText(bytes), options);
+    return decodeText(bytes);
   }
 
-  ns.pointImport = { importFile, parseText, MAX_FILE_BYTES };
+  /**
+   * Liest eine hochgeladene Datei ein. Der Datensatz wird hier nicht verändert.
+   *
+   * @param {File} file - Datei.
+   * @param {Object} [options] - Siehe {@link parseText}.
+   * @returns {Promise<Object>} Ergebnis von {@link parseText}.
+   * @throws {Error} Bei unzulässiger, zu großer oder beschädigter Datei.
+   */
+  async function importFile(file, options) {
+    return parseText(await readTextFile(file), options);
+  }
+
+  ns.pointImport = { importFile, parseText, readTextFile, readBytes, MAX_FILE_BYTES };
 })(window.BB = window.BB || {});

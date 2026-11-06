@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SCORM-1.2-Manifest von CLEVER CLUSTERS (Choose Locations, Evaluate Vectors, Edit, Repeat: Centers Learn Until Stable, Then Everything Rests Smoothly).
+  - Ein einzelnes SCO (index.html), das alle sechs Seiten als Registerkarten enthält.
+  - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
+  - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
+-->
+<manifest identifier="CLEVER-CLUSTERS-1" version="1.0"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="ORG-CLEVER-CLUSTERS">
+    <organization identifier="ORG-CLEVER-CLUSTERS">
+      <title>CLEVER CLUSTERS – k-Means-Demonstrator</title>
+      <item identifier="ITEM-CLEVER-CLUSTERS" identifierref="RES-CLEVER-CLUSTERS" isvisible="true">
+        <title>CLEVER CLUSTERS – k-Means-Demonstrator</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="RES-CLEVER-CLUSTERS" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="index.html"/>
+      <file href="LICENSE.txt"/>
+      <file href="css/base.css"/>
+      <file href="css/clusters.css"/>
+      <file href="css/sim.css"/>
+      <file href="css/style.css"/>
+      <file href="js/app.js"/>
+      <file href="js/cluster-data.js"/>
+      <file href="js/cluster-import.js"/>
+      <file href="js/cluster-panel.js"/>
+      <file href="js/cluster-view.js"/>
+      <file href="js/coord-plot.js"/>
+      <file href="js/csv-parser.js"/>
+      <file href="js/dom-utils.js"/>
+      <file href="js/hand-calc.js"/>
+      <file href="js/image-kmeans.js"/>
+      <file href="js/kmeans-analysis.js"/>
+      <file href="js/kmeans.js"/>
+      <file href="js/object-count.js"/>
+      <file href="js/pages/elbow.js"/>
+      <file href="js/pages/hand.js"/>
+      <file href="js/pages/images.js"/>
+      <file href="js/pages/input.js"/>
+      <file href="js/pages/silhouette.js"/>
+      <file href="js/pages/training.js"/>
+      <file href="js/point-data.js"/>
+      <file href="js/point-import.js"/>
+      <file href="js/sample-scenes.js"/>
+      <file href="js/scorm-api.js"/>
+      <file href="js/session.js"/>
+      <file href="js/sim-format.js"/>
+      <file href="js/tabs.js"/>
+      <file href="js/task-generator.js"/>
+      <file href="js/text-utils.js"/>
+      <file href="js/training-controls.js"/>
+      <file href="js/voronoi.js"/>
+      <file href="js/samples.js"/>
+    </resource>
+  </resources>
+</manifest>

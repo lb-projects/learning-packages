@@ -3,13 +3,14 @@
 Der Quelltext dieses Repositorys steht unter der **MIT-Lizenz** (siehe [LICENSE](LICENSE)).
 Davon abweichend oder ergänzend gilt Folgendes.
 
-Das Repository enthält vier Pakete. Die Hinweise sind danach gegliedert, für wen sie gelten:
+Das Repository enthält fünf Pakete. Die Hinweise sind danach gegliedert, für wen sie gelten:
 
 - [Allgemein](#allgemein-alle-pakete): gilt für alle Pakete.
 - [NOSY NEIGHBORS](#nosy-neighbors): gilt für NOSY NEIGHBORS (`NOSY-NEIGHBORS/`); der Abschnitt zu `inflate.js` gilt auch für EDGY EDGES.
 - [SQL Sandbox](#sql-sandbox): gilt nur für die SQL Sandbox (`SQL-Sandbox/`).
 - [EDGY EDGES](#edgy-edges): gilt nur für das Graphen-Paket (`EDGY-EDGES/`).
 - [BUSY BIAS](#busy-bias): gilt nur für den Perzeptron-Simulator (`BUSY-BIAS/`).
+- [CLEVER CLUSTERS](#clever-clusters): gilt nur für den k-Means-Demonstrator (`CLEVER-CLUSTERS/`).
 
 ## Allgemein (alle Pakete)
 
@@ -159,3 +160,20 @@ BUSY BIAS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-parser.
 ### Gestaltung
 
 Grün und Hellrot für die Decision Areas sind eine inhaltliche Vorgabe des Pakets. Damit die Klassen auch ohne Farbwahrnehmung erkennbar sind, unterscheiden sich die Punkte zusätzlich in der Form (Kreis und Quadrat).
+
+## CLEVER CLUSTERS
+
+### Code
+
+CLEVER CLUSTERS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Die Verfahren sind allgemein bekannt und in eigener Umsetzung enthalten: k-Means nach S. P. Lloyd (1957, veröffentlicht 1982), k-means++ nach D. Arthur und S. Vassilvitskii (2007), Silhouette nach P. J. Rousseeuw (1987).
+
+### Daten: Beispieldatensätze und Beispielbilder
+
+- **Betrifft:** `CLEVER-CLUSTERS/testdata/*.csv`, die inhaltsgleichen eingebauten Beispiele `CLEVER-CLUSTERS/src/js/samples.js` und die Beispielbilder in `CLEVER-CLUSTERS/src/js/sample-scenes.js`.
+- **Herkunft:** für dieses Projekt erstellt, MIT-Lizenz.
+- Die Werte sind selbst erzeugt, ohne Übernahme aus einer Datenbank; es sind keine Messdaten. Die Lebensmittel sind gerundete, selbst zusammengestellte Richtwerte und nicht für Ernährungsangaben gedacht.
+- Die Beispielbilder sind eigene Zeichnungen, die der Code beim Laden erzeugt. Das Paket enthält keine Bilddateien.
+
+### Gestaltung
+
+Die Farben der Cluster sind eine eigene Zusammenstellung. Damit die Cluster auch ohne Farbwahrnehmung und bei vielen Clustern erkennbar sind, tragen die Zentren ihre Nummer, und die Punkte unterscheiden sich zusätzlich in der Form (Kreis, Quadrat und Raute).

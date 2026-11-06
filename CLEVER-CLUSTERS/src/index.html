@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<!--
+  CLEVER CLUSTERS – Choose Locations, Evaluate Vectors, Edit, Repeat: Centers Learn Until Stable, Then Everything Rests Smoothly
+  ==============================================================================================================================
+  SCORM-1.2-Lernpaket: k-Means-Demonstrator. Einstiegsseite (im Manifest als SCO eingetragen).
+
+  Aufbau:
+    - Kopfbereich mit Registerkarten (Tabs) für die sechs Seiten
+    - sechs <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
+
+  Sicherheit:
+    - Content-Security-Policy nach dem Prinzip "alles verboten, außer":
+      default-src 'none' sperrt jede Ressourcenart (Bilder, Schriften, Medien,
+      Frames, Worker, Netzwerkverbindungen, Plugins); erlaubt sind nur Skripte
+      und Stylesheets aus dem Paket selbst. Keine Formularübertragung, kein <base>.
+    - Trusted Types (require-trusted-types-for 'script'): Browser mit Unterstützung
+      blockieren zur Laufzeit jede Übergabe von Zeichenketten an HTML-Senken wie innerHTML.
+      Es gibt keine Policy, weil das Paket kein XML einliest.
+    - Es gibt kein Inline-JavaScript und keine Inline-Stile.
+    - Keine externen Ressourcen (keine CDNs, keine Webfonts).
+    - Alle dynamischen Inhalte werden per JavaScript als Text eingefügt (siehe js/dom-utils.js).
+    - Bilder auf Seite 6 werden mit createImageBitmap dekodiert und auf Canvas gezeichnet;
+      dafür ist keine Ausnahme in der Richtlinie nötig.
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CLEVER CLUSTERS – k-Means-Demonstrator</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/sim.css">
+  <link rel="stylesheet" href="css/clusters.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Reihenfolge ist wichtig: Grundmodule zuerst, app.js zuletzt. "defer" = nach dem Aufbau des HTML ausführen. -->
+  <script src="js/dom-utils.js" defer></script>
+  <script src="js/sim-format.js" defer></script>
+  <script src="js/text-utils.js" defer></script>
+  <script src="js/tabs.js" defer></script>
+  <script src="js/scorm-api.js" defer></script>
+  <script src="js/csv-parser.js" defer></script>
+  <script src="js/point-data.js" defer></script>
+  <script src="js/point-import.js" defer></script>
+  <script src="js/coord-plot.js" defer></script>
+  <script src="js/training-controls.js" defer></script>
+  <script src="js/samples.js" defer></script>
+  <script src="js/cluster-data.js" defer></script>
+  <script src="js/cluster-import.js" defer></script>
+  <script src="js/kmeans.js" defer></script>
+  <script src="js/kmeans-analysis.js" defer></script>
+  <script src="js/voronoi.js" defer></script>
+  <script src="js/image-kmeans.js" defer></script>
+  <script src="js/object-count.js" defer></script>
+  <script src="js/sample-scenes.js" defer></script>
+  <script src="js/hand-calc.js" defer></script>
+  <script src="js/task-generator.js" defer></script>
+  <script src="js/session.js" defer></script>
+  <script src="js/cluster-panel.js" defer></script>
+  <script src="js/cluster-view.js" defer></script>
+  <script src="js/pages/input.js" defer></script>
+  <script src="js/pages/training.js" defer></script>
+  <script src="js/pages/hand.js" defer></script>
+  <script src="js/pages/elbow.js" defer></script>
+  <script src="js/pages/silhouette.js" defer></script>
+  <script src="js/pages/images.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>CLEVER CLUSTERS <span class="subtitle">Choose Locations, Evaluate Vectors, Edit, Repeat: Centers Learn Until Stable, Then Everything Rests Smoothly</span></h1>
+    <nav class="tabs" role="tablist" aria-label="Seiten von CLEVER CLUSTERS">
+      <button type="button" role="tab" id="tab-input" aria-controls="page-input" aria-selected="true"><span class="tab-no">1</span> Daten und k</button>
+      <button type="button" role="tab" id="tab-training" aria-controls="page-training" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Training</button>
+      <button type="button" role="tab" id="tab-hand" aria-controls="page-hand" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> Von Hand rechnen</button>
+      <button type="button" role="tab" id="tab-elbow" aria-controls="page-elbow" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Ellbogen-Analyse</button>
+      <button type="button" role="tab" id="tab-silhouette" aria-controls="page-silhouette" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Silhouetten-Analyse</button>
+      <button type="button" role="tab" id="tab-images" aria-controls="page-images" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Bilder und Objekte</button>
+    </nav>
+  </header>
+
+  <noscript><p class="status status-error">CLEVER CLUSTERS benötigt JavaScript.</p></noscript>
+  <p id="app-error" class="status status-error" role="alert">Die Anwendung wird geladen … Falls diese Meldung bestehen bleibt, ist JavaScript deaktiviert oder der Browser zu alt.</p>
+
+  <main>
+    <!-- ===================================================================
+         Seite 1: Daten und k
+         =================================================================== -->
+    <section id="page-input" class="page page-wide" role="tabpanel" aria-labelledby="tab-input">
+      <h2>Daten und k</h2>
+      <p class="intro">Laden Sie Daten aus einer CSV-Datei oder einem Beispiel, oder geben Sie einzelne Punkte ein. Wählen Sie dann die Anzahl der Cluster k und legen Sie die Startzentren fest.</p>
+      <div class="sim-layout">
+        <div>
+          <div id="input-data"></div>
+          <div id="input-form"></div>
+          <div class="card" id="cfg-card">
+            <h3>k-Means einstellen</h3>
+            <div class="field-row">
+              <div class="field"><label for="cfg-k">Anzahl der Cluster k</label><select id="cfg-k"></select></div>
+            </div>
+            <label class="switch"><input type="checkbox" id="cfg-scale"> Eingabedaten skalieren (je Achse auf 0 bis 1)</label>
+            <h4 class="card-subtitle">Startzentren</h4>
+            <p id="cfg-center-status" role="status"></p>
+            <div class="button-row">
+              <button type="button" id="cfg-random" class="btn btn-primary">Zufällig wählen</button>
+              <button type="button" id="cfg-plusplus" class="btn">Mit k-means++ wählen</button>
+              <button type="button" id="cfg-clear-centers" class="btn">Zentren löschen</button>
+            </div>
+            <p class="hint">Ein Klick in die Zeichnung setzt ein Zentrum. Nahe an einem Datenpunkt rastet es auf ihm ein. Ein Klick auf ein Zentrum entfernt es.</p>
+            <p class="hint">k-means++ wählt das erste Zentrum zufällig und bevorzugt danach Punkte, die weit von den schon gewählten entfernt liegen. Das führt oft, aber nicht immer zu einem besseren Ergebnis.</p>
+            <p id="input-click-message" class="error" role="alert"></p>
+          </div>
+        </div>
+        <div>
+          <div id="input-plot" class="plot-box"></div>
+          <p id="input-empty" class="hint">Noch keine Datenpunkte.</p>
+          <label class="switch"><input type="checkbox" id="input-toggle-areas"> Decision Areas einzeichnen</label>
+          <div class="card" id="input-centers-card" hidden>
+            <h3>Startzentren</h3>
+            <div class="table-scroll table-scroll-limited">
+              <table class="data-table"><thead><tr id="input-centers-head"></tr></thead><tbody id="input-centers-body"></tbody></table>
+            </div>
+          </div>
+          <div id="input-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 2: Training
+         =================================================================== -->
+    <section id="page-training" class="page page-wide" role="tabpanel" aria-labelledby="tab-training" hidden>
+      <h2>Training</h2>
+      <p id="training-not-ready" class="notice" hidden>Legen Sie zuerst auf Seite 1 die Daten und alle k Startzentren fest.</p>
+      <div class="sim-layout">
+        <div>
+          <div class="card"><div id="training-controls"></div></div>
+          <div class="card result-box" aria-live="polite">
+            <p class="result-title" id="training-step-title"></p>
+            <p id="training-step-text"></p>
+          </div>
+          <div class="card">
+            <dl class="counters">
+              <div><dt>Iteration</dt><dd id="count-iteration">0</dd></div>
+              <div><dt>Trainingsschritte</dt><dd id="count-steps">0</dd></div>
+              <div><dt>Wechsel bei der letzten Zuordnung</dt><dd id="count-changes">–</dd></div>
+              <div><dt>WCSS</dt><dd id="training-wcss">–</dd></div>
+            </dl>
+            <p class="hint">WCSS (Within Cluster Sum of Squares) ist die Summe der quadrierten Abstände aller Punkte zu ihrem Zentrum.</p>
+            <p id="training-found" class="status status-success" role="status" hidden></p>
+            <p id="training-empty-cluster" class="notice" hidden></p>
+          </div>
+          <div class="card">
+            <h3>Aktuelle Clusterzentren</h3>
+            <div class="table-scroll table-scroll-limited">
+              <table class="data-table"><thead><tr id="training-centers-head"></tr></thead><tbody id="training-centers-body"></tbody></table>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div id="training-plot" class="plot-box"></div>
+          <div class="switch-row">
+            <label class="switch"><input type="checkbox" id="toggle-areas"> Decision Areas einzeichnen</label>
+            <label class="switch"><input type="checkbox" id="toggle-trail"> Verlauf der Clusterzentren zeigen</label>
+          </div>
+        </div>
+      </div>
+      <details class="card" id="training-curve-details">
+        <summary>Verlauf der WCSS</summary>
+        <p id="training-curve-empty" class="hint">Noch kein Trainingsschritt.</p>
+        <p class="hint">Die Kurve erhält nach jedem Trainingsschritt einen neuen Wert.</p>
+        <div id="training-curve" class="curve-box"></div>
+      </details>
+      <details class="card" id="training-objects-details">
+        <summary>Objekte je Cluster</summary>
+        <div id="training-objects"></div>
+      </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 3: Von Hand rechnen
+         =================================================================== -->
+    <section id="page-hand" class="page page-wide" role="tabpanel" aria-labelledby="tab-hand" hidden>
+      <h2>Von Hand rechnen</h2>
+      <div class="card" id="hand-source">
+        <h3>Aufgabe</h3>
+        <div class="inline-row">
+          <button type="button" id="hand-adopt" class="btn btn-primary">Daten von Seite 1 übernehmen</button>
+          <label for="hand-level">Schwierigkeit</label>
+          <select id="hand-level"></select>
+          <button type="button" id="hand-random" class="btn btn-primary">Neue Zufallsaufgabe</button>
+        </div>
+        <p id="hand-source-error" class="error" role="alert"></p>
+        <p id="hand-empty" class="hint">Noch keine Aufgabe: Übernehmen Sie die Daten von Seite 1 (höchstens 12 Punkte und k = 4) oder lassen Sie eine Zufallsaufgabe erzeugen.</p>
+        <p id="hand-info" class="hint" role="status"></p>
+        <p id="hand-differs" class="notice" hidden>Seite 1 wurde geändert. Die Tabelle rechnet mit den übernommenen Werten weiter.</p>
+      </div>
+      <div id="hand-content" hidden>
+        <div class="card">
+          <h3>So geht es</h3>
+          <p>Füllen Sie die Tabelle Zeile für Zeile aus und klicken Sie auf „Prüfen“ (oder drücken Sie die Eingabetaste). Ist die Zeile richtig, erscheint die nächste. Runden Sie krumme Zahlen auf mindestens zwei Nachkommastellen.</p>
+          <ul class="hint">
+            <li>Zuordnung: d² = (x − Zentrum x)² + (y − Zentrum y)². Der Punkt gehört zum Zentrum mit dem kleinsten d², bei gleichem Abstand zur kleineren Nummer.</li>
+            <li>Aktualisierung: Das neue Zentrum ist der Mittelwert aller Punkte des Clusters. Ein leerer Cluster behält sein Zentrum.</li>
+            <li>WCSS: Summe der quadrierten Abstände aller Punkte zu ihren neuen Zentren.</li>
+            <li>Ende: Eine Zuordnung ändert nichts mehr.</li>
+          </ul>
+          <label class="switch"><input type="checkbox" id="hand-given"> Abstände vorgeben (nur den Cluster eintragen)</label>
+        </div>
+        <div class="card">
+          <dl class="counters">
+            <div><dt>Richtige Zeilen</dt><dd id="hand-correct">0</dd></div>
+            <div><dt>Fehlversuche</dt><dd id="hand-errors">0</dd></div>
+            <div><dt>Genutzte Hilfen</dt><dd id="hand-helps">0</dd></div>
+          </dl>
+          <p id="hand-feedback" class="status" role="status" aria-live="polite"></p>
+          <div class="button-row">
+            <button type="button" id="hand-restart" class="btn">Tabelle neu beginnen</button>
+            <button type="button" id="hand-next" class="btn btn-primary" hidden>Nächste Zufallsaufgabe</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Aktuelle Zentren</h3>
+          <div id="hand-centers"></div>
+          <div id="hand-table" class="table-scroll"></div>
+        </div>
+        <details class="card" id="hand-plot-details">
+          <summary>Zeichnung</summary>
+          <p class="hint">Stand nach der letzten richtigen Zeile. Der Punkt der offenen Zeile ist hervorgehoben.</p>
+          <div id="hand-plot" class="curve-box"></div>
+          <label class="switch"><input type="checkbox" id="hand-areas"> Decision Areas einzeichnen</label>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 4: Ellbogen-Analyse
+         =================================================================== -->
+    <section id="page-elbow" class="page page-wide" role="tabpanel" aria-labelledby="tab-elbow" hidden>
+      <h2>Ellbogen-Analyse</h2>
+      <p class="intro">Die WCSS sinkt mit wachsendem k. Ab dem „Knick“ bringt ein weiteres Cluster meist nur noch wenig. Jede Analyse beginnt für jedes k mit neuen zufälligen Zentren und ist unabhängig vom Training und von der Silhouetten-Analyse.</p>
+      <p id="elbow-empty" class="notice" hidden>Laden oder erfassen Sie zuerst auf Seite 1 Daten.</p>
+      <p id="elbow-stale" class="notice" hidden>Die Daten haben sich geändert. Starten Sie die Analyse neu.</p>
+      <div class="sim-layout">
+        <div>
+          <div class="card">
+            <p id="elbow-plan"></p>
+            <div class="field-row switch-field" id="elbow-higher-row" hidden>
+              <label class="switch"><input type="checkbox" id="elbow-higher"> Höhere k-Werte zuschalten</label>
+              <div class="field"><label for="elbow-max">Größtes k</label><select id="elbow-max" disabled></select></div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label for="elbow-start">Startzentren</label><select id="elbow-start"><option value="random" selected>zufällig</option><option value="plusplus">k-means++</option></select></div>
+            </div>
+            <div class="button-row"><button type="button" id="elbow-run" class="btn btn-primary">Ellbogen-Analyse durchführen</button></div>
+          </div>
+          <div class="card">
+            <label class="switch"><input type="checkbox" id="elbow-knee"> Ellbogen-Knick markieren</label>
+            <p id="elbow-knee-text" class="hint" hidden></p>
+            <p id="elbow-rising" class="notice" hidden>Die Kurve steigt an mindestens einer Stelle. Das kann passieren, weil jedes k eigene zufällige Startzentren hat und k-Means dabei in einem schlechteren Ergebnis enden kann.</p>
+          </div>
+        </div>
+        <div id="elbow-chart-box" hidden>
+          <div id="elbow-chart" class="plot-box"></div>
+        </div>
+      </div>
+      <details class="card" id="elbow-details">
+        <summary>Clusterzentren und Abstände</summary>
+        <p id="elbow-detail-empty" class="hint">Führen Sie zuerst die Analyse durch.</p>
+        <div id="elbow-detail" hidden>
+          <div class="slider-row">
+            <label for="elbow-slider">k = <strong id="elbow-slider-value">1</strong></label>
+            <input type="range" id="elbow-slider" min="1" max="10" step="1" value="1" disabled>
+          </div>
+          <div class="sim-layout">
+            <div>
+              <dl class="counters">
+                <div><dt>WCSS</dt><dd id="elbow-wcss">–</dd></div>
+                <div><dt>Iterationen</dt><dd id="elbow-iterations">–</dd></div>
+              </dl>
+              <div class="table-scroll table-scroll-limited detail-table">
+                <table class="data-table"><thead><tr id="elbow-centers-head"></tr></thead><tbody id="elbow-centers-body"></tbody></table>
+              </div>
+            </div>
+            <div id="elbow-plot" class="plot-box"></div>
+          </div>
+          <h3>Objekte je Cluster</h3>
+          <div id="elbow-objects"></div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 5: Silhouetten-Analyse
+         =================================================================== -->
+    <section id="page-silhouette" class="page page-wide" role="tabpanel" aria-labelledby="tab-silhouette" hidden>
+      <h2>Silhouetten-Analyse</h2>
+      <p class="intro">Der Silhouettenwert eines Punkts vergleicht den mittleren Abstand zum eigenen Cluster (a) mit dem zum nächsten fremden Cluster (b): s = (b − a) / max(a, b). Werte nahe 1 passen gut, Werte unter 0 sprechen für den falschen Cluster. Jede Analyse beginnt mit neuen zufälligen Zentren und ist unabhängig vom Training und von der Ellbogen-Analyse.</p>
+      <p id="sil-empty" class="notice" hidden>Für die Analyse sind auf Seite 1 mindestens drei Punkte nötig, davon zwei verschiedene.</p>
+      <p id="sil-stale" class="notice" hidden>Die Daten haben sich geändert. Starten Sie die Analyse neu.</p>
+      <div class="sim-layout">
+        <div>
+          <div class="card">
+            <div class="field-row">
+              <div class="field"><label for="sil-k">Anzahl der Cluster k</label><select id="sil-k"></select></div>
+              <div class="field"><label for="sil-start">Startzentren</label><select id="sil-start"><option value="random" selected>zufällig</option><option value="plusplus">k-means++</option></select></div>
+            </div>
+            <div class="button-row"><button type="button" id="sil-run" class="btn btn-primary">Silhouetten-Analyse durchführen</button></div>
+          </div>
+          <div class="card" id="sil-point-card" hidden>
+            <h3>Punkt untersuchen</h3>
+            <div class="field-row">
+              <div class="field"><label for="sil-point">Punkt</label><select id="sil-point"></select></div>
+            </div>
+            <p class="hint">Oder klicken Sie im Diagramm auf eine Säule.</p>
+            <div id="sil-point-calc" aria-live="polite"></div>
+          </div>
+          <div class="card" id="sil-summary">
+            <dl class="counters">
+              <div><dt>Mittlerer Silhouettenwert</dt><dd id="sil-mean">–</dd></div>
+            </dl>
+            <div class="table-scroll table-scroll-limited detail-table">
+              <table class="data-table">
+                <thead><tr><th scope="col">Cluster</th><th scope="col" class="num">Punkte</th><th scope="col" class="num">Mittelwert</th></tr></thead>
+                <tbody id="sil-clusters"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div id="sil-chart-box" hidden>
+          <div id="sil-chart" class="plot-box"></div>
+        </div>
+      </div>
+      <details class="card" id="sil-details">
+        <summary>Clusterzentren und Cluster</summary>
+        <p id="sil-detail-empty" class="hint">Führen Sie zuerst die Analyse durch.</p>
+        <div id="sil-detail" hidden>
+          <div class="sim-layout">
+            <div class="table-scroll table-scroll-limited detail-table">
+              <table class="data-table"><thead><tr id="sil-centers-head"></tr></thead><tbody id="sil-centers-body"></tbody></table>
+            </div>
+            <div id="sil-plot" class="plot-box"></div>
+          </div>
+          <h3>Objekte je Cluster</h3>
+          <div id="sil-objects"></div>
+        </div>
+      </details>
+      <details class="card" id="sil-eval-details">
+        <summary>Welches k wäre am besten?</summary>
+        <p id="sil-eval-empty" class="hint">Führen Sie zuerst die Analyse durch.</p>
+        <div id="sil-eval" hidden>
+          <p id="sil-best" class="result-title"></p>
+          <p class="hint">Für jedes k läuft k-Means einmal mit neuen zufälligen Zentren. Das Ergebnis kann deshalb von Klick zu Klick schwanken.</p>
+          <div class="table-scroll table-scroll-limited detail-table">
+            <table class="data-table">
+              <thead><tr><th scope="col" class="num">k</th><th scope="col" class="num">Mittlerer Silhouettenwert</th><th scope="col">Bemerkung</th></tr></thead>
+              <tbody id="sil-eval-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- ===================================================================
+         Seite 6: Bilder und Objekte
+         =================================================================== -->
+    <section id="page-images" class="page page-wide" role="tabpanel" aria-labelledby="tab-images" hidden>
+      <h2>Bilder und Objekte</h2>
+      <p class="intro">k-Means kann auch die Farben eines Bildes gruppieren: Jedes Pixel ist ein Punkt im Farbraum aus Rot, Grün und Blau. Fasst man danach zusammenhängende Flächen zusammen, lassen sich Objekte zählen. Diese Seite ist von den übrigen Seiten unabhängig. Bilder bleiben im Browser und werden nicht gespeichert.</p>
+      <div class="card">
+        <div class="img-controls">
+          <div>
+            <label class="file-label" for="img-file">PNG-Datei auswählen (höchstens 10 MB)</label>
+            <input type="file" id="img-file" accept=".png,image/png">
+          </div>
+          <div>
+            <label for="img-sample">Beispiel</label>
+            <div class="inline-row">
+              <select id="img-sample"></select>
+              <button type="button" id="img-sample-load" class="btn">Beispiel laden</button>
+            </div>
+          </div>
+        </div>
+        <div id="img-status" class="status" role="status" aria-live="polite" hidden></div>
+      </div>
+      <p id="img-empty" class="notice">Laden Sie ein Bild oder ein Beispiel.</p>
+      <div id="img-result" hidden>
+        <div class="slider-row">
+          <label for="img-k">k = <strong id="img-k-value">2</strong></label>
+          <input type="range" id="img-k" min="1" max="10" step="1" value="2">
+          <button type="button" id="img-recalc" class="btn">Neu berechnen</button>
+        </div>
+        <p id="img-few-colors" class="notice" hidden></p>
+        <div class="image-pair">
+          <figure>
+            <figcaption>Original</figcaption>
+            <canvas id="img-original" role="img"></canvas>
+          </figure>
+          <figure>
+            <figcaption>Ergebnis mit den Farben der Cluster</figcaption>
+            <canvas id="img-output" role="img"></canvas>
+          </figure>
+        </div>
+        <div class="card">
+          <h3>Flächen zählen</h3>
+          <dl class="counters">
+            <div><dt>Gezählte Flächen</dt><dd id="img-count">0</dd></div>
+          </dl>
+          <p id="img-ignored" class="hint"></p>
+          <p class="hint">k-Means gruppiert nur Farben und kennt keine Objekte. Gezählt werden zusammenhängende Flächen, die nicht zum Hintergrund gehören. Stimmt das mit dem überein, was Sie im Bild sehen?</p>
+          <h4 class="card-subtitle">Farben: Ein Klick wechselt zwischen Hintergrund und Objekt</h4>
+          <div id="img-palette" class="img-palette"></div>
+          <div class="slider-row">
+            <label for="img-min-area">Mindestgröße einer Fläche: <strong id="img-min-area-value"></strong></label>
+            <input type="range" id="img-min-area" min="1" max="3000" step="1" value="100">
+          </div>
+          <label class="switch"><input type="checkbox" id="img-boxes" checked> Nummerierte Rahmen einzeichnen</label>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p id="progress" role="status"></p>
+  </footer>
+</body>
+</html>
