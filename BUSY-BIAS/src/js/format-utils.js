@@ -85,6 +85,41 @@
   }
 
   /**
+   * Eingänge eines Punkts als Text; bei skalierten Daten mit dem Original in Klammern.
+   * @param {number[]} x - Rechenwerte.
+   * @param {number[]|null} raw - Originalwerte oder null.
+   * @returns {string} z. B. "x₁ = 0,5 (3,6), x₂ = 0,25 (1,2)".
+   */
+  function inputsText(x, raw) {
+    const part = (symbol, i) => symbol + ' = ' + num(x[i]) + (raw ? ' (' + num(raw[i]) + ')' : '');
+    return part('x₁', 0) + ', ' + part('x₂', 1);
+  }
+
+  /**
+   * Stelle eines Punkts in der Iteration.
+   * @param {Object} r - Aufzeichnung des Trainers.
+   * @returns {string} z. B. "Punkt 3 von 8" oder bei gemischter Reihenfolge "Schritt 3 von 8: Punkt Nr. 5".
+   */
+  function pointTitle(r) {
+    return r.shuffled ? 'Schritt ' + (r.position + 1) + ' von ' + r.total + ': Punkt Nr. ' + (r.index + 1) : 'Punkt ' + (r.index + 1) + ' von ' + r.total;
+  }
+
+  /**
+   * Zeile der Umrechnung auf Seite 4.
+   * @param {string} symbol - x₁ oder x₂.
+   * @param {number} value - Originalwert.
+   * @param {{min:number, max:number}} range - Bereich.
+   * @param {number} scaled - Ergebnis.
+   * @returns {string} Zeile.
+   */
+  function scaleLine(symbol, value, range, scaled) {
+    if (range.max === range.min) {
+      return 'Skaliert: ' + symbol + ' = 0, weil alle Trainingswerte gleich sind';
+    }
+    return 'Skaliert: ' + symbol + ' = (' + num(value) + ' − ' + factor(range.min) + ') / (' + num(range.max) + ' − ' + factor(range.min) + ') = ' + num(scaled);
+  }
+
+  /**
    * Zeilen eines Trainingspunkts. Es erscheint nur, was der Ablauf schon erreicht hat.
    *
    * @param {Object} record - Aufzeichnung des Trainers.
@@ -94,7 +129,7 @@
   function recordLines(record, lineOf) {
     const r = record;
     const lines = [{
-      text: 'Iteration ' + r.iteration + ', Punkt ' + (r.index + 1) + ' von ' + r.total + ': x₁ = ' + num(r.x[0]) + ', x₂ = ' + num(r.x[1]) +
+      text: 'Iteration ' + r.iteration + ', ' + pointTitle(r) + ': ' + inputsText(r.x, r.raw) +
         ', Label ' + r.label + ' (t = ' + r.t + ')' + (r.group ? ', ' + r.group : ''),
       cls: 'protocol-head'
     }, { text: currentLine(r.wBefore, r.thetaBefore) }];
@@ -134,5 +169,5 @@
     return label === null ? '(anderes Label)' : label;
   }
 
-  ns.fmt = { equation, generalForm, sumLine, activationLine, currentLine, recordLines, labelText };
+  ns.fmt = { equation, generalForm, sumLine, activationLine, currentLine, recordLines, labelText, inputsText, scaleLine, pointTitle };
 })(window.BB = window.BB || {});

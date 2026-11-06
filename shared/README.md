@@ -27,21 +27,22 @@ Simulator-Bausteine (**BUSY BIAS**; vorgesehen auch für den geplanten Simulator
 |---|---|---|
 | `js/sim-format.js` | Rundung für die Rechnung, deutsche Zahlenschreibweise | `simFormat.clean`, `num`, `factor`, `plural` |
 | `js/activations.js` | Aktivierungsfunktionen als einheitliche Einträge | `{id, name, output(net), fires(y), symbol}`; bisher nur Heaviside |
-| `js/point-data.js` | Datensatz: Punkte, Attributnamen, Labels, positives Label, Prüfungen, Änderungsmeldung | `pointData.create({maxLabels})` |
+| `js/point-data.js` | Datensatz: Punkte, Attributnamen, Labels, positives Label, Prüfungen, Änderungsmeldung | `pointData.create({maxLabels})`, `minMaxScaler(points)` (Min-Max auf 0 bis 1), `selectTestIndices(points, fraction)` (zufällig, je Label getrennt), `shuffled(list)`, `randomInt(max)` |
 | `js/number-wheel.js` | Wert eines Zahlenfelds mit dem Mausrad ändern, nur im Feld mit Fokus | `numberWheel.attach(input, {min, max, step, fallback})`, `decadeStep` |
 | `js/point-import.js` | CSV lesen und prüfen; Kopfzeile `Attribut x;Attribut y;Label` ist Pflicht | `pointImport.importFile`, `parseText` |
-| `js/data-panel.js` | Upload, Ersetzen/Ergänzen, Beispielauswahl mit Stufen, Punktmaske und -tabelle, Stufenkarte | `dataPanel.create(container, {data, samples, idPrefix, formatHelp, formContainer, listContainer})`; Punktmaske und Tabelle können in eigenen Behältern stehen; Form der Beispiele im Dateikopf |
+| `js/data-panel.js` | Upload, Ersetzen/Ergänzen, Beispielauswahl mit Stufen, Punktmaske und -tabelle, Stufenkarte | `dataPanel.create(container, {data, samples, idPrefix, formatHelp, formContainer, listContainer})`; Punktmaske und Tabelle können in eigenen Behältern stehen; `restoreSample(id, stage)` zum Wiederherstellen; Form der Beispiele im Dateikopf |
 | `js/coord-plot.js` | Koordinatensystem mit Flächen, Linien und Punkten | `coordPlot.create`, `render({view, xLabel, yLabel, regions, lines, points})`, `fitView(coords, {includeOrigin})`; Achsen mit Pfeilspitzen, sobald 0 im Ausschnitt liegt |
 | `js/net-view.js` | Zeichnung von Eingängen, Kanten, zweigeteilten Neuronen und Ausgängen | `netView.create`, `draw({inputs, neurons, edges, outputs})`; leere Texte entfallen (leerer Eingang = leerer Kreis), ein Schwellenwert kommt als Pfeil von unten |
 | `js/training-controls.js` | Weiter, N Iterationen, Automatik mit Tempo, Zurücksetzen | steuert jedes Objekt mit `step()`, `runIterations(n)`, `isFinished()`, `reset()`, `isReady()`, `hasStarted()` |
 | `js/protocol-view.js` | Scrollbares Protokoll, älteste Einträge oben; erzeugt nur neue Einträge | `protocolView.create`, `sync(list, toLines, notice)` |
 | `js/classify-panel.js` | Maske für einen Prüfpunkt, Rechnung und Urteil | `classifyPanel.create(container, {id, classify, labels, attributes, onProbe})` |
+| `js/confusion-matrix.js` | Konfusionsmatrix für beliebig viele Labels | `confusionMatrix.count(labels, results)`, `table(labels, m)` |
 | `css/sim.css` | Gestaltung dieser Bausteine | Farben über CSS-Variablen (`--fire`, `--nofire`, …) |
 
 ### Simulator-Bausteine in einem neuen Paket verwenden
 
 1. In `sync-shared.mjs` beim Paket `files: [...SHARED_FILES, 'js/csv-parser.js', ...SIM_FILES]` eintragen und das Skript ausführen.
-2. In `index.html` und `imsmanifest.xml` die Dateien in dieser Reihenfolge einbinden: `dom-utils`, `sim-format`, `text-utils`, `tabs`, `scorm-api`, `csv-parser`, `activations`, `point-data`, `number-wheel`, `point-import`, `data-panel`, `coord-plot`, `net-view`, `training-controls`, `protocol-view`, `classify-panel`, danach die eigenen Module; `css/base.css`, `css/sim.css`, `css/style.css`.
+2. In `index.html` und `imsmanifest.xml` die Dateien in dieser Reihenfolge einbinden: `dom-utils`, `sim-format`, `text-utils`, `tabs`, `scorm-api`, `csv-parser`, `activations`, `point-data`, `number-wheel`, `point-import`, `data-panel`, `coord-plot`, `net-view`, `training-controls`, `protocol-view`, `classify-panel`, `confusion-matrix`, danach die eigenen Module; `css/base.css`, `css/sim.css`, `css/style.css`.
 3. Das Modell und die Texte im Paket umsetzen und `training-controls` ein passendes Objekt übergeben (Vorlage: `BUSY-BIAS/src/js/session.js`).
 
 ### Eine Aktivierungsfunktion ergänzen

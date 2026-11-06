@@ -206,6 +206,29 @@
     }
 
     /**
+     * Lädt ein Beispiel direkt bis zu einer Stufe (beim Wiederherstellen eines gespeicherten Stands).
+     * @param {string} id - Kennung.
+     * @param {number} stage - Nummer der Stufe ab 1.
+     * @returns {boolean} true, wenn das Beispiel und die Stufe vorhanden sind.
+     */
+    function restoreSample(id, stage) {
+      const sample = samples.find((s) => s.id === id);
+      if (!sample || stage < 1 || stage > sample.stages.length) {
+        return false;
+      }
+      importToken++;
+      const first = stagePoints(sample.stages[0], 1, []);
+      let points = first.points;
+      for (let i = 1; i < stage; i++) {
+        points = points.concat(stagePoints(sample.stages[i], i + 1, [...new Set(points.map((p) => p.label))]).points);
+      }
+      current = { sample, index: stage - 1 };
+      sampleSelect.value = id;
+      data.replaceAll(points, first.attributes, { sample: id, stage, mode: 'restart' });
+      return true;
+    }
+
+    /**
      * Liest die gewählte Datei ein.
      * @param {File} file - Datei.
      */
@@ -387,7 +410,7 @@
     });
     refresh();
 
-    return { refresh, stageInfo, stageCard, loadSample, nextStage, setStageMode: (mode) => { stageMode = mode; refreshCards(); } };
+    return { refresh, stageInfo, stageCard, loadSample, restoreSample, nextStage, setStageMode: (mode) => { stageMode = mode; refreshCards(); } };
   }
 
   ns.dataPanel = { create };

@@ -10,7 +10,8 @@
  *
  * Ablauf des Trainers je Punkt (ein Aufruf von step() = ein Schritt):
  *   highlight → inputs → sum → output → update (nur bei δ ≠ 0).
- *   Iteration = ein Durchlauf durch alle Punkte in der Reihenfolge der Tabelle.
+ *   Iteration = ein Durchlauf durch alle Punkte in der Reihenfolge der Tabelle oder, mit der Option
+ *   shuffle, in einer je Iteration neuen Reihenfolge.
  *   Die Trenngerade gilt als gefunden, wenn eine ganze Iteration ohne Anpassung durchläuft.
  *
  * Abhängigkeiten:
@@ -160,8 +161,9 @@
    * Erzeugt einen Trainer.
    *
    * @param {{points:Array<{x:number[], t:number, label:string, group:(string|null)}>, w:number[], theta:number,
-   *          alpha:(number|null), onRecord:function(Object):void}} options - Punkte, Startwerte, Lernrate
-   *   (null: ohne Lernrate, also α = 1), Rückruf für jede neue Aufzeichnung.
+   *          alpha:(number|null), onRecord:function(Object):void, shuffle?:function(number[]):number[]}} options -
+   *   Punkte, Startwerte, Lernrate (null: ohne Lernrate, also α = 1), Rückruf für jede neue Aufzeichnung,
+   *   Mischfunktion für die Reihenfolge je Iteration (ohne Angabe die Reihenfolge der Punkte).
    * @returns {Object} Trainer (siehe Rückgabe).
    */
   function createTrainer(options) {
@@ -172,28 +174,38 @@
     let w = [...options.w];
     let theta = options.theta;
     let phase = 'idle';
+    /** Reihenfolge der aktuellen Iteration (Indizes der Punkte). */
+    const fixedOrder = points.map((_, i) => i);
+    let order = fixedOrder;
+    /** Stelle in der aktuellen Iteration. */
+    let position = -1;
+    /** Index des aktuellen Punkts. */
     let index = -1;
     let iteration = 0;
     let processed = 0;
     let correctInPass = 0;
     let passes = 0;
     let lastPass = null;
+    /** Richtig klassifizierte Punkte je abgeschlossener Iteration (für die Lernkurve). */
+    const history = [];
     let foundAfter = null;
     let record = null;
 
     /** Beginnt den nächsten Punkt, nach dem letzten die nächste Iteration. */
     function begin() {
-      if (index === -1 || index === total - 1) {
-        index = 0;
+      if (position === -1 || position === total - 1) {
+        position = 0;
+        order = options.shuffle ? options.shuffle(fixedOrder) : fixedOrder;
         iteration++;
         correctInPass = 0;
       } else {
-        index++;
+        position++;
       }
+      index = order[position];
       const p = points[index];
       phase = 'highlight';
       record = {
-        kind: 'point', iteration, index, total, x: p.x, label: p.label, t: p.t, group: p.group, alpha,
+        kind: 'point', iteration, index, position, shuffled: Boolean(options.shuffle), total, x: p.x, raw: p.raw || null, label: p.label, t: p.t, group: p.group, alpha,
         wBefore: [...w], thetaBefore: theta, sum: null, y: null, delta: null, wAfter: null, thetaAfter: null, phase
       };
       options.onRecord(record);
@@ -201,9 +213,10 @@
 
     /** Schließt die Iteration ab, wenn der aktuelle Punkt der letzte war. */
     function endPassIfLast() {
-      if (index === total - 1) {
+      if (position === total - 1) {
         passes++;
         lastPass = { correct: correctInPass, total };
+        history.push(correctInPass);
         if (correctInPass === total) {
           foundAfter = processed;
         }
@@ -265,10 +278,12 @@
       theta: () => theta,
       phase: () => phase,
       index: () => index,
+      position: () => position,
       iteration: () => iteration,
       processed: () => processed,
       passes: () => passes,
       lastPass: () => lastPass,
+      history: () => history,
       foundAfter: () => foundAfter,
       isFinished: () => foundAfter !== null,
       hasStarted: () => phase !== 'idle',

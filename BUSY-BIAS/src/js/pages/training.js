@@ -6,7 +6,7 @@
  *   Links das Perzeptron, darunter Steuerung, Rechnungen des Schritts und Zähler.
  *   Rechts das Koordinatensystem mit aktuellem Punkt und Gerade, darunter Schalter für die
  *   Decision Areas, Legende und Geradengleichung.
- *   Darunter aufklappbar die Punktetabelle; bei mehrstufigen Beispielen zusätzlich Stufenkarte
+ *   Darunter aufklappbar die Lernkurve und die Punktetabelle; bei mehrstufigen Beispielen zusätzlich Stufenkarte
  *   und Stufenvergleich.
  *
  * Abhängigkeiten:
@@ -20,95 +20,35 @@
   const session = ns.session;
   const { num, plural } = ns.simFormat;
 
-  /** Überschrift je Schritt. */
-  const PHASE_TITLES = {
-    idle: 'Bereit: „Weiter“ startet das Training.',
-    highlight: 'Schritt 1: Trainingspunkt hervorheben',
-    inputs: 'Schritt 2: Eingänge vorbelegen',
-    sum: 'Schritt 3: Gewichtete Summe berechnen',
-    output: 'Schritt 4: Ausgabe berechnen und vergleichen',
-    update: 'Schritt 5: Gewichte und Schwellenwert anpassen'
-  };
-
   let plot = null;
   let view = null;
   let controls = null;
   let tableKey = null;
+  let curve = null;
+  let curveTrainer = null;
+  let curvePasses = -1;
 
-  /** Zeigt das Ergebnis des aktuellen Schritts. */
-  function renderResult() {
+  /** Zeigt die Lernkurve, wenn sich der Verlauf geändert hat. */
+  function renderCurve() {
     const trainer = session.trainer();
-    const data = session.data;
-    const phase = trainer.phase();
-    const r = trainer.record();
-    const box = dom.byId('training-result');
-    dom.clear(box);
-    box.appendChild(dom.el('p', { class: 'result-title', id: 'training-phase' }, trainer.isFinished() ? 'Trenngerade gefunden.' : PHASE_TITLES[phase]));
-    if (!r) {
+    if (curveTrainer === trainer && curvePasses === trainer.passes()) {
       return;
     }
-    const add = (id, text, cls) => box.appendChild(dom.el('p', { id, class: cls || null }, text));
-    add('training-point', 'Punkt ' + (r.index + 1) + ' von ' + r.total + ' in Iteration ' + r.iteration + ': x₁ = ' + num(r.x[0]) + ', x₂ = ' + num(r.x[1]) + (r.group ? ' (' + r.group + ')' : ''));
-    if (phase === 'sum' || phase === 'output' || phase === 'update') {
-      add('training-sum', ns.fmt.sumLine(r.wBefore, r.x, r.sum));
-    }
-    if (phase === 'output' || phase === 'update') {
-      add('training-activation', ns.fmt.activationLine(r.sum, r.thetaBefore, r.y));
-      add('training-expected', 'Erwartet: Label ' + r.label + ' (t = ' + r.t + ')');
-      add('training-computed', 'Berechnet: Label ' + ns.fmt.labelText(data.labelOf(r.y)) + ' (f(a) = ' + r.y + ')');
-      add('training-verdict', r.delta === 0 ? 'Richtig klassifiziert: keine Anpassung nötig.' : 'Falsch klassifiziert: δ = ' + num(r.delta) + (phase === 'output' ? ', Gewichte und Schwellenwert müssen angepasst werden.' : ''), r.delta === 0 ? 'result-ok' : 'result-wrong');
-    }
-    if (phase === 'update') {
-      add('training-update', 'w₁: ' + num(r.wBefore[0]) + ' → ' + num(r.wAfter[0]) + ', w₂: ' + num(r.wBefore[1]) + ' → ' + num(r.wAfter[1]) + ', θ: ' + num(r.thetaBefore) + ' → ' + num(r.thetaAfter));
-    }
-  }
-
-  /** Zeigt die Zähler. */
-  function renderCounters() {
-    const trainer = session.trainer();
-    const last = trainer.lastPass();
-    dom.byId('count-iteration').textContent = String(trainer.iteration());
-    dom.byId('count-processed').textContent = String(trainer.processed());
-    dom.byId('count-last').textContent = last ? last.correct + ' von ' + last.total : '–';
-    const found = dom.byId('training-found');
-    found.hidden = !trainer.isFinished();
-    found.textContent = trainer.isFinished() ? session.statusText() : '';
-    const hint = dom.byId('training-hint');
-    hint.hidden = !session.mightBeInseparable();
-    dom.byId('training-empty').hidden = trainer.total() > 0;
+    curveTrainer = trainer;
+    curvePasses = trainer.passes();
+    ns.pages.common.renderLearningCurve(curve, trainer.history(), trainer.total());
+    dom.byId('training-curve-empty').hidden = trainer.passes() > 0;
   }
 
   /** Füllt die Punktetabelle, wenn sich die Daten geändert haben, und markiert den aktuellen Punkt. */
   function renderTable() {
     const data = session.data;
     const points = data.points();
-    const hasGroups = points.some((p) => p.group);
-    const key = points.map((p) => p.id).join(',') + '|' + data.positive();
+    const key = points.map((p) => p.id).join(',') + '|' + data.positive() + '|' + session.config.scale;
     const tbody = dom.byId('training-tbody');
     if (key !== tableKey) {
       tableKey = key;
-      const attrs = data.attributes();
-      const head = dom.byId('training-thead');
-      dom.clear(head);
-      dom.appendChildren(head, [
-        dom.el('th', { scope: 'col', class: 'num' }, 'Nr.'),
-        dom.el('th', { scope: 'col', class: 'num' }, attrs.x),
-        dom.el('th', { scope: 'col', class: 'num' }, attrs.y),
-        dom.el('th', { scope: 'col' }, 'Label'),
-        dom.el('th', { scope: 'col', class: 'num' }, 't'),
-        hasGroups ? dom.el('th', { scope: 'col' }, 'Stufe, Gruppe') : null
-      ]);
-      dom.clear(tbody);
-      points.forEach((p, i) => {
-        tbody.appendChild(dom.el('tr', null, [
-          dom.el('td', { class: 'num' }, i + 1),
-          dom.el('td', { class: 'num' }, num(p.x)),
-          dom.el('td', { class: 'num' }, num(p.y)),
-          dom.el('td', null, p.label),
-          dom.el('td', { class: 'num' }, data.target(p.label)),
-          hasGroups ? dom.el('td', null, p.group ? p.stage + ', ' + p.group : '–') : null
-        ]));
-      });
+      ns.pages.common.renderPointTable(dom.byId('training-thead'), tbody);
     }
     dom.byId('training-table-count').textContent = '(' + points.length + ')';
     const trainer = session.trainer();
@@ -153,9 +93,14 @@
     const { spec, outside } = session.plotSpec({ line: true, areas: session.showAreas(), ringIndex });
     plot.render(spec);
     dom.byId('toggle-areas').checked = session.showAreas();
+    dom.byId('toggle-shuffle').checked = session.shuffle();
+    dom.byId('training-shuffle-hint').hidden = !session.shuffle();
     view.draw(trainer);
-    renderResult();
-    renderCounters();
+    ns.pages.common.renderStepResult(dom.byId('training-result'), trainer, 'training');
+    ns.pages.common.renderCounters(trainer, { iteration: 'count-iteration', processed: 'count-processed', last: 'count-last', found: 'training-found', hint: 'training-hint' });
+    dom.byId('training-empty').hidden = trainer.total() > 0;
+    dom.byId('training-scale-shift').hidden = !session.scaleShift();
+    renderCurve();
     ns.pages.common.renderPointLegend(dom.byId('training-point-legend'));
     ns.pages.common.renderEquation(dom.byId('training-equation'), outside);
     renderTable();
@@ -167,12 +112,17 @@
   function init() {
     plot = ns.coordPlot.create(dom.byId('training-plot'), { ariaLabel: 'Koordinatensystem mit Trainingspunkten und der Geraden des Perzeptrons' });
     view = ns.perceptronView.create(dom.byId('training-perceptron'));
+    curve = ns.coordPlot.create(dom.byId('training-curve'), { ariaLabel: 'Lernkurve: richtig klassifizierte Punkte je Iteration' });
     controls = ns.trainingControls.create(dom.byId('training-controls'), { id: 'run', runner: session.runner, onChange: render });
     session.panel.stageCard(dom.byId('training-stage'), 'training-stage-card');
     ns.pages.common.renderAreaLegend(dom.byId('training-area-legend'));
+    dom.byId('toggle-shuffle').addEventListener('change', (event) => {
+      session.setShuffle(event.target.checked);
+    });
     dom.byId('toggle-areas').addEventListener('change', (event) => {
       session.setShowAreas(event.target.checked);
       render();
+      ns.progress.save();
     });
   }
 

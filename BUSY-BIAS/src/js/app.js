@@ -3,15 +3,17 @@
  * @description Einstiegspunkt: Seitennavigation, Verteilung von Änderungen und SCORM-Abschluss.
  *
  * Navigation:
- *   Die vier Seiten sind jederzeit frei anwählbar. Beim Wechsel bleibt das Training
+ *   Die sechs Seiten sind jederzeit frei anwählbar. Beim Wechsel bleibt das Training
  *   unverändert, auch mitten in einem Trainingspunkt; eine laufende Automatik hält an.
  *
  * SCORM (Datensparsamkeit):
  *   - Das Paket meldet beim Öffnen cmi.core.lesson_status = "incomplete" (nicht "completed"), damit
  *     Moodle beim erneuten Öffnen nicht den Überprüfungsmodus zeigt. Den Abschluss stellt die
  *     Lehrkraft in Moodle als manuellen Abschluss ein. Ein bereits gemeldeter Abschluss bleibt.
- *   - Übertragen werden nur cmi.core.lesson_status und cmi.core.exit. Trainingspunkte,
- *     Einstellungen und Training verlassen den Browser nicht und werden nicht gespeichert.
+ *   - Daten, Einstellungen und die Eingaben der Seiten 5 und 6 werden in cmi.suspend_data gespeichert
+ *     und beim nächsten Öffnen wiederhergestellt (siehe progress.js). Beim Verlassen: cmi.core.exit =
+ *     "suspend", wenn ein Stand gespeichert ist.
+ *   - Übertragen werden nur cmi.core.lesson_status, cmi.core.exit und cmi.suspend_data.
  *
  * Abhängigkeiten:
  *   alle übrigen Module (werden in index.html vorher geladen).
@@ -30,7 +32,9 @@
     { id: 'input', title: 'Daten und Perzeptron' },
     { id: 'training', title: 'Training' },
     { id: 'protocol', title: 'Protokoll' },
-    { id: 'classify', title: 'Punkt klassifizieren' }
+    { id: 'classify', title: 'Punkt klassifizieren' },
+    { id: 'hand', title: 'Von Hand rechnen' },
+    { id: 'test', title: 'Test und Konfusionsmatrix' }
   ];
 
   let tabs = null;
@@ -38,13 +42,13 @@
   /** Zeigt in der Fußzeile, ob eine Verbindung zur Lernplattform besteht. */
   function renderProgress() {
     dom.byId('progress').textContent = scorm.isConnected()
-      ? 'Verbunden mit der Lernplattform.'
-      : 'Offline-Modus (keine Lernplattform gefunden).';
+      ? 'Verbunden mit der Lernplattform – Daten, Einstellungen und Eingaben werden gespeichert.' + ns.progress.statusText()
+      : 'Offline-Modus (keine Lernplattform gefunden) – es wird nichts gespeichert.';
   }
 
   /** Stellt die SCORM-Verbindung her und meldet den Status „incomplete“ (siehe oben). */
   function initScorm() {
-    if (!scorm.init()) {
+    if (!scorm.init({ suspendData: true })) {
       return;
     }
     const status = scorm.getValue('cmi.core.lesson_status');
@@ -59,7 +63,8 @@
     if (!scorm.isConnected()) {
       return;
     }
-    scorm.setValue('cmi.core.exit', '');
+    ns.progress.flush();
+    scorm.setValue('cmi.core.exit', ns.progress.hasSaved() ? 'suspend' : '');
     scorm.commit();
     scorm.finish();
   }
@@ -74,15 +79,20 @@
         if (id !== 'training') {
           ns.pages.training.pause();
         }
+        if (id !== 'test') {
+          ns.pages.test.pause();
+        }
         ns.pages[id].render();
       });
       ns.session.onChange(() => {
         ns.pages.training.pause();
+        ns.pages.test.pause();
         if (tabs.activeId()) {
           ns.pages[tabs.activeId()].render();
         }
       });
       initScorm();
+      ns.progress.init({ onStatus: renderProgress });
       window.addEventListener('pagehide', finishScorm);
       window.addEventListener('beforeunload', finishScorm);
       tabs.showPage(PAGES[0].id);

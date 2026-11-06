@@ -34,11 +34,14 @@
     const data = session.data;
     const w = trainer.weights();
     const theta = trainer.theta();
-    const result = ns.perceptron.classify(w, theta, [x, y]);
+    const scaler = session.scalerFor(data.points());
+    const model = scaler.apply(x, y);
+    const result = ns.perceptron.classify(w, theta, model);
     const computed = data.labelOf(result.y);
     const lines = [
+      ...(scaler.ranges ? [ns.fmt.scaleLine('x₁', x, scaler.ranges.x, model[0]), ns.fmt.scaleLine('x₂', y, scaler.ranges.y, model[1])] : []),
       ns.fmt.currentLine(w, theta),
-      ns.fmt.sumLine(w, [x, y], result.sum),
+      ns.fmt.sumLine(w, model, result.sum),
       ns.fmt.activationLine(result.sum, theta, result.y) + (result.y === 1 ? ' (feuert)' : ' (feuert nicht)')
     ];
     if (expected === null) {
@@ -52,7 +55,12 @@
 
   /** Zeichnet das Koordinatensystem mit dem Prüfpunkt. */
   function drawPlot() {
-    const { spec, outside } = session.plotSpec({ line: true, areas: true, probe });
+    let shown = null;
+    if (probe) {
+      const model = session.scalerFor(session.data.points()).apply(probe.x, probe.y);
+      shown = { x: model[0], y: model[1] };
+    }
+    const { spec, outside } = session.plotSpec({ line: true, areas: true, probe: shown });
     plot.render(spec);
     ns.pages.common.renderEquation(dom.byId('classify-equation'), outside);
   }

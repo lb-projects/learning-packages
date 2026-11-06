@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   SCORM-1.2-Manifest von BUSY BIAS (Brain Under Simple Yardstick: Bias Influences Activation Start).
-  - Ein einzelnes SCO (index.html), das alle vier Seiten als Registerkarten enthält.
+  - Ein einzelnes SCO (index.html), das alle sechs Seiten als Registerkarten enthält.
   - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
   - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
 -->
@@ -43,9 +43,12 @@
       <file href="js/training-controls.js"/>
       <file href="js/protocol-view.js"/>
       <file href="js/classify-panel.js"/>
+      <file href="js/confusion-matrix.js"/>
       <file href="js/samples.js"/>
       <file href="js/format-utils.js"/>
       <file href="js/perceptron.js"/>
+      <file href="js/hand-calc.js"/>
+      <file href="js/task-generator.js"/>
       <file href="js/perceptron-view.js"/>
       <file href="js/session.js"/>
       <file href="js/pages/common.js"/>
@@ -53,6 +56,9 @@
       <file href="js/pages/training.js"/>
       <file href="js/pages/protocol.js"/>
       <file href="js/pages/classify.js"/>
+      <file href="js/pages/hand.js"/>
+      <file href="js/pages/test.js"/>
+      <file href="js/progress.js"/>
       <file href="js/app.js"/>
     </resource>
   </resources>

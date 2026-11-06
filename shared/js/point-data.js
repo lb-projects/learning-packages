@@ -126,6 +126,94 @@
   }
 
   /**
+   * Skaliert Punkte je Attribut auf den Bereich 0 bis 1: x′ = (x − min) / (max − min).
+   * Die Ergebnisse sind auf vier Nachkommastellen gerundet und werden so weitergerechnet, damit
+   * Anzeige und Rechnung übereinstimmen. Sind alle Werte eines Attributs gleich, ergibt es 0.
+   * Werte außerhalb der Punkte können außerhalb von 0 bis 1 liegen.
+   *
+   * @param {Array<{x:number, y:number}>} points - Punkte, aus denen Minimum und Maximum stammen.
+   * @returns {{apply:function(number, number):number[], ranges:(Object|null)}} Umrechnung;
+   *   ranges: {x:{min,max}, y:{min,max}} oder null ohne Punkte (dann bleiben die Werte unverändert).
+   */
+  function minMaxScaler(points) {
+    if (points.length === 0) {
+      return { apply: (x, y) => [x, y], ranges: null };
+    }
+    const range = (key) => {
+      const values = points.map((p) => p[key]);
+      return { min: Math.min(...values), max: Math.max(...values) };
+    };
+    const ranges = { x: range('x'), y: range('y') };
+    const scale = (v, r) => {
+      const span = r.max - r.min;
+      const result = span === 0 ? 0 : Math.round(((v - r.min) / span) * 1e4) / 1e4;
+      return result === 0 ? 0 : result;
+    };
+    return { apply: (x, y) => [scale(x, ranges.x), scale(y, ranges.y)], ranges };
+  }
+
+  /**
+   * Gleichverteilte Zufallszahl aus einer kryptographisch sicheren Quelle (ohne Verzerrung durch Modulo).
+   * @param {number} max - Obergrenze (exklusiv).
+   * @returns {number} Zufallszahl.
+   */
+  function randomInt(max) {
+    const buffer = new Uint32Array(1);
+    const limit = Math.floor(0x100000000 / max) * max;
+    let value;
+    do {
+      crypto.getRandomValues(buffer);
+      value = buffer[0];
+    } while (value >= limit);
+    return value % max;
+  }
+
+  /**
+   * Mischt eine Liste zufällig (Fisher-Yates).
+   * @param {Array} list - Liste.
+   * @returns {Array} Neue, gemischte Liste.
+   */
+  function shuffled(list) {
+    const out = [...list];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = randomInt(i + 1);
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+
+  /**
+   * Wählt zufällig Testpunkte aus, je Label getrennt. Jedes Label behält mindestens einen
+   * Trainingspunkt. Rundet der Anteil überall auf 0, wird ein Punkt des häufigsten Labels gewählt,
+   * sofern das möglich ist.
+   *
+   * @param {Array<{label:string}>} points - Punkte.
+   * @param {number} fraction - Anteil, z. B. 0.2 für 20 %.
+   * @returns {number[]} Indizes der Testpunkte, aufsteigend; leer, wenn nichts auswählbar ist.
+   */
+  function selectTestIndices(points, fraction) {
+    const groups = new Map();
+    points.forEach((p, i) => {
+      if (!groups.has(p.label)) {
+        groups.set(p.label, []);
+      }
+      groups.get(p.label).push(i);
+    });
+    const chosen = [];
+    for (const group of groups.values()) {
+      const mixed = shuffled(group);
+      chosen.push(...mixed.slice(0, Math.min(Math.round(group.length * fraction), group.length - 1)));
+    }
+    if (chosen.length === 0) {
+      const largest = [...groups.values()].sort((a, b) => b.length - a.length)[0];
+      if (largest && largest.length >= 2) {
+        chosen.push(shuffled(largest)[0]);
+      }
+    }
+    return chosen.sort((a, b) => a - b);
+  }
+
+  /**
    * Erzeugt einen Datensatz.
    *
    * @param {{maxLabels?:number}} [options] - Höchstzahl der Labels (Standard 2).
@@ -311,5 +399,5 @@
     };
   }
 
-  ns.pointData = { create, parseNumber, validateNumber, validateLabel, sanitizeAttribute, autoPositive, LIMITS, DEFAULT_ATTRIBUTES };
+  ns.pointData = { create, parseNumber, validateNumber, validateLabel, sanitizeAttribute, autoPositive, minMaxScaler, selectTestIndices, shuffled, randomInt, LIMITS, DEFAULT_ATTRIBUTES };
 })(window.LP = window.LP || {});

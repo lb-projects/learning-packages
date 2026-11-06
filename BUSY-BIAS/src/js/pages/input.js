@@ -34,7 +34,7 @@
 
   /** @returns {Object} Eingabefelder der Konfiguration. */
   function fields() {
-    return { w1: dom.byId('cfg-w1'), w2: dom.byId('cfg-w2'), theta: dom.byId('cfg-theta'), alphaOn: dom.byId('cfg-alpha-on'), alpha: dom.byId('cfg-alpha') };
+    return { w1: dom.byId('cfg-w1'), w2: dom.byId('cfg-w2'), theta: dom.byId('cfg-theta'), alphaOn: dom.byId('cfg-alpha-on'), alpha: dom.byId('cfg-alpha'), scale: dom.byId('cfg-scale') };
   }
 
   /** Erklärung des Dateiformats. */
@@ -71,7 +71,22 @@
     if (bad) {
       return;
     }
-    session.setConfig({ w: [checks[0].value, checks[1].value], theta: checks[2].value, alphaOn: f.alphaOn.checked, alpha });
+    session.setConfig({ w: [checks[0].value, checks[1].value], theta: checks[2].value, alphaOn: f.alphaOn.checked, alpha, scale: f.scale.checked });
+  }
+
+  /** Überträgt die Einstellungen in die Felder (nach dem Wiederherstellen). */
+  function syncFields() {
+    const f = fields();
+    const text = (v) => String(v).replace('.', ',');
+    const c = session.config;
+    f.w1.value = text(c.w[0]);
+    f.w2.value = text(c.w[1]);
+    f.theta.value = text(c.theta);
+    f.alpha.value = text(c.alpha);
+    f.alphaOn.checked = c.alphaOn;
+    f.scale.checked = c.scale;
+    f.alpha.classList.toggle('is-inactive', !c.alphaOn);
+    dom.byId('cfg-error').textContent = '';
   }
 
   /**
@@ -131,6 +146,9 @@
       }
     });
     f.alphaOn.addEventListener('change', applyConfig);
+    f.scale.addEventListener('change', applyConfig);
+    // Beim Tippen speichert progress.js verzögert, beim Verlassen eines Felds sofort.
+    dom.byId('cfg-card').addEventListener('change', () => ns.progress.save());
     const limit = ns.pointData.LIMITS.maxAbs;
     const startValue = (read) => ({ min: -limit, max: limit, step: () => 1, fallback: read });
     ns.numberWheel.attach(f.w1, startValue(() => session.config.w[0]));
@@ -152,9 +170,10 @@
     dom.byId('input-toggle-areas').addEventListener('change', (event) => {
       session.setShowAreas(event.target.checked);
       render();
+      ns.progress.save();
     });
     dom.byId('cfg-positive').addEventListener('change', (event) => session.data.setPositive(event.target.value));
   }
 
-  ns.pages.input = { init, render };
+  ns.pages.input = { init, render, syncFields };
 })(window.BB = window.BB || {});

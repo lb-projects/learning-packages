@@ -256,6 +256,40 @@ h3 {
   stroke-width: 1.5;
 }
 
+.plot-marker.pt-test {
+  fill: #fff;
+  stroke-width: 2.5;
+}
+
+.plot-marker.pt-fire.pt-test {
+  stroke: var(--fire);
+}
+
+.plot-marker.pt-nofire.pt-test {
+  stroke: var(--nofire);
+}
+
+.marker-icon .pt-test {
+  fill: #fff;
+  stroke: var(--muted);
+  stroke-width: 2.5;
+}
+
+.plot-marker.pt-curve {
+  fill: var(--primary);
+}
+
+.plot-line.curve-line {
+  stroke: var(--primary);
+  stroke-width: 2;
+}
+
+.plot-line.curve-goal {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
 .plot-ring {
   fill: none;
   stroke: var(--highlight);
@@ -266,6 +300,11 @@ h3 {
   stroke: var(--text);
   stroke-width: 1.5;
   stroke-dasharray: 3 2;
+}
+
+.ring-wrong .plot-ring {
+  stroke: var(--nofire);
+  stroke-width: 2.5;
 }
 
 .marker-icon {
@@ -309,6 +348,61 @@ h3 {
 
 .swatch-nofire {
   background: var(--nofire-area);
+}
+
+/* ---------- Konfusionsmatrix: Farbstufe = Anteil an der Zeilensumme ---------- */
+
+.confusion-matrix {
+  width: auto;
+}
+
+.confusion-matrix th,
+.confusion-matrix td {
+  text-align: center;
+}
+
+.confusion-matrix tbody th {
+  text-align: left;
+}
+
+.cm-corner {
+  font-weight: normal;
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cm-axis {
+  display: block;
+}
+
+.confusion-matrix .cm-cell {
+  min-width: 3.2rem;
+  font-weight: bold;
+  font-size: 1.05rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.cm-h0 { background: #f7f9fb; color: #5b6776; font-weight: normal; }
+.cm-diag.cm-h1 { background: #e6f5e9; }
+.cm-diag.cm-h2 { background: #c8e9cf; }
+.cm-diag.cm-h3 { background: #a3d9ae; }
+.cm-diag.cm-h4 { background: #6cbf7d; }
+.cm-diag.cm-h5 { background: #2e7d32; color: #fff; }
+.cm-off.cm-h1 { background: #fbe9e9; }
+.cm-off.cm-h2 { background: #f5cccc; }
+.cm-off.cm-h3 { background: #eda5a5; }
+.cm-off.cm-h4 { background: #df6f6f; }
+.cm-off.cm-h5 { background: #c62828; color: #fff; }
+
+.cm-sum {
+  background: #eef1f5;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.cm-total {
+  color: var(--text);
 }
 
 /* ---------- Neuronen ---------- */

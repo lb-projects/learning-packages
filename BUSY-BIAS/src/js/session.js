@@ -7,6 +7,10 @@
  *   Ausnahme: Beim Wechsel zur nächsten Stufe mit „continue“ übernimmt der neue Trainer die
  *   aktuellen Gewichte und θ, und das Protokoll läuft weiter.
  *
+ * Skalierung:
+ *   Die Originaldaten bleiben unverändert. modelPoints() liefert die Werte, mit denen gerechnet
+ *   wird: bei eingeschalteter Skalierung Min-Max auf 0 bis 1, sonst die Originalwerte.
+ *
  * Protokoll:
  *   Einträge tragen eine fortlaufende Nummer seq, die nie zurückgesetzt wird. Es bleiben die
  *   letzten MAX_LOG Einträge, damit lange Läufe den Browser nicht überlasten.
@@ -23,7 +27,9 @@
   const INSEPARABLE_HINT = 100;
 
   const data = ns.pointData.create({ maxLabels: 2 });
-  const config = { w: [1, 1], theta: 1, alphaOn: false, alpha: 0.1 };
+  const config = { w: [1, 1], theta: 1, alphaOn: false, alpha: 0.1, scale: false };
+  /** Reihenfolge der Punkte auf Seite 2 je Iteration zufällig mischen. */
+  let shuffle = false;
   const listeners = [];
   let trainer = null;
   let log = [];
@@ -34,12 +40,62 @@
   let stageRuns = [];
   /** Nummer der aktuellen Stufe oder null. */
   let currentStage = null;
+  /** Beispiel und Stufe, solange die Daten genau diesem Beispiel entsprechen ({id, stage} oder null). */
+  let sampleRef = null;
+  /** true, wenn das geladene Beispiel von Hand verändert wurde. */
+  let sampleModified = false;
+  /** true, wenn eine neue Stufe beim Weitertrainieren die Skalierung der alten Punkte verändert hat. */
+  let scaleShift = false;
+  /** Bereich der Skalierung beim letzten neuen Trainer. */
+  let lastRanges = null;
 
-  /** Meldet eine Änderung an die Seiten. */
-  function emit() {
+  /**
+   * Meldet eine Änderung an die Seiten.
+   * @param {string} kind - 'data' (Punkte oder Labels) oder 'config' (Einstellungen).
+   */
+  function emit(kind) {
     for (const fn of listeners) {
-      fn();
+      fn(kind);
     }
+  }
+
+  /**
+   * Umrechnung für eine Menge von Punkten; ohne Skalierung bleiben die Werte unverändert.
+   * @param {Array<Object>} points - Punkte, aus denen Minimum und Maximum stammen.
+   * @returns {{apply:function(number, number):number[], ranges:(Object|null)}} Umrechnung.
+   */
+  function scalerFor(points) {
+    return ns.pointData.minMaxScaler(config.scale ? points : []);
+  }
+
+  /**
+   * Punkte in der Form, mit der gerechnet wird.
+   * @param {Array<Object>} points - Punkte des Datensatzes.
+   * @param {Object} scaler - Umrechnung.
+   * @returns {Array<Object>} {x:[x₁,x₂], raw:(Originalwerte bei Skalierung, sonst null), t, label, group, stage}.
+   */
+  function modelPoints(points, scaler) {
+    return points.map((p) => ({
+      x: scaler.apply(p.x, p.y),
+      raw: scaler.ranges ? [p.x, p.y] : null,
+      t: data.target(p.label),
+      label: p.label,
+      group: p.group,
+      stage: p.stage
+    }));
+  }
+
+  /** @returns {number|null} Lernrate für die Rechnung oder null ohne Lernrate. */
+  function rate() {
+    return config.alphaOn ? config.alpha : null;
+  }
+
+  /**
+   * Schlüssel für alles, was die Rechnung bestimmt. Die Seiten 5 und 6 erkennen daran echte Änderungen.
+   * @returns {string} Schlüssel.
+   */
+  function dataKey() {
+    return JSON.stringify([data.points().map((p) => [p.x, p.y, data.target(p.label), p.label]), config.w, config.theta, rate(), config.scale]);
   }
 
   /**
@@ -70,12 +126,14 @@
    */
   function newTrainer(w, theta) {
     trainer = ns.perceptron.createTrainer({
-      points: data.points().map((p) => ({ x: [p.x, p.y], t: data.target(p.label), label: p.label, group: p.group })),
+      points: modelPoints(data.points(), scalerFor(data.points())),
       w,
       theta,
-      alpha: config.alphaOn ? config.alpha : null,
-      onRecord: addLog
+      alpha: rate(),
+      onRecord: addLog,
+      shuffle: shuffle ? ns.pointData.shuffled : undefined
     });
+    lastRanges = scalerFor(data.points()).ranges;
     if (currentStage !== null) {
       const run = stageRuns[currentStage - 1];
       run.total = data.count();
@@ -100,6 +158,7 @@
   /** Setzt das Training auf die Startwerte der Einstellungen zurück. */
   function resetTraining() {
     clearLog();
+    scaleShift = false;
     if (currentStage !== null) {
       addStageHeading(currentStage);
     }
@@ -120,6 +179,13 @@
    */
   function onDataChange(event) {
     if (event.stage) {
+      sampleModified = event.stage === 1 ? false : sampleModified;
+      sampleRef = sampleModified ? null : { id: event.sample, stage: event.stage };
+    } else if (event.type !== 'positive') {
+      sampleRef = null;
+      sampleModified = true;
+    }
+    if (event.stage) {
       const sample = ns.samples.find((s) => s.id === event.sample);
       if (event.stage === 1) {
         stageRuns = [];
@@ -130,18 +196,20 @@
         currentStage = null;
         stageRuns = [];
         resetTraining();
-        emit();
+        emit('data');
         return;
       }
       if (currentStage !== null && event.stage > 1) {
         syncRun();
       }
       const before = trainer;
+      const beforeRanges = JSON.stringify(lastRanges);
       currentStage = event.stage;
       stageRuns[event.stage - 1] = { stage: event.stage, title: stage.title, total: data.count(), startW: null, startTheta: null, processed: 0, foundAfter: null, w: null, theta: null };
       if (event.mode === 'continue' && before) {
         addStageHeading(event.stage);
         newTrainer(before.weights(), before.theta());
+        scaleShift = config.scale && JSON.stringify(lastRanges) !== beforeRanges;
       } else {
         resetTraining();
       }
@@ -152,7 +220,7 @@
       }
       resetTraining();
     }
-    emit();
+    emit('data');
   }
 
   /**
@@ -162,7 +230,17 @@
   function setConfig(changes) {
     Object.assign(config, changes);
     resetTraining();
-    emit();
+    emit('config');
+  }
+
+  /**
+   * Schaltet das Mischen der Reihenfolge um und setzt das Training von Seite 2 zurück.
+   * @param {boolean} value - Neuer Zustand.
+   */
+  function setShuffle(value) {
+    shuffle = Boolean(value);
+    resetTraining();
+    emit('config');
   }
 
   /** Steuerbares Objekt für training-controls.js. */
@@ -188,6 +266,7 @@
    */
   function plotPoints(options) {
     const ringIndex = options && options.ringIndex !== undefined ? options.ringIndex : -1;
+    const model = modelPoints(data.points(), scalerFor(data.points()));
     return data.points().map((p, i) => {
       const fires = data.target(p.label) === 1;
       let ring = null;
@@ -197,7 +276,7 @@
         ring = 'new';
       }
       return {
-        x: p.x, y: p.y,
+        x: model[i].x[0], y: model[i].x[1],
         shape: fires ? 'circle' : 'square',
         cls: fires ? 'pt-fire' : 'pt-nofire',
         ring,
@@ -213,21 +292,24 @@
    * @returns {string} Beschriftung.
    */
   function axisLabel(symbol, name) {
-    return name === symbol ? symbol : symbol + ': ' + name;
+    return (name === symbol ? symbol : symbol + ': ' + name) + (config.scale ? ' (skaliert)' : '');
   }
 
   /**
    * Vollständige Angaben für das Koordinatensystem.
    *
    * @param {{line?:boolean, areas?:boolean, ringIndex?:number, probe?:{x:number, y:number},
-   *          values?:{w:number[], theta:number}}} options - Ebenen; values: Werte für Gerade und Flächen
-   *   (ohne Angabe gilt der aktuelle Stand des Trainers).
+   *          values?:{w:number[], theta:number}, marks?:Array<Object>, xLabel?:string, yLabel?:string}} options -
+   *   Ebenen; probe in Rechenwerten; values: Werte für Gerade und Flächen (ohne Angabe der aktuelle Stand des
+   *   Trainers); marks: eigene Punkte statt der Punkte des Datensatzes (Seiten 5 und 6); xLabel, yLabel: eigene
+   *   Achsentitel (Seite 5).
    * @returns {{spec:Object, outside:boolean}} Angaben; outside: Die Gerade verläuft außerhalb des Ausschnitts.
    */
   function plotSpec(options) {
     const opts = options || {};
     const attrs = data.attributes();
-    const coords = data.points().map((p) => ({ x: p.x, y: p.y }));
+    const marks = opts.marks || plotPoints(opts);
+    const coords = marks.map((p) => ({ x: p.x, y: p.y }));
     if (opts.probe) {
       coords.push(opts.probe);
     }
@@ -236,9 +318,9 @@
     const theta = opts.values ? opts.values.theta : trainer.theta();
     const spec = {
       view,
-      xLabel: axisLabel('x₁', attrs.x),
-      yLabel: axisLabel('x₂', attrs.y),
-      points: plotPoints(opts)
+      xLabel: opts.xLabel || axisLabel('x₁', attrs.x),
+      yLabel: opts.yLabel || axisLabel('x₂', attrs.y),
+      points: [...marks]
     };
     let outside = false;
     if (opts.areas) {
@@ -255,18 +337,23 @@
     return { spec, outside };
   }
 
-  /** @returns {string} Kurzer Stand des Trainings. */
-  function statusText() {
-    if (trainer.total() === 0) {
+  /**
+   * Kurzer Stand eines Trainings.
+   * @param {Object} [source] - Trainer; ohne Angabe der von Seite 2.
+   * @returns {string} Text.
+   */
+  function statusText(source) {
+    const t = source || trainer;
+    if (t.total() === 0) {
       return 'Keine Trainingspunkte vorhanden.';
     }
-    if (trainer.isFinished()) {
-      return 'Trenngerade gefunden nach ' + ns.simFormat.plural(trainer.foundAfter(), 'verarbeitetem Punkt', 'verarbeiteten Punkten') + '.';
+    if (t.isFinished()) {
+      return 'Trenngerade gefunden nach ' + ns.simFormat.plural(t.foundAfter(), 'verarbeitetem Punkt', 'verarbeiteten Punkten') + '.';
     }
-    if (!trainer.hasStarted()) {
+    if (!t.hasStarted()) {
       return 'Training noch nicht begonnen.';
     }
-    return 'Iteration ' + trainer.iteration() + ', ' + ns.simFormat.plural(trainer.processed(), 'verarbeiteter Punkt', 'verarbeitete Punkte') + '.';
+    return 'Iteration ' + t.iteration() + ', ' + ns.simFormat.plural(t.processed(), 'verarbeiteter Punkt', 'verarbeitete Punkte') + '.';
   }
 
   data.onChange(onDataChange);
@@ -274,6 +361,10 @@
 
   ns.session = {
     data, config, runner, setConfig, plotSpec, statusText, axisLabel, MAX_LOG, INSEPARABLE_HINT,
+    scalerFor, modelPoints, rate, dataKey, setShuffle,
+    shuffle: () => shuffle,
+    sampleRef: () => sampleRef,
+    scaleShift: () => scaleShift,
     trainer: () => trainer,
     log: () => log.slice(-MAX_LOG),
     droppedEntries: () => dropped + Math.max(0, log.length - MAX_LOG),
@@ -281,7 +372,10 @@
     currentStage: () => currentStage,
     showAreas: () => showAreas,
     setShowAreas: (value) => { showAreas = Boolean(value); },
-    mightBeInseparable: () => !trainer.isFinished() && trainer.passes() >= INSEPARABLE_HINT,
+    mightBeInseparable: (source) => {
+      const t = source || trainer;
+      return !t.isFinished() && t.passes() >= INSEPARABLE_HINT;
+    },
     onChange: (fn) => listeners.push(fn)
   };
 })(window.BB = window.BB || {});

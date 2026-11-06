@@ -148,6 +148,18 @@ h1, h2, h3 {
   font-size: 1.05rem;
 }
 
+.help-box {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-left: 4px solid var(--primary);
+  background: var(--info-bg);
+}
+
+.help-box p {
+  margin: 0.1rem 0;
+}
+
+#hand-equation .hint,
 #input-equation .hint,
 #training-equation .hint,
 #classify-equation .hint {
@@ -161,6 +173,107 @@ details.card > summary {
 
 details.card .table-scroll {
   margin-top: 0.6rem;
+}
+
+.curve-box {
+  max-width: 720px;
+}
+
+.card.test-mode {
+  padding: 0.6rem 1rem;
+}
+
+.test-mode .radio {
+  display: inline-block;
+  margin-right: 1.2rem;
+}
+
+.test-mode legend {
+  float: left;
+  margin-right: 1.2rem;
+  font-weight: 600;
+}
+
+/* Tabelle „Von Hand rechnen“, nach der Trainingstabelle in EDGY EDGES. */
+.hand-table td.num {
+  text-align: left;
+}
+
+.hand-table td,
+.hand-table th {
+  white-space: nowrap;
+}
+
+.hand-table thead th {
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+.hand-input {
+  width: 5.2rem;
+  font: inherit;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+}
+
+.hand-input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.hand-input.input-wrong {
+  border: 2px solid var(--wrong-border);
+  background: var(--wrong-bg);
+}
+
+.hand-given {
+  font-weight: 600;
+}
+
+.hand-original {
+  display: block;
+  font-weight: normal;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.hand-iteration th {
+  background: var(--bg);
+  text-align: left;
+  font-weight: 600;
+}
+
+.data-table tbody tr.row-open > * {
+  background: #f7f9fc;
+}
+
+.check-ok {
+  color: #1e7b34;
+  font-weight: 600;
+}
+
+.check-cell {
+  white-space: nowrap;
+}
+
+.row-hints td {
+  background: var(--surface);
+  white-space: normal;
+}
+
+.hints-title {
+  margin: 0 0 0.3rem;
+  font-weight: 600;
+}
+
+.hint-list {
+  margin: 0;
+  padding-left: 1.3rem;
+}
+
+.hint-calc li {
+  color: var(--danger);
 }
 
 [hidden] {
