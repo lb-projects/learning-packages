@@ -3,12 +3,13 @@
 Der Quelltext dieses Repositorys steht unter der **MIT-Lizenz** (siehe [LICENSE](LICENSE)).
 Davon abweichend oder ergänzend gilt Folgendes.
 
-Das Repository enthält drei Pakete. Die Hinweise sind danach gegliedert, für wen sie gelten:
+Das Repository enthält vier Pakete. Die Hinweise sind danach gegliedert, für wen sie gelten:
 
 - [Allgemein](#allgemein-alle-pakete): gilt für alle Pakete.
 - [NOSY NEIGHBORS](#nosy-neighbors): gilt für NOSY NEIGHBORS (`NOSY-NEIGHBORS/`); der Abschnitt zu `inflate.js` gilt auch für EDGY EDGES.
 - [SQL Sandbox](#sql-sandbox): gilt nur für die SQL Sandbox (`SQL-Sandbox/`).
 - [EDGY EDGES](#edgy-edges): gilt nur für das Graphen-Paket (`EDGY-EDGES/`).
+- [BUSY BIAS](#busy-bias): gilt nur für den Perzeptron-Simulator (`BUSY-BIAS/`).
 
 ## Allgemein (alle Pakete)
 
@@ -142,3 +143,19 @@ EDGY EDGES enthält außer dem gemeinsamen Datei-Import (`inflate.js`, siehe [NO
 ### Standards
 
 Für den Datei-Import gelten dieselben Standards wie in NOSY NEIGHBORS (DEFLATE, ZIP, Office Open XML, OpenDocument).
+
+## BUSY BIAS
+
+### Code
+
+BUSY BIAS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Das Perzeptron und seine Lernregel sind allgemein bekannte Verfahren in eigener Umsetzung (F. Rosenblatt, 1958).
+
+### Daten: Beispieldatensätze
+
+- **Betrifft:** `BUSY-BIAS/testdata/*.csv` und die inhaltsgleichen eingebauten Beispiele `BUSY-BIAS/src/js/samples.js`.
+- **Herkunft:** für dieses Projekt erstellt, MIT-Lizenz.
+- Die Werte sind selbst erzeugt und an typische Größenordnungen angelehnt, ohne Übernahme aus einer Datenbank. Es sind keine Messdaten. Hunderassen und Fahrzeugarten werden nur als allgemeine Bezeichnungen verwendet; Fahrzeugmarken kommen nicht vor.
+
+### Gestaltung
+
+Grün und Hellrot für die Decision Areas sind eine inhaltliche Vorgabe des Pakets. Damit die Klassen auch ohne Farbwahrnehmung erkennbar sind, unterscheiden sich die Punkte zusätzlich in der Form (Kreis und Quadrat).
