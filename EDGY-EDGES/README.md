@@ -227,7 +227,7 @@ EDGY-EDGES/
 │     ├─ player.js           Abspieler (Einzelschritt, Automatik, Pause)
 │     ├─ pages/*.js          die sechs Seiten (+ gemeinsamer Rahmen der Algorithmus-Seiten)
 │     ├─ progress.js         Speichern/Wiederherstellen von Graph und Training in der Lernplattform
-│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
+│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Status
 ├─ testdata/                 Beispielgraphen als CSV (siehe oben)
 ├─ preview/                  Vorschau
 └─ README.md                 diese Datei
@@ -245,7 +245,8 @@ Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsma
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. `edgy-edges.zip` hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ wird bereits beim Öffnen gemeldet. Ein bereits gemeldeter Abschluss (auch „passed“) bleibt unverändert.
+3. **Abschluss: In den Einstellungen der Aktivität unter *Aktivitätsabschluss* „Teilnehmer/innen können die Aktivität manuell als abgeschlossen markieren“ einstellen.** Nur so lässt sich die Aktivität als abgeschlossen erkennen. Das Lernpaket meldet beim Öffnen nämlich den Status „incomplete“ und nie „completed“: Ein abgeschlossener Versuch würde Moodle beim erneuten Öffnen in den *Überprüfungsmodus* schalten. Abschlussbedingungen, die den SCORM-Status auswerten („Status erforderlich“, „Alle Lernobjekte abgeschlossen“), werden deshalb nie erfüllt.
+   - Ein Status „completed“ bzw. „passed“ aus einer früheren Version des Pakets bleibt unverändert; für diese Lernenden erscheint der Überprüfungsmodus weiterhin. Abhilfe: das Paket in einer neuen Aktivität einbinden.
 4. Damit der Graph in der nächsten Stunde wieder da ist, muss Moodle denselben Versuch fortsetzen: Einstellung **„Neuen Versuch erzwingen“ = „Nein“** (Standard).
 
 ### Speicherung des Graphen und des Trainings
@@ -267,10 +268,10 @@ Es gilt dasselbe Konzept wie in den anderen Paketen des Repositorys:
 - **Uploads, ZIP und XML:** Whitelist der Endungen, höchstens 2 MB, Prüfung der Dateisignatur; Grenzwerte gegen Zip-Bomben, CRC-Prüfung, XML ohne DOCTYPE/ENTITY, begrenzte Elementzahl (gemeinsamer Code aus `shared/`, Einzelheiten in der README von NOSY NEIGHBORS).
 - **Content-Security-Policy:** `default-src 'none'`; nur Skripte und Stylesheets aus dem Paket; `form-action 'none'`, `base-uri 'none'`; Trusted Types mit der einzigen privaten Policy `lp-xml` in `xml-utils.js`.
 - **Keine externen Quellen:** kein CDN, keine Webfonts, keine Bibliotheken von Drittanbietern.
-- **Datenschutz:** An Moodle gehen nur `cmi.core.lesson_status` (`completed`), `cmi.core.exit` und in `cmi.suspend_data` der Graph und der Stand des Trainings (Zähler und Eingaben der offenen Tabellenzeile). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt. Der Name der Lernenden wird nicht gelesen. Kein `localStorage`, keine Cookies.
+- **Datenschutz:** An Moodle gehen nur `cmi.core.lesson_status` (`incomplete`), `cmi.core.exit` und in `cmi.suspend_data` der Graph und der Stand des Trainings (Zähler und Eingaben der offenen Tabellenzeile). Schreibzugriffe auf andere Datenelemente sind im Code gesperrt. Der Name der Lernenden wird nicht gelesen. Kein `localStorage`, keine Cookies.
 
 ## Qualitätssicherung
 
-Build und Tests laufen mit Entwicklungswerkzeugen außerhalb des Repositorys (wie bei den anderen Paketen):
+Build und Tests laufen mit nicht veröffentlichten Entwicklungswerkzeugen (wie bei den anderen Paketen):
 - **Build:** Manifest vollständig, keine externen Adressen, CSP unverändert streng, keine unsichtbaren Zeichen, keine gefährlichen APIs, UTF-8 ohne BOM mit LF, Kopien aus `shared/` unverändert, eingebaute Beispiele zeichengleich mit `testdata/`.
 - **Tests** (headless Chromium): Graphmodell, Import (beide Formate, CSV/XLSX/ODS, Fehlerzeilen), Algorithmen (Reihenfolgen, Distanzen, Tabellenzeilen, negative Gewichte und Zyklen), Training (Abfolgen, Klickbewertung, Schreibweise und Rechenprüfung der Tabelle, Zeichnung nach jeder Zeile, Tastaturbedienung), Bedienung aller Seiten einschließlich Abspieler und Automatik, Speicherung in Moodle (auch Weiterarbeit und Größengrenzen), Sicherheit.

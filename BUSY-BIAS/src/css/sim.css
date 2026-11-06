@@ -1,0 +1,550 @@
+/* Kopie aus shared/css/sim.css – nicht hier bearbeiten: Änderungen in shared/ vornehmen und sync-shared.mjs ausführen. */
+/*
+ * sim.css – Gestaltung der Simulator-Bausteine (Koordinatensystem, Neuronen, Steuerung,
+ * Protokoll, Eingabe der Punkte).
+ *
+ * Gemeinsamer Code der Simulator-Pakete (Quelle: shared/css/sim.css). Wird nach base.css und
+ * vor css/style.css geladen. Die Farben der Flächen und Punkte legen die Variablen fest;
+ * jedes Paket kann sie in style.css ändern.
+ */
+
+:root {
+  --fire: #2e7d32;
+  --fire-area: #c6e8ca;
+  --nofire: #b3261e;
+  --nofire-area: #fbd9d6;
+  --highlight: #d55e00;
+  --probe: #0b5cad;
+}
+
+h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.05rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.8rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.card[hidden] {
+  display: none;
+}
+
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 7rem;
+  min-width: 0;
+  font-size: 0.92rem;
+}
+
+.field input,
+.field select,
+.inline-row select,
+.controls-row select,
+.input-small {
+  font: inherit;
+  padding: 0.3rem 0.45rem;
+  border: 1px solid var(--muted);
+  border-radius: 4px;
+  width: 100%;
+  background: #fff;
+}
+
+.input-small {
+  width: 4.5rem;
+}
+
+.controls-row select {
+  width: auto;
+}
+
+.error {
+  color: var(--danger);
+  font-size: 0.92rem;
+  margin: 0.4rem 0 0;
+}
+
+.error:empty {
+  display: none;
+}
+
+.radio-group {
+  border: none;
+  margin: 0.6rem 0;
+  padding: 0;
+}
+
+.radio-group[hidden] {
+  display: none;
+}
+
+.radio-group legend {
+  padding: 0;
+  font-size: 0.92rem;
+}
+
+.radio {
+  display: block;
+}
+
+.sample-row {
+  margin-top: 0.6rem;
+}
+
+.inline-row,
+.button-row,
+.controls-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.controls-row {
+  margin-bottom: 0.5rem;
+}
+
+.inline-row select {
+  flex: 1 1 12rem;
+  width: auto;
+  min-width: 0;
+}
+
+.button-row {
+  margin-top: 0.6rem;
+}
+
+.btn-small {
+  font-size: 0.82rem;
+  padding: 0.1rem 0.45rem;
+}
+
+.btn[hidden] {
+  display: none;
+}
+
+.format-help {
+  margin-top: 0.6rem;
+  font-size: 0.92rem;
+}
+
+.format-help summary {
+  cursor: pointer;
+}
+
+/* ---------- Tabellen ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll-limited {
+  max-height: 22rem;
+  overflow-y: auto;
+}
+
+.data-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 0.92rem;
+}
+
+.data-table th,
+.data-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 0.25rem 0.5rem;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.data-table th.num,
+.data-table td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+
+.data-table tr.is-current td {
+  background: #fde6d4;
+  font-weight: 600;
+}
+
+/* ---------- Koordinatensystem ---------- */
+
+.coord-plot,
+.net-view {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.plot-region-fire {
+  fill: var(--fire-area);
+}
+
+.plot-region-nofire {
+  fill: var(--nofire-area);
+}
+
+.plot-frame {
+  fill: none;
+  stroke: var(--muted);
+}
+
+.plot-grid line {
+  stroke: var(--border);
+  stroke-width: 1;
+}
+
+.plot-axis line {
+  stroke: var(--text);
+  stroke-width: 1.8;
+}
+
+.plot-axis path {
+  fill: var(--text);
+}
+
+.plot-tick-labels text {
+  font-size: 13px;
+  fill: var(--muted);
+}
+
+.plot-axis-label {
+  font-size: 14px;
+  font-weight: 600;
+  fill: var(--text);
+}
+
+.plot-line {
+  stroke: var(--text);
+  stroke-width: 2.5;
+}
+
+.plot-marker {
+  stroke: #fff;
+  stroke-width: 1;
+}
+
+.plot-marker.pt-fire {
+  fill: var(--fire);
+}
+
+.plot-marker.pt-nofire {
+  fill: var(--nofire);
+}
+
+.plot-marker.pt-probe {
+  fill: var(--probe);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.plot-marker.pt-test {
+  fill: #fff;
+  stroke-width: 2.5;
+}
+
+.plot-marker.pt-fire.pt-test {
+  stroke: var(--fire);
+}
+
+.plot-marker.pt-nofire.pt-test {
+  stroke: var(--nofire);
+}
+
+.marker-icon .pt-test {
+  fill: #fff;
+  stroke: var(--muted);
+  stroke-width: 2.5;
+}
+
+.plot-marker.pt-curve {
+  fill: var(--primary);
+}
+
+.plot-line.curve-line {
+  stroke: var(--primary);
+  stroke-width: 2;
+}
+
+.plot-line.curve-goal {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 4;
+}
+
+.plot-ring {
+  fill: none;
+  stroke: var(--highlight);
+  stroke-width: 3;
+}
+
+.ring-new .plot-ring {
+  stroke: var(--text);
+  stroke-width: 1.5;
+  stroke-dasharray: 3 2;
+}
+
+.ring-wrong .plot-ring {
+  stroke: var(--nofire);
+  stroke-width: 2.5;
+}
+
+.marker-icon {
+  vertical-align: -2px;
+}
+
+.marker-icon .pt-fire {
+  fill: var(--fire);
+}
+
+.marker-icon .pt-nofire {
+  fill: var(--nofire);
+}
+
+.marker-icon .pt-probe {
+  fill: var(--probe);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 1.1rem;
+  margin: 0.5rem 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.92rem;
+}
+
+.swatch {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.3em;
+  border: 1px solid var(--muted);
+  vertical-align: -2px;
+}
+
+.swatch-fire {
+  background: var(--fire-area);
+}
+
+.swatch-nofire {
+  background: var(--nofire-area);
+}
+
+/* ---------- Konfusionsmatrix: Farbstufe = Anteil an der Zeilensumme ---------- */
+
+.confusion-matrix {
+  width: auto;
+}
+
+.confusion-matrix th,
+.confusion-matrix td {
+  text-align: center;
+}
+
+.confusion-matrix tbody th {
+  text-align: left;
+}
+
+.cm-corner {
+  font-weight: normal;
+  font-size: 0.82rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.cm-axis {
+  display: block;
+}
+
+.confusion-matrix .cm-cell {
+  min-width: 3.2rem;
+  font-weight: bold;
+  font-size: 1.05rem;
+  padding: 0.55rem 0.7rem;
+}
+
+.cm-h0 { background: #f7f9fb; color: #5b6776; font-weight: normal; }
+.cm-diag.cm-h1 { background: #e6f5e9; }
+.cm-diag.cm-h2 { background: #c8e9cf; }
+.cm-diag.cm-h3 { background: #a3d9ae; }
+.cm-diag.cm-h4 { background: #6cbf7d; }
+.cm-diag.cm-h5 { background: #2e7d32; color: #fff; }
+.cm-off.cm-h1 { background: #fbe9e9; }
+.cm-off.cm-h2 { background: #f5cccc; }
+.cm-off.cm-h3 { background: #eda5a5; }
+.cm-off.cm-h4 { background: #df6f6f; }
+.cm-off.cm-h5 { background: #c62828; color: #fff; }
+
+.cm-sum {
+  background: #eef1f5;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.cm-total {
+  color: var(--text);
+}
+
+/* ---------- Neuronen ---------- */
+
+.net-edge line {
+  stroke: var(--muted);
+  stroke-width: 2;
+}
+
+.net-edge path {
+  fill: var(--muted);
+}
+
+.net-edge.is-active line {
+  stroke: var(--primary);
+  stroke-width: 3;
+}
+
+.net-edge.is-active path {
+  fill: var(--primary);
+}
+
+.net-edge.is-changed line {
+  stroke: var(--highlight);
+  stroke-width: 3;
+}
+
+.net-edge.is-changed path {
+  fill: var(--highlight);
+}
+
+.net-weight,
+.net-note,
+.net-name,
+.net-output {
+  font-size: 18px;
+  fill: var(--text);
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 4px;
+}
+
+.net-weight.is-changed,
+.net-note.is-changed {
+  fill: var(--highlight);
+  font-weight: 700;
+}
+
+.net-note.is-active,
+.net-output.is-active {
+  fill: var(--primary);
+  font-weight: 700;
+}
+
+.net-input circle {
+  fill: #fff;
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.net-input.is-active circle {
+  fill: var(--info-bg);
+  stroke: var(--primary);
+  stroke-width: 3;
+}
+
+.net-value {
+  font-size: 16px;
+  fill: var(--text);
+}
+
+.net-half {
+  fill: #fff;
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.net-half.is-active {
+  fill: var(--info-bg);
+}
+
+.net-divider {
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.net-sigma {
+  font-size: 44px;
+  fill: var(--text);
+}
+
+.net-symbol {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+/* ---------- Protokoll und Rechnung ---------- */
+
+.protocol {
+  max-height: 70vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+}
+
+.protocol[hidden] {
+  display: none;
+}
+
+.protocol-line {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.protocol-head {
+  font-weight: 600;
+}
+
+.protocol-stage {
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-bottom: 0.4rem;
+}
+
+.protocol-sub {
+  padding-left: 1.2rem;
+}
+
+.protocol-rule {
+  margin: 0.5rem 0;
+  height: 0;
+  overflow: hidden;
+  border-top: 1px solid var(--muted);
+}
+
+.calc-lines {
+  margin-bottom: 0.6rem;
+}

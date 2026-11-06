@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<!--
+  BUSY BIAS – Brain Under Simple Yardstick: Bias Influences Activation Start
+  ===========================================================================
+  SCORM-1.2-Lernpaket: Perzeptron-Simulator. Einstiegsseite (im Manifest als SCO eingetragen).
+
+  Aufbau:
+    - Kopfbereich mit Registerkarten (Tabs) für die sechs Seiten
+    - sechs <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
+
+  Sicherheit:
+    - Content-Security-Policy nach dem Prinzip "alles verboten, außer":
+      default-src 'none' sperrt jede Ressourcenart (Bilder, Schriften, Medien,
+      Frames, Worker, Netzwerkverbindungen, Plugins); erlaubt sind nur Skripte
+      und Stylesheets aus dem Paket selbst. Keine Formularübertragung, kein <base>.
+    - Trusted Types (require-trusted-types-for 'script'): Browser mit Unterstützung
+      blockieren zur Laufzeit jede Übergabe von Zeichenketten an HTML-Senken wie innerHTML.
+      Es gibt keine Policy, weil das Paket kein XML einliest.
+    - Es gibt kein Inline-JavaScript und keine Inline-Stile.
+    - Keine externen Ressourcen (keine CDNs, keine Webfonts).
+    - Alle dynamischen Inhalte werden per JavaScript als Text eingefügt (siehe js/dom-utils.js).
+-->
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; base-uri 'none'; form-action 'none'; require-trusted-types-for 'script'; trusted-types 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BUSY BIAS – Perzeptron-Simulator</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/sim.css">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Reihenfolge ist wichtig: Grundmodule zuerst, app.js zuletzt. "defer" = nach dem Aufbau des HTML ausführen. -->
+  <script src="js/dom-utils.js" defer></script>
+  <script src="js/sim-format.js" defer></script>
+  <script src="js/text-utils.js" defer></script>
+  <script src="js/tabs.js" defer></script>
+  <script src="js/scorm-api.js" defer></script>
+  <script src="js/csv-parser.js" defer></script>
+  <script src="js/activations.js" defer></script>
+  <script src="js/point-data.js" defer></script>
+  <script src="js/number-wheel.js" defer></script>
+  <script src="js/point-import.js" defer></script>
+  <script src="js/data-panel.js" defer></script>
+  <script src="js/coord-plot.js" defer></script>
+  <script src="js/net-view.js" defer></script>
+  <script src="js/training-controls.js" defer></script>
+  <script src="js/protocol-view.js" defer></script>
+  <script src="js/classify-panel.js" defer></script>
+  <script src="js/confusion-matrix.js" defer></script>
+  <script src="js/samples.js" defer></script>
+  <script src="js/format-utils.js" defer></script>
+  <script src="js/perceptron.js" defer></script>
+  <script src="js/hand-calc.js" defer></script>
+  <script src="js/task-generator.js" defer></script>
+  <script src="js/perceptron-view.js" defer></script>
+  <script src="js/session.js" defer></script>
+  <script src="js/pages/common.js" defer></script>
+  <script src="js/pages/input.js" defer></script>
+  <script src="js/pages/training.js" defer></script>
+  <script src="js/pages/protocol.js" defer></script>
+  <script src="js/pages/classify.js" defer></script>
+  <script src="js/pages/hand.js" defer></script>
+  <script src="js/pages/test.js" defer></script>
+  <script src="js/progress.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <h1>BUSY BIAS <span class="subtitle">Brain Under Simple Yardstick: Bias Influences Activation Start</span></h1>
+    <nav class="tabs" role="tablist" aria-label="Seiten von BUSY BIAS">
+      <button type="button" role="tab" id="tab-input" aria-controls="page-input" aria-selected="true"><span class="tab-no">1</span> Daten und Perzeptron</button>
+      <button type="button" role="tab" id="tab-training" aria-controls="page-training" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Training</button>
+      <button type="button" role="tab" id="tab-protocol" aria-controls="page-protocol" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> Protokoll</button>
+      <button type="button" role="tab" id="tab-classify" aria-controls="page-classify" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Punkt klassifizieren</button>
+      <button type="button" role="tab" id="tab-hand" aria-controls="page-hand" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Von Hand rechnen</button>
+      <button type="button" role="tab" id="tab-test" aria-controls="page-test" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Test und Konfusionsmatrix</button>
+    </nav>
+  </header>
+
+  <noscript><p class="status status-error">BUSY BIAS benötigt JavaScript.</p></noscript>
+  <p id="app-error" class="status status-error" role="alert">Die Anwendung wird geladen … Falls diese Meldung bestehen bleibt, ist JavaScript deaktiviert oder der Browser zu alt.</p>
+
+  <main>
+    <!-- ===================================================================
+         Seite 1: Daten und Perzeptron
+         =================================================================== -->
+    <section id="page-input" class="page page-wide" role="tabpanel" aria-labelledby="tab-input">
+      <h2>Daten und Perzeptron</h2>
+      <p class="intro">Laden Sie Trainingspunkte aus einer CSV-Datei oder einem Beispiel, oder geben Sie einzelne Punkte ein. Das Perzeptron rechnet mit zwei Eingängen, der Heaviside-Funktion und einem Schwellenwert θ.</p>
+      <div class="sim-layout">
+        <div>
+          <div id="input-data"></div>
+          <div id="input-stage"></div>
+          <div id="input-form"></div>
+          <div class="card" id="cfg-card">
+            <h3>Perzeptron konfigurieren</h3>
+            <div class="field-row" id="cfg-positive-row" hidden>
+              <div class="field">
+                <label for="cfg-positive">Perzeptron feuert bei Label</label>
+                <select id="cfg-positive"></select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field"><label for="cfg-w1">Startgewicht w₁</label><input type="text" id="cfg-w1" inputmode="decimal" value="1" autocomplete="off"></div>
+              <div class="field"><label for="cfg-w2">Startgewicht w₂</label><input type="text" id="cfg-w2" inputmode="decimal" value="1" autocomplete="off"></div>
+              <div class="field"><label for="cfg-theta">Startschwellenwert θ</label><input type="text" id="cfg-theta" inputmode="decimal" value="1" autocomplete="off"></div>
+            </div>
+            <div class="button-row">
+              <button type="button" id="cfg-random" class="btn">Zufällig belegen</button>
+            </div>
+            <div class="field-row alpha-row">
+              <label class="switch"><input type="checkbox" id="cfg-alpha-on"> Lernrate α verwenden</label>
+              <div class="field"><label for="cfg-alpha">Lernrate α</label><input type="text" id="cfg-alpha" class="is-inactive" inputmode="decimal" value="0,1" autocomplete="off"></div>
+            </div>
+            <label class="switch"><input type="checkbox" id="cfg-scale"> Eingabedaten skalieren (je Attribut auf 0 bis 1)</label>
+            <p class="hint">Ohne Lernrate gilt α = 1. Nach einem Klick in ein Feld ändert auch das Mausrad den Wert. Jede Änderung setzt das Training zurück.</p>
+            <p id="cfg-error" class="error" role="alert"></p>
+            <div class="heaviside-def" id="cfg-heaviside">
+              <h4>Aktivierungsfunktion: Heaviside</h4>
+              <svg viewBox="0 0 280 70" role="img" aria-label="f von a ist 1, falls a größer oder gleich Theta ist, und 0, falls a kleiner als Theta ist">
+                <text x="0" y="41">f(a) =</text>
+                <path class="heaviside-brace" d="M88 5C80 5 78 9 78 17V27C78 32 75 35 70 35C75 35 78 38 78 43V53C78 61 80 65 88 65"/>
+                <text x="96" y="26">1,&#160;&#160;falls a ≥ θ</text>
+                <text x="96" y="56">0,&#160;&#160;falls a &lt; θ</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div id="input-plot" class="plot-box"></div>
+          <p id="input-empty" class="hint">Noch keine Trainingspunkte.</p>
+          <label class="switch"><input type="checkbox" id="input-toggle-areas"> Decision Areas einzeichnen</label>
+          <ul id="input-area-legend" class="legend"></ul>
+          <ul id="input-legend" class="legend"></ul>
+          <div id="input-equation"></div>
+          <div id="input-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 2: Training
+         =================================================================== -->
+    <section id="page-training" class="page page-wide" role="tabpanel" aria-labelledby="tab-training" hidden>
+      <h2>Training</h2>
+      <p id="training-empty" class="notice" hidden>Es gibt noch keine Trainingspunkte. Laden oder erfassen Sie zuerst Punkte auf Seite 1.</p>
+      <div class="sim-layout">
+        <div>
+          <div id="training-perceptron" class="perceptron-box"></div>
+          <div class="card">
+            <div id="training-controls"></div>
+            <label class="switch"><input type="checkbox" id="toggle-shuffle"> Punkte in jeder Iteration zufällig mischen</label>
+            <p id="training-shuffle-hint" class="hint" hidden>Jeder Lauf kann eine andere Gerade ergeben. Vergleichen Sie mit „Zurücksetzen“.</p>
+          </div>
+          <div id="training-result" class="card result-box" aria-live="polite"></div>
+          <div class="card">
+            <dl class="counters">
+              <div><dt>Iteration</dt><dd id="count-iteration">0</dd></div>
+              <div><dt>Verarbeitete Punkte</dt><dd id="count-processed">0</dd></div>
+              <div><dt>Richtig in der letzten Iteration</dt><dd id="count-last">–</dd></div>
+            </dl>
+            <p id="training-found" class="status status-success" role="status" hidden></p>
+            <p id="training-hint" class="notice" hidden>Nach 100 Iterationen ist noch keine Trenngerade gefunden. Die Daten sind möglicherweise nicht linear trennbar.</p>
+          </div>
+          <div id="training-stage"></div>
+        </div>
+        <div>
+          <div id="training-plot" class="plot-box"></div>
+          <label class="switch"><input type="checkbox" id="toggle-areas"> Decision Areas einzeichnen</label>
+          <ul id="training-area-legend" class="legend"></ul>
+          <ul id="training-point-legend" class="legend"></ul>
+          <div id="training-equation"></div>
+        </div>
+      </div>
+      <p id="training-scale-shift" class="notice" hidden>Die neuen Punkte haben Minimum oder Maximum verändert. Deshalb haben sich auch die alten Punkte im skalierten Bereich verschoben.</p>
+      <details class="card" id="training-curve-details">
+        <summary>Lernkurve</summary>
+        <p id="training-curve-empty" class="hint">Noch keine Iteration abgeschlossen.</p>
+        <p class="hint">Richtig klassifizierte Punkte je abgeschlossener Iteration; die gestrichelte Linie markiert „alle richtig“.</p>
+        <div id="training-curve" class="curve-box"></div>
+      </details>
+      <details class="card" id="training-table-details">
+        <summary>Trainingspunkte <span id="training-table-count" class="count"></span></summary>
+        <div class="table-scroll table-scroll-limited">
+          <table class="data-table">
+            <thead><tr id="training-thead"></tr></thead>
+            <tbody id="training-tbody"></tbody>
+          </table>
+        </div>
+      </details>
+      <div class="card" id="training-stages" hidden>
+        <h3>Vergleich der Stufen</h3>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead><tr><th scope="col">Stufe</th><th scope="col" class="num">Punkte</th><th scope="col">Startwerte</th><th scope="col">Verarbeitet bis zur Trenngeraden</th><th scope="col">Werte am Ende</th></tr></thead>
+            <tbody id="stages-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 3: Protokoll
+         =================================================================== -->
+    <section id="page-protocol" class="page page-wide" role="tabpanel" aria-labelledby="tab-protocol" hidden>
+      <h2>Protokoll</h2>
+      <p class="intro">Jeder Trainingspunkt mit seiner Rechnung. Die ältesten Einträge stehen oben.</p>
+      <div id="protocol-box"></div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 4: Punkt klassifizieren
+         =================================================================== -->
+    <section id="page-classify" class="page page-wide" role="tabpanel" aria-labelledby="tab-classify" hidden>
+      <h2>Punkt klassifizieren</h2>
+      <div id="classify-notice" class="notice" role="status">
+        <p id="classify-notice-text"></p>
+        <button type="button" id="classify-notice-button" class="btn"></button>
+      </div>
+      <p class="hint" id="classify-status"></p>
+      <div class="sim-layout">
+        <div id="classify-panel"></div>
+        <div>
+          <div id="classify-plot" class="plot-box"></div>
+          <ul id="classify-area-legend" class="legend"></ul>
+          <ul id="classify-point-legend" class="legend"></ul>
+          <div id="classify-equation"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 5: Von Hand rechnen
+         =================================================================== -->
+    <section id="page-hand" class="page page-wide" role="tabpanel" aria-labelledby="tab-hand" hidden>
+      <h2>Von Hand rechnen</h2>
+      <div class="card" id="hand-source">
+        <h3>Aufgabe</h3>
+        <div class="inline-row">
+          <button type="button" id="hand-adopt" class="btn btn-primary">Daten von Seite 1 übernehmen</button>
+          <label for="hand-level">Schwierigkeit</label>
+          <select id="hand-level"></select>
+          <button type="button" id="hand-random" class="btn btn-primary">Neue Zufallsaufgabe</button>
+        </div>
+        <p id="hand-source-error" class="error" role="alert"></p>
+        <p id="hand-empty" class="hint">Noch keine Aufgabe: Übernehmen Sie die Daten von Seite 1 oder lassen Sie eine Zufallsaufgabe erzeugen.</p>
+        <p id="hand-info" class="hint" role="status"></p>
+        <p id="hand-differs" class="notice" hidden>Seite 1 wurde geändert. Die Tabelle rechnet mit den übernommenen Werten weiter.</p>
+      </div>
+      <div id="hand-content">
+        <div class="card" id="hand-help"></div>
+        <div class="card">
+          <dl class="counters">
+            <div><dt>Richtige Zeilen</dt><dd id="hand-correct">0</dd></div>
+            <div><dt>Fehlversuche</dt><dd id="hand-errors">0</dd></div>
+            <div><dt>Genutzte Hilfen</dt><dd id="hand-helps">0</dd></div>
+          </dl>
+          <p id="hand-feedback" class="status" role="status" aria-live="polite"></p>
+          <p id="hand-hint" class="notice" hidden>Nach 100 Iterationen ist noch keine Trenngerade gefunden. Die Daten sind möglicherweise nicht linear trennbar.</p>
+          <div class="button-row">
+            <button type="button" id="hand-restart" class="btn">Von vorn beginnen</button>
+            <button type="button" id="hand-next" class="btn btn-primary" hidden>Neue Zufallsaufgabe</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Berechnung</h3>
+          <div id="hand-table" class="table-scroll"></div>
+        </div>
+        <details class="card" id="hand-plot-details">
+          <summary>Visualisierung</summary>
+          <p class="hint">Die Punkte der Aufgabe und die Gerade nach der letzten richtigen Zeile. Der Punkt der offenen Zeile ist hervorgehoben.</p>
+          <div id="hand-plot" class="curve-box"></div>
+          <label class="switch"><input type="checkbox" id="hand-areas"> Decision Areas einzeichnen</label>
+          <ul id="hand-area-legend" class="legend"></ul>
+          <ul id="hand-point-legend" class="legend"></ul>
+          <div id="hand-equation"></div>
+        </details>
+        <details class="card" id="hand-points-details">
+          <summary>Trainingspunkte <span id="hand-points-count" class="count"></span></summary>
+          <div class="table-scroll table-scroll-limited">
+            <table class="data-table">
+              <thead><tr id="hand-thead"></tr></thead>
+              <tbody id="hand-tbody"></tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 6: Test und Konfusionsmatrix
+         =================================================================== -->
+    <section id="page-test" class="page page-wide" role="tabpanel" aria-labelledby="tab-test" hidden>
+      <h2>Test und Konfusionsmatrix</h2>
+      <p class="intro">Ein Teil der Punkte wird zufällig zurückgehalten. Das Perzeptron trainiert ohne diese <strong>Testdaten</strong> und klassifiziert sie danach. So zeigt sich, wie gut es mit Punkten zurechtkommt, die es noch nie gesehen hat. Diese Seite ändert nichts an den Seiten 1 bis 5.</p>
+      <p id="test-note" class="notice" hidden></p>
+      <div id="test-empty" class="notice" hidden>
+        <p>Es gibt noch keine Trainingspunkte.</p>
+        <button type="button" id="test-to-input" class="btn">Zur Dateneingabe</button>
+      </div>
+      <div class="card" id="test-select-card">
+        <h3>Testdaten auswählen</h3>
+        <div class="inline-row">
+          <label for="test-fraction">Anteil der Testdaten (%)</label>
+          <input type="text" id="test-fraction" class="input-small" inputmode="numeric" maxlength="3" value="20" autocomplete="off">
+          <button type="button" id="test-select" class="btn btn-primary">Testdaten auswählen</button>
+        </div>
+        <p id="test-select-error" class="error" role="alert"></p>
+        <p id="test-split" class="hint" role="status"></p>
+        <p id="test-scale-note" class="hint" hidden>Bei der Skalierung stammen Minimum und Maximum nur aus den Trainingspunkten, damit die Testdaten nicht ins Training einfließen. Testpunkte können deshalb außerhalb von 0 bis 1 liegen.</p>
+      </div>
+      <div id="test-work" hidden>
+        <fieldset class="card radio-group test-mode">
+          <legend>Modus</legend>
+          <label class="radio"><input type="radio" name="test-mode" id="test-mode-training" value="training" checked> Training</label>
+          <label class="radio"><input type="radio" name="test-mode" id="test-mode-test" value="test" disabled> Test</label>
+          <p id="test-mode-hint" class="hint">Der Test ist verfügbar, sobald das Training begonnen hat.</p>
+          <p id="test-preliminary" class="notice" hidden>Das Training hat noch keine Trenngerade gefunden. Der Test verwendet den aktuellen, vorläufigen Stand.</p>
+        </fieldset>
+        <div class="sim-layout">
+          <div>
+            <div id="test-perceptron" class="perceptron-box"></div>
+            <div id="test-training-pane">
+              <div id="test-controls" class="card"></div>
+              <div id="test-result" class="card result-box" aria-live="polite"></div>
+              <div class="card">
+                <dl class="counters">
+                  <div><dt>Iteration</dt><dd id="test-count-iteration">0</dd></div>
+                  <div><dt>Verarbeitete Punkte</dt><dd id="test-count-processed">0</dd></div>
+                  <div><dt>Richtig in der letzten Iteration</dt><dd id="test-count-last">–</dd></div>
+                </dl>
+                <p id="test-found" class="status status-success" role="status" hidden></p>
+                <p id="test-hint" class="notice" hidden>Nach 100 Iterationen ist noch keine Trenngerade gefunden. Die Daten sind möglicherweise nicht linear trennbar.</p>
+              </div>
+            </div>
+            <div id="test-test-pane" hidden>
+              <div class="card">
+                <div class="controls-row">
+                  <button type="button" id="test-next" class="btn btn-primary">Nächster Testpunkt</button>
+                  <button type="button" id="test-all" class="btn">Alle klassifizieren</button>
+                  <button type="button" id="test-again" class="btn">Test neu starten</button>
+                </div>
+              </div>
+              <div id="test-calc" class="card result-box" aria-live="polite"></div>
+            </div>
+          </div>
+          <div>
+            <div id="test-plot" class="plot-box"></div>
+            <ul id="test-area-legend" class="legend"></ul>
+            <ul id="test-point-legend" class="legend"></ul>
+            <p class="hint">Hohle Marker sind Testpunkte, gefüllte Trainingspunkte. Falsch klassifizierte Testpunkte sind rot umrandet.</p>
+            <div id="test-equation"></div>
+          </div>
+        </div>
+        <div class="card" id="test-results-card">
+          <h3>Testpunkte</h3>
+          <div class="table-scroll table-scroll-limited">
+            <table class="data-table" id="test-results-table">
+              <thead><tr id="test-results-head"></tr></thead>
+              <tbody id="test-results-body"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" id="test-matrix-card" hidden>
+          <h3>Konfusionsmatrix</h3>
+          <div id="test-matrix" class="table-scroll"></div>
+          <p id="test-accuracy" class="result-title"></p>
+          <p id="test-compare"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p id="progress" role="status"></p>
+  </footer>
+</body>
+</html>

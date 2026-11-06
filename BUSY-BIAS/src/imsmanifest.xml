@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SCORM-1.2-Manifest von BUSY BIAS (Brain Under Simple Yardstick: Bias Influences Activation Start).
+  - Ein einzelnes SCO (index.html), das alle sechs Seiten als Registerkarten enthält.
+  - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
+  - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
+-->
+<manifest identifier="BUSY-BIAS-1" version="1.0"
+          xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+          xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="ORG-BUSY-BIAS">
+    <organization identifier="ORG-BUSY-BIAS">
+      <title>BUSY BIAS – Perzeptron-Simulator</title>
+      <item identifier="ITEM-BUSY-BIAS" identifierref="RES-BUSY-BIAS" isvisible="true">
+        <title>BUSY BIAS – Perzeptron-Simulator</title>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="RES-BUSY-BIAS" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="index.html"/>
+      <file href="LICENSE.txt"/>
+      <file href="css/base.css"/>
+      <file href="css/sim.css"/>
+      <file href="css/style.css"/>
+      <file href="js/dom-utils.js"/>
+      <file href="js/sim-format.js"/>
+      <file href="js/text-utils.js"/>
+      <file href="js/tabs.js"/>
+      <file href="js/scorm-api.js"/>
+      <file href="js/csv-parser.js"/>
+      <file href="js/activations.js"/>
+      <file href="js/point-data.js"/>
+      <file href="js/number-wheel.js"/>
+      <file href="js/point-import.js"/>
+      <file href="js/data-panel.js"/>
+      <file href="js/coord-plot.js"/>
+      <file href="js/net-view.js"/>
+      <file href="js/training-controls.js"/>
+      <file href="js/protocol-view.js"/>
+      <file href="js/classify-panel.js"/>
+      <file href="js/confusion-matrix.js"/>
+      <file href="js/samples.js"/>
+      <file href="js/format-utils.js"/>
+      <file href="js/perceptron.js"/>
+      <file href="js/hand-calc.js"/>
+      <file href="js/task-generator.js"/>
+      <file href="js/perceptron-view.js"/>
+      <file href="js/session.js"/>
+      <file href="js/pages/common.js"/>
+      <file href="js/pages/input.js"/>
+      <file href="js/pages/training.js"/>
+      <file href="js/pages/protocol.js"/>
+      <file href="js/pages/classify.js"/>
+      <file href="js/pages/hand.js"/>
+      <file href="js/pages/test.js"/>
+      <file href="js/progress.js"/>
+      <file href="js/app.js"/>
+    </resource>
+  </resources>
+</manifest>

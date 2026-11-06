@@ -1,0 +1,51 @@
+Anzahl Links;Anzahl Signalwörter;Label
+10;10;Spam
+7;10;Spam
+11;13;Spam
+1;3;kein Spam
+2;1;kein Spam
+0;1;kein Spam
+0;3;kein Spam
+2;2;kein Spam
+8;13;Spam
+10;10;Spam
+10;8;Spam
+3;6;Spam
+10;6;Spam
+2;2;kein Spam
+1;1;kein Spam
+2;0;kein Spam
+5;9;Spam
+1;2;kein Spam
+7;5;Spam
+2;1;kein Spam
+0;2;kein Spam
+1;3;kein Spam
+0;1;kein Spam
+0;1;kein Spam
+1;2;kein Spam
+1;1;kein Spam
+1;0;kein Spam
+10;6;Spam
+2;1;kein Spam
+8;8;Spam
+9;7;Spam
+1;1;kein Spam
+1;0;kein Spam
+2;2;kein Spam
+0;1;kein Spam
+1;3;kein Spam
+10;6;Spam
+9;13;Spam
+0;1;kein Spam
+6;13;Spam
+6;12;Spam
+6;10;Spam
+5;14;Spam
+8;4;Spam
+1;1;kein Spam
+6;8;Spam
+0;2;kein Spam
+5;10;Spam
+1;3;kein Spam
+2;2;kein Spam

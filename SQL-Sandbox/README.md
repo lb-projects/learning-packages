@@ -219,7 +219,7 @@ SQL-Sandbox/
 │     ├─ uml-model.js        Klassendiagramm: Ableitung aus dem Tabellenschema
 │     ├─ uml-layout.js       Klassendiagramm: Ebenenlayout mit rechtwinkligen Linien
 │     ├─ pages/*.js          die sechs Seiten (+ gemeinsame Bausteine)
-│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Abschluss
+│     └─ app.js              Navigation, Verteilung der Änderungen, SCORM-Status
 ├─ testdata/                 SQL-Dateien für den Unterricht (siehe oben)
 ├─ preview/                  Vorschau
 └─ README.md                 diese Datei
@@ -237,7 +237,8 @@ Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsma
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
 2. `sql-sandbox.zip` hochladen.
-3. Bewertung: „Abschluss“ bzw. Status „completed“ wird bereits beim Öffnen des Lernpakets gemeldet. Ein bereits gemeldeter Abschluss (auch „passed“) bleibt unverändert.
+3. **Abschluss: In den Einstellungen der Aktivität unter *Aktivitätsabschluss* „Teilnehmer/innen können die Aktivität manuell als abgeschlossen markieren“ einstellen.** Nur so lässt sich die Aktivität als abgeschlossen erkennen. Das Lernpaket meldet beim Öffnen nämlich den Status „incomplete“ und nie „completed“: Ein abgeschlossener Versuch würde Moodle beim erneuten Öffnen in den *Überprüfungsmodus* schalten. Abschlussbedingungen, die den SCORM-Status auswerten („Status erforderlich“, „Alle Lernobjekte abgeschlossen“), werden deshalb nie erfüllt.
+   - Ein Status „completed“ bzw. „passed“ aus einer früheren Version des Pakets bleibt unverändert; für diese Lernenden erscheint der Überprüfungsmodus weiterhin. Abhilfe: das Paket in einer neuen Aktivität einbinden.
 
 ## Sicherheits- und Datenschutzkonzept
 
@@ -278,7 +279,7 @@ So wird das Paket in Moodle eingebunden:
 
 **Datenschutz**
 - Datenbanken, SQL-Eingaben und Ergebnisse verlassen den Browser nicht.
-- An Moodle gehen nur `cmi.core.lesson_status` (`completed`) und `cmi.core.exit`. Besuchte Seiten werden nicht erfasst; `cmi.suspend_data` wird nicht verwendet; Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
+- An Moodle gehen nur `cmi.core.lesson_status` (`incomplete`) und `cmi.core.exit`. Besuchte Seiten werden nicht erfasst; `cmi.suspend_data` wird nicht verwendet; Schreibzugriffe auf andere Datenelemente sind im Code gesperrt.
 - Der Name der Lernenden wird nicht gelesen.
 - Kein `localStorage`, keine Cookies.
 - **Hinweis:** Nach dem Neuladen sind Datenbank, Eingaben und Änderungen weg – das ist bewusst so (Datensparsamkeit).
