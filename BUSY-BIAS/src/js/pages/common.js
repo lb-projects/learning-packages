@@ -38,23 +38,24 @@
   function renderAreaLegend(box) {
     dom.clear(box);
     dom.appendChildren(box, [
-      dom.el('li', null, [dom.el('span', { class: 'swatch swatch-fire' }), 'Perzeptron feuert (s ≥ θ)']),
-      dom.el('li', null, [dom.el('span', { class: 'swatch swatch-nofire' }), 'Perzeptron feuert nicht (s < θ)'])
+      dom.el('li', null, [dom.el('span', { class: 'swatch swatch-fire' }), 'Perzeptron feuert (a ≥ θ)']),
+      dom.el('li', null, [dom.el('span', { class: 'swatch swatch-nofire' }), 'Perzeptron feuert nicht (a < θ)'])
     ]);
   }
 
   /**
-   * Zeigt die Geradengleichung des aktuellen Stands.
+   * Zeigt eine Geradengleichung.
    * @param {HTMLElement} box - Behälter (wird geleert).
    * @param {boolean} outside - Die Gerade verläuft außerhalb des Ausschnitts.
+   * @param {{w:number[], theta:number, label:string}} [source] - Werte und Bezeichnung; ohne Angabe der aktuelle Stand.
    */
-  function renderEquation(box, outside) {
+  function renderEquation(box, outside, source) {
     const trainer = ns.session.trainer();
-    const w = trainer.weights();
-    const theta = trainer.theta();
+    const w = source ? source.w : trainer.weights();
+    const theta = source ? source.theta : trainer.theta();
     const line = ns.perceptron.lineOf(w, theta);
     dom.clear(box);
-    box.appendChild(dom.el('p', { class: 'equation' }, ['Gerade: ', dom.el('strong', null, ns.fmt.equation(line))]));
+    box.appendChild(dom.el('p', { class: 'equation' }, [(source ? source.label : 'Gerade') + ': ', dom.el('strong', null, ns.fmt.equation(line))]));
     box.appendChild(dom.el('p', { class: 'hint' }, 'Allgemeine Form: ' + ns.fmt.generalForm(w, theta)));
     if (line.kind === 'none') {
       box.appendChild(dom.el('p', { class: 'hint' }, line.fires ? 'Die ganze Fläche feuert, weil 0 ≥ θ gilt.' : 'Die ganze Fläche feuert nicht, weil 0 < θ gilt.'));

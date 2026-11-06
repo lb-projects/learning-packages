@@ -7,6 +7,8 @@
  *   - Der Baustein kennt kein Modell: Flächen sind beliebige Polygone, Linien beliebige Strecken.
  *     Nichtlineare Entscheidungsgrenzen lassen sich als Raster aus Polygonen übergeben.
  *   - Punkte sind Kreis, Quadrat oder Raute, damit Klassen auch ohne Farbe unterscheidbar bleiben.
+ *   - Liegt 0 im Ausschnitt, sind die Achsen kräftig und mit Pfeilspitzen gezeichnet. Mit
+ *     fitView(…, {includeOrigin: true}) ist das immer der Fall.
  *
  * Darstellung (render):
  *   {view, xLabel, yLabel, regions: [{polygon: [[x, y], …], cls, title?}],
@@ -31,6 +33,8 @@
   const MARGIN = { left: 66, right: 16, top: 14, bottom: 54 };
   const MARKER_R = 6;
   const TICKS = 6;
+  /** Größe der Pfeilspitzen der Achsen. */
+  const AXIS_TIP = 10;
 
   /** Zähler für eindeutige clipPath-IDs. */
   let counter = 0;
@@ -45,13 +49,16 @@
   /**
    * Bestimmt den Ausschnitt für eine Menge von Koordinaten.
    *
-   * @param {Array<{x:number, y:number}>} coords - Koordinaten.
+   * @param {Array<{x:number, y:number}>} list - Koordinaten.
+   * @param {{includeOrigin?:boolean}} [options] - includeOrigin: Der Nullpunkt liegt immer im Ausschnitt,
+   *   sodass beide Achsen zu sehen sind.
    * @returns {{xmin:number, xmax:number, ymin:number, ymax:number}} Ausschnitt.
    */
-  function fitView(coords) {
-    if (coords.length === 0) {
+  function fitView(list, options) {
+    if (list.length === 0) {
       return { xmin: -5, xmax: 5, ymin: -5, ymax: 5 };
     }
+    const coords = options && options.includeOrigin ? [...list, { x: 0, y: 0 }] : list;
     const range = (values) => {
       let min = Math.min(...values);
       let max = Math.max(...values);
@@ -169,14 +176,31 @@
       const grid = dom.svg('g', { class: 'plot-grid' });
       const labels = dom.svg('g', { class: 'plot-tick-labels' });
       for (const t of ticksOf(view.xmin, view.xmax)) {
-        grid.appendChild(dom.svg('line', { x1: r2(sx(t)), x2: r2(sx(t)), y1: MARGIN.top, y2: MARGIN.top + plotH, class: t === 0 ? 'plot-zero' : null }));
+        grid.appendChild(dom.svg('line', { x1: r2(sx(t)), x2: r2(sx(t)), y1: MARGIN.top, y2: MARGIN.top + plotH}));
         labels.appendChild(dom.svg('text', { x: r2(sx(t)), y: MARGIN.top + plotH + 18, 'text-anchor': 'middle' }, ns.simFormat.num(t)));
       }
       for (const t of ticksOf(view.ymin, view.ymax)) {
-        grid.appendChild(dom.svg('line', { x1: MARGIN.left, x2: MARGIN.left + plotW, y1: r2(sy(t)), y2: r2(sy(t)), class: t === 0 ? 'plot-zero' : null }));
+        grid.appendChild(dom.svg('line', { x1: MARGIN.left, x2: MARGIN.left + plotW, y1: r2(sy(t)), y2: r2(sy(t))}));
         labels.appendChild(dom.svg('text', { x: MARGIN.left - 8, y: r2(sy(t)) + 4, 'text-anchor': 'end' }, ns.simFormat.num(t)));
       }
       root.appendChild(grid);
+      const axes = dom.svg('g', { class: 'plot-axes' });
+      if (view.ymin <= 0 && view.ymax >= 0) {
+        const y = r2(sy(0));
+        const end = MARGIN.left + plotW;
+        axes.appendChild(dom.svg('g', { class: 'plot-axis', 'data-axis': 'x' }, [
+          dom.svg('line', { x1: MARGIN.left, y1: y, x2: end, y2: y }),
+          dom.svg('path', { d: 'M' + end + ' ' + y + 'l' + -AXIS_TIP + ' ' + (-AXIS_TIP / 2) + 'v' + AXIS_TIP + 'Z' })
+        ]));
+      }
+      if (view.xmin <= 0 && view.xmax >= 0) {
+        const x = r2(sx(0));
+        axes.appendChild(dom.svg('g', { class: 'plot-axis', 'data-axis': 'y' }, [
+          dom.svg('line', { x1: x, y1: MARGIN.top + plotH, x2: x, y2: MARGIN.top }),
+          dom.svg('path', { d: 'M' + x + ' ' + MARGIN.top + 'l' + (-AXIS_TIP / 2) + ' ' + AXIS_TIP + 'h' + AXIS_TIP + 'Z' })
+        ]));
+      }
+      root.appendChild(axes);
       root.appendChild(dom.svg('rect', { class: 'plot-frame', x: MARGIN.left, y: MARGIN.top, width: plotW, height: plotH }));
       root.appendChild(labels);
       root.appendChild(dom.svg('text', { class: 'plot-axis-label', x: MARGIN.left + plotW / 2, y: HEIGHT - 10, 'text-anchor': 'middle' }, spec.xLabel));

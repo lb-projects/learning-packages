@@ -46,6 +46,11 @@ h1, h2, h3 {
   }
 }
 
+/* Breite Tabellen scrollen in ihrem Behälter und dürfen die Spalte nicht aufweiten. */
+.sim-layout > * {
+  min-width: 0;
+}
+
 .plot-box,
 .perceptron-box {
   background: var(--surface);
@@ -103,11 +108,47 @@ h1, h2, h3 {
   margin: 0.3rem 0;
 }
 
+.heaviside-def {
+  margin-top: 0.8rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--border);
+}
+
+.heaviside-def h4 {
+  margin: 0 0 0.3rem;
+  font-size: 0.95rem;
+}
+
+.heaviside-def svg {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+}
+
+.heaviside-def text {
+  font-size: 18px;
+  fill: var(--text);
+}
+
+.heaviside-brace {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.8;
+}
+
+.field input.is-inactive {
+  color: var(--muted);
+  background: var(--bg);
+  border-color: var(--border);
+}
+
 .equation {
   margin: 0.2rem 0;
   font-size: 1.05rem;
 }
 
+#input-equation .hint,
 #training-equation .hint,
 #classify-equation .hint {
   margin: 0.1rem 0;

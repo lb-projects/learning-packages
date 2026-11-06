@@ -8,8 +8,8 @@ Es läuft vollständig im Browser, lädt keine externen Ressourcen und verwendet
 
 | Seite | Inhalt |
 |---|---|
-| 1 Daten und Perzeptron | Links CSV-Datei oder Beispiel laden, Punkte einzeln hinzufügen und entfernen, feuerndes Label wählen, Perzeptron konfigurieren. Rechts die Visualisierung der Punkte |
-| 2 Training | Links das Perzeptron mit Eingängen, Gewichten, Σ, Heaviside-Symbol, θ und Ausgabe, darunter Ergebnis des Schritts, Steuerung und Zähler. Rechts die Punkte mit Gerade, Decision Areas auf Wunsch, Legende und Geradengleichung. Darunter aufklappbar alle Trainingspunkte |
+| 1 Daten und Perzeptron | Links CSV-Datei oder Beispiel laden, einzelne Punkte hinzufügen, Perzeptron konfigurieren (feuerndes Label, Startwerte, Lernrate), darunter die Definition der Heaviside-Funktion. Rechts die Punkte mit der Geraden des konfigurierten Perzeptrons, Decision Areas auf Wunsch, Legende und Geradengleichung, darunter die Liste der Punkte mit Entfernen |
+| 2 Training | Links das Perzeptron mit Eingängen, Gewichten, Σ, Heaviside-Symbol, dem von unten zugeführten θ und der Ausgabe, darunter Steuerung, Rechnungen des Schritts und Zähler. Rechts die Punkte mit Gerade, Decision Areas auf Wunsch, Legende und Geradengleichung. Darunter aufklappbar alle Trainingspunkte |
 | 3 Protokoll | Scrollbar, älteste Einträge oben: je Trainingspunkt die Werte vor der Rechnung, gewichtete Summe, Aktivierung, Fehler, Anpassung und Geradengleichung |
 | 4 Punkt klassifizieren | Links Maske und Rechnung mit dem Urteil korrekt oder falsch. Rechts Punkte, aktuelle Gerade, Decision Areas und der eingegebene Punkt. Ein Hinweis erscheint, solange keine Trenngerade gefunden wurde |
 
@@ -19,11 +19,13 @@ Zwischen den Seiten kann jederzeit gewechselt werden, auch mitten in einem Train
 
 Gerechnet und dargestellt wird mit dem **Schwellenwert θ**, nicht mit einem Bias. Einzige Aktivierungsfunktion ist die **Heaviside-Funktion**.
 
-- Gewichtete Summe: `s = w₁·x₁ + w₂·x₂`
-- Ausgabe: `y = 1`, wenn `s ≥ θ`, sonst `y = 0`
-- Fehler: `δ = t − y`; dabei ist `t = 1` beim feuernden Label und `t = 0` beim anderen
-- Nur bei `δ ≠ 0`: `wᵢ ← wᵢ + η·δ·xᵢ` und `θ ← θ − η·δ`
+- Gewichtete Summe: `a = w₁·x₁ + w₂·x₂`
+- Ausgabe: `f(a) = 1`, wenn `a ≥ θ`, sonst `f(a) = 0`
+- Fehler: `δ = t − f(a)`; dabei ist `t = 1` beim feuernden Label und `t = 0` beim anderen
+- Nur bei `δ ≠ 0`: `wᵢ ← wᵢ + α·δ·xᵢ` und `θ ← θ − α·δ`
 - Gerade: `w₁·x₁ + w₂·x₂ = θ`, angezeigt als `x₂ = m·x₁ + b`. Bei `w₂ = 0` ist sie senkrecht (`x₁ = θ/w₁`), bei `w₁ = w₂ = 0` gibt es keine Gerade, und die ganze Fläche hat dieselbe Farbe.
+
+Alle Koordinatensysteme schließen den Nullpunkt ein, damit beide Achsen zu sehen sind und sich die Lage der Geraden einordnen lässt.
 
 Eine **Iteration** ist ein Durchlauf durch alle Punkte in der Reihenfolge der Tabelle. Die **Trenngerade gilt als gefunden**, wenn eine ganze Iteration ohne Anpassung durchläuft („n von n“). Der Zähler enthält diesen letzten Prüfdurchlauf.
 
@@ -32,18 +34,20 @@ Gewichte, θ und Summen werden auf zehn Nachkommastellen gerundet, damit Darstel
 ### Konfiguration (Seite 1)
 
 - **Startgewichte** w₁, w₂ und **Startschwellenwert** θ: voreingestellt 1, frei eingebbar. **Zufällig belegen** setzt alle drei auf ganze Zahlen von −5 bis 5.
-- **Lernrate η:** optional zuschaltbar, dann frei wählbar (größer als 0, voreingestellt 0,1). Ohne Lernrate gilt η = 1, und η erscheint nicht in den Formeln.
+- **Lernrate α:** optional zuschaltbar, dann frei wählbar (mindestens 0,0001, voreingestellt 0,1). Ein Klick ins Feld oder eine Eingabe dort schaltet sie ein. Ohne Lernrate gilt α = 1, und α erscheint nicht in den Formeln.
+- **Mausrad:** Nach einem Klick in eines dieser Felder ändert auch das Mausrad den Wert. w₁, w₂ und θ ändern sich um 1. Bei α richtet sich die Schrittweite nach der Größenordnung, höchstens 0,1 (zum Beispiel 0,2 → 0,1 → 0,09 und 0,01 → 0,009). Über einem Feld ohne Fokus scrollt das Rad nur die Seite.
 - **Feuerndes Label:** Bei Zahlen ist das größere Label voreingestellt, sonst das erste der Datei.
+- Die Visualisierung zeigt sofort die Gerade dieser **Startwerte**, auch während des Trainings; den aktuellen Stand zeigen die Seiten 2 und 4. Der Schalter für die Decision Areas gilt für die Seiten 1 und 2 gemeinsam.
 - Jede Änderung auf Seite 1 setzt Training und Protokoll zurück. Ausnahme ist der Stufenwechsel mit „weitertrainieren“.
 
 ### Ablauf des Trainings (Seite 2)
 
-Je Trainingspunkt gibt es diese Schritte; ein Klick auf **Weiter** führt einen aus:
+Je Trainingspunkt gibt es diese Schritte; ein Klick auf **Weiter** führt einen aus. Eingänge bleiben leere Kreise, bis sie belegt sind; Summe und Ausgabe stehen erst in der Zeichnung, wenn sie berechnet sind.
 
 1. Der Punkt wird im Koordinatensystem und in der Tabelle hervorgehoben.
 2. Die Eingänge im Perzeptron werden vorbelegt.
-3. Die gewichtete Summe erscheint am Summenzeichen.
-4. Die Ausgabe erscheint, dazu erwartetes und berechnetes Label.
+3. Die gewichtete Summe a erscheint am Summenzeichen.
+4. Die Ausgabe f(a) erscheint, dazu erwartetes und berechnetes Label.
 5. Nur bei einem Fehler: Gewichte und θ werden angepasst, geänderte Werte sind hervorgehoben, Gerade und Decision Areas werden neu gezeichnet.
 
 | Steuerung | Wirkung |
@@ -78,7 +82,7 @@ Lernstunden;Schlafstunden;Label
 - Fehlerhafte Zeilen werden mit Zeilennummer gemeldet und übersprungen.
 - Vor dem Hochladen ist wählbar, ob vorhandene Punkte **ersetzt** oder **ergänzt** werden. Beim Ergänzen bleiben die bisherigen Attributnamen bestehen.
 
-Große Zahlen verlangsamen das Training stark, weil die Lernregel θ je Anpassung nur um η ändert, die Gewichte aber um η·x. Werte um 1 bis 10 eignen sich am besten; Einzelheiten stehen in [testdata/README.md](testdata/README.md).
+Große Zahlen verlangsamen das Training stark, weil die Lernregel θ je Anpassung nur um α ändert, die Gewichte aber um α·x. Werte um 1 bis 10 eignen sich am besten; Einzelheiten stehen in [testdata/README.md](testdata/README.md).
 
 ## Beispiele
 
@@ -169,4 +173,4 @@ Trainingspunkte, Einstellungen und Training werden **nicht gespeichert**: Nach d
 
 ## Qualitätssicherung
 
-Die Entwicklungswerkzeuge liegen außerhalb des Repositorys. Die automatischen Tests laufen in Chromium und prüfen unter anderem einen von Hand gerechneten AND-Lauf, jede Stufe gegen die dokumentierten Zahlen, jeden Baustein ohne Perzeptron und die Bedienung aller Seiten.
+Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklungswerkzeugen gebaut und getestet. Die automatischen Tests laufen in Chromium und prüfen unter anderem einen von Hand gerechneten AND-Lauf, jede Stufe gegen die dokumentierten Zahlen, jeden Baustein ohne Perzeptron und die Bedienung aller Seiten.

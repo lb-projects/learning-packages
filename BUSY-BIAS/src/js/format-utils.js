@@ -60,7 +60,7 @@
    * @returns {string} Zeile.
    */
   function sumLine(w, x, sum) {
-    return 'Gewichtete Summe: s = ' + factor(w[0]) + ' · ' + factor(x[0]) + ' + ' + factor(w[1]) + ' · ' + factor(x[1]) + ' = ' + num(sum);
+    return 'Gewichtete Summe: a = ' + factor(w[0]) + ' · ' + factor(x[0]) + ' + ' + factor(w[1]) + ' · ' + factor(x[1]) + ' = ' + num(sum);
   }
 
   /**
@@ -71,7 +71,7 @@
    * @returns {string} Zeile.
    */
   function activationLine(sum, theta, y) {
-    return 'Aktivierung: s = ' + num(sum) + (y === 1 ? ' ≥ ' : ' < ') + 'θ = ' + num(theta) + ' → y = ' + y;
+    return 'Aktivierung: a = ' + num(sum) + (y === 1 ? ' ≥ ' : ' < ') + 'θ = ' + num(theta) + ' → f(a) = ' + y;
   }
 
   /**
@@ -106,17 +106,17 @@
       return lines;
     }
     lines.push({ text: activationLine(r.sum, r.thetaBefore, r.y) });
-    lines.push({ text: 'Fehler: δ = t − y = ' + r.t + ' − ' + r.y + ' = ' + num(r.delta) });
+    lines.push({ text: 'Fehler: δ = t − f(a) = ' + r.t + ' − ' + r.y + ' = ' + num(r.delta) });
     if (r.delta !== 0) {
       if (r.phase !== 'update') {
         return lines;
       }
-      const eta = r.eta === null ? '' : num(r.eta) + ' · ';
+      const alpha = r.alpha === null ? '' : num(r.alpha) + ' · ';
       lines.push({ text: 'Anpassung:' });
       r.wBefore.forEach((w, i) => {
-        lines.push({ text: 'w' + (i === 0 ? '₁' : '₂') + ' = ' + num(w) + ' + ' + eta + factor(r.delta) + ' · ' + factor(r.x[i]) + ' = ' + num(r.wAfter[i]), cls: 'protocol-sub' });
+        lines.push({ text: 'w' + (i === 0 ? '₁' : '₂') + ' = ' + num(w) + ' + ' + alpha + factor(r.delta) + ' · ' + factor(r.x[i]) + ' = ' + num(r.wAfter[i]), cls: 'protocol-sub' });
       });
-      lines.push({ text: 'θ = ' + num(r.thetaBefore) + ' − ' + eta + factor(r.delta) + ' = ' + num(r.thetaAfter), cls: 'protocol-sub' });
+      lines.push({ text: 'θ = ' + num(r.thetaBefore) + ' − ' + alpha + factor(r.delta) + ' = ' + num(r.thetaAfter), cls: 'protocol-sub' });
       lines.push({ text: 'Neue Gerade: ' + equation(lineOf(r.wAfter, r.thetaAfter)) });
     } else {
       lines.push({ text: 'Gerade (unverändert): ' + equation(lineOf(r.wBefore, r.thetaBefore)) });

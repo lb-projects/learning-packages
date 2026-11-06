@@ -3,8 +3,8 @@
  * @description Rechenregeln des Perzeptrons und Trainer. Reine Logik ohne Zugriff auf die Seite.
  *
  * Rechenregel (Schwellenwert θ, kein Bias):
- *   s = w₁·x₁ + w₂·x₂;  y = 1, wenn s ≥ θ, sonst 0;  δ = t − y.
- *   Nur bei δ ≠ 0: wᵢ ← wᵢ + η·δ·xᵢ und θ ← θ − η·δ. Ohne Lernrate gilt η = 1.
+ *   a = w₁·x₁ + w₂·x₂;  f(a) = 1, wenn a ≥ θ, sonst 0;  δ = t − f(a).
+ *   Nur bei δ ≠ 0: wᵢ ← wᵢ + α·δ·xᵢ und θ ← θ − α·δ. Ohne Lernrate gilt α = 1.
  *   Alle Rechenwerte werden gerundet (sim-format.js, clean), damit Darstellungsfehler von
  *   Gleitkommazahlen keine Klassifikation verfälschen.
  *
@@ -42,13 +42,13 @@
    * @param {number} theta - Schwellenwert.
    * @param {number[]} x - Eingänge.
    * @param {number} delta - Fehler.
-   * @param {number} eta - Lernrate.
+   * @param {number} alpha - Lernrate.
    * @returns {{w:number[], theta:number}} Neue Werte.
    */
-  function learn(w, theta, x, delta, eta) {
+  function learn(w, theta, x, delta, alpha) {
     return {
-      w: w.map((wi, i) => clean(wi + eta * delta * x[i])),
-      theta: clean(theta - eta * delta)
+      w: w.map((wi, i) => clean(wi + alpha * delta * x[i])),
+      theta: clean(theta - alpha * delta)
     };
   }
 
@@ -160,15 +160,15 @@
    * Erzeugt einen Trainer.
    *
    * @param {{points:Array<{x:number[], t:number, label:string, group:(string|null)}>, w:number[], theta:number,
-   *          eta:(number|null), onRecord:function(Object):void}} options - Punkte, Startwerte, Lernrate
-   *   (null: ohne Lernrate, also η = 1), Rückruf für jede neue Aufzeichnung.
+   *          alpha:(number|null), onRecord:function(Object):void}} options - Punkte, Startwerte, Lernrate
+   *   (null: ohne Lernrate, also α = 1), Rückruf für jede neue Aufzeichnung.
    * @returns {Object} Trainer (siehe Rückgabe).
    */
   function createTrainer(options) {
     const points = options.points;
     const total = points.length;
-    const eta = options.eta;
-    const rate = eta === null ? 1 : eta;
+    const alpha = options.alpha;
+    const rate = alpha === null ? 1 : alpha;
     let w = [...options.w];
     let theta = options.theta;
     let phase = 'idle';
@@ -193,7 +193,7 @@
       const p = points[index];
       phase = 'highlight';
       record = {
-        kind: 'point', iteration, index, total, x: p.x, label: p.label, t: p.t, group: p.group, eta,
+        kind: 'point', iteration, index, total, x: p.x, label: p.label, t: p.t, group: p.group, alpha,
         wBefore: [...w], thetaBefore: theta, sum: null, y: null, delta: null, wAfter: null, thetaAfter: null, phase
       };
       options.onRecord(record);

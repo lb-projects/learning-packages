@@ -35,6 +35,7 @@
       <file href="js/csv-parser.js"/>
       <file href="js/activations.js"/>
       <file href="js/point-data.js"/>
+      <file href="js/number-wheel.js"/>
       <file href="js/point-import.js"/>
       <file href="js/data-panel.js"/>
       <file href="js/coord-plot.js"/>

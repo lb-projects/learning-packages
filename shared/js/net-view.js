@@ -6,15 +6,18 @@
  * lassen sich ein einzelnes Perzeptron ebenso wie Netze mit mehreren Schichten darstellen.
  *
  * Darstellung (draw):
- *   inputs:  [{id, x, y, name, value, active?}]                 Eingang: Name darüber, Wert im Kreis
+ *   inputs:  [{id, x, y, name, value, active?}]                 Eingang: Name darüber, Wert im Kreis;
+ *            value leer = leerer Kreis (Eingang nicht belegt)
  *   neurons: [{id, x, y, r, activation, sum, threshold, active?}]
  *            Kreis mit Σ links und dem Symbol von activation rechts (siehe activations.js);
- *            sum und threshold sind fertige Texte neben Σ bzw. neben dem Symbol;
- *            active: 'sum' oder 'output' hebt die jeweilige Hälfte hervor;
- *            thresholdChanged: true hebt den Text des Schwellenwerts hervor.
+ *            sum: fertiger Text über Σ; leer = kein Text (z. B. solange nichts berechnet ist);
+ *            threshold: fertiger Text; ein Pfeil trifft mittig von unten auf das Neuron, der Text steht
+ *            ohne Kreis unter dem Pfeilanfang; leer = kein Pfeil (Neuron ohne Schwellenwert);
+ *            active: 'sum' oder 'output' hebt die jeweilige Hälfte hervor, 'output' auch den Pfeil;
+ *            thresholdChanged: true hebt Pfeil und Text des Schwellenwerts als geändert hervor.
  *   edges:   [{from, to, label, active?, changed?}]             Kante mit Pfeil und Beschriftung
  *   outputs: [{id, from, x, y, text, active?}]                  Ausgang: Pfeil vom Neuron zum Text;
- *            der Text darf jede Zahl enthalten
+ *            der Text darf jede Zahl enthalten; leer = nur der Pfeil
  *
  * Gemeinsamer Code der Simulator-Pakete (Quelle: shared/js/net-view.js).
  *
@@ -33,6 +36,8 @@
   const INPUT_R = 28;
   /** Länge der Pfeilspitze. */
   const ARROW = 10;
+  /** Abstand des Anfangs des Schwellenwert-Pfeils vom unteren Rand des Neurons. */
+  const THRESHOLD_ARROW = 24;
 
   /**
    * Rundet für kompakte SVG-Attribute.
@@ -117,7 +122,7 @@
         root.appendChild(dom.svg('g', { class: 'net-input' + (i.active ? ' is-active' : ''), 'data-id': i.id }, [
           dom.svg('text', { class: 'net-name', x: i.x, y: i.y - INPUT_R - 8, 'text-anchor': 'middle' }, i.name),
           dom.svg('circle', { cx: i.x, cy: i.y, r: INPUT_R }),
-          dom.svg('text', { class: 'net-value', x: i.x, y: i.y + 5, 'text-anchor': 'middle' }, i.value)
+          i.value ? dom.svg('text', { class: 'net-value', x: i.x, y: i.y + 5, 'text-anchor': 'middle' }, i.value) : null
         ]));
       }
 
@@ -125,6 +130,16 @@
         const left = 'M' + n.x + ' ' + (n.y - n.r) + 'A' + n.r + ' ' + n.r + ' 0 0 0 ' + n.x + ' ' + (n.y + n.r) + 'Z';
         const right = 'M' + n.x + ' ' + (n.y - n.r) + 'A' + n.r + ' ' + n.r + ' 0 0 1 ' + n.x + ' ' + (n.y + n.r) + 'Z';
         const scale = r2(n.r / 28);
+        const symbolX = r2(n.x + n.r * 0.5);
+        let thresholdArrow = null;
+        let thresholdText = null;
+        if (n.threshold) {
+          const start = n.y + n.r + THRESHOLD_ARROW;
+          const state = n.thresholdChanged ? ' is-changed' : (n.active === 'output' ? ' is-active' : '');
+          thresholdArrow = arrow({ x: n.x, y: start, r: 0 }, { x: n.x, y: n.y + n.r, r: 0 }, 'net-threshold' + state);
+          thresholdArrow.setAttribute('data-part', 'threshold-arrow');
+          thresholdText = dom.svg('text', { class: 'net-note' + (n.thresholdChanged ? ' is-changed' : ''), x: n.x, y: start + 20, 'text-anchor': 'middle', 'data-part': 'threshold' }, n.threshold);
+        }
         root.appendChild(dom.svg('g', { class: 'net-neuron', 'data-id': n.id }, [
           dom.svg('path', { d: left, class: 'net-half' + (n.active === 'sum' ? ' is-active' : '') }),
           dom.svg('path', { d: right, class: 'net-half' + (n.active === 'output' ? ' is-active' : '') }),
@@ -133,17 +148,20 @@
           dom.svg('path', {
             class: 'net-symbol',
             d: n.activation.symbol,
-            transform: 'translate(' + r2(n.x + n.r * 0.5) + ' ' + n.y + ') scale(' + scale + ')'
+            transform: 'translate(' + symbolX + ' ' + n.y + ') scale(' + scale + ')'
           }, dom.svg('title', null, n.activation.name)),
-          dom.svg('text', { class: 'net-note' + (n.active === 'sum' ? ' is-active' : ''), x: r2(n.x - n.r * 0.5), y: n.y - n.r - 10, 'text-anchor': 'middle', 'data-part': 'sum' }, n.sum),
-          dom.svg('text', { class: 'net-note' + (n.thresholdChanged ? ' is-changed' : ''), x: r2(n.x + n.r * 0.5), y: n.y + n.r + 22, 'text-anchor': 'middle', 'data-part': 'threshold' }, n.threshold)
+          n.sum ? dom.svg('text', { class: 'net-note' + (n.active === 'sum' ? ' is-active' : ''), x: r2(n.x - n.r * 0.5), y: n.y - n.r - 10, 'text-anchor': 'middle', 'data-part': 'sum' }, n.sum) : null,
+          thresholdArrow,
+          thresholdText
         ]));
       }
 
       for (const o of model.outputs || []) {
         const from = anchors.get(o.from);
         root.appendChild(arrow(from, { x: o.x, y: o.y, r: 0 }, o.active ? 'is-active' : ''));
-        root.appendChild(dom.svg('text', { class: 'net-output' + (o.active ? ' is-active' : ''), x: o.x + 6, y: o.y + 5, 'data-id': o.id }, o.text));
+        if (o.text) {
+          root.appendChild(dom.svg('text', { class: 'net-output' + (o.active ? ' is-active' : ''), x: o.x + 6, y: o.y + 5, 'data-id': o.id }, o.text));
+        }
       }
     }
 

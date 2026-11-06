@@ -47,9 +47,11 @@
   /**
    * Erzeugt die Eingabe der Trainingspunkte.
    *
-   * @param {HTMLElement} container - Behälter (wird geleert).
-   * @param {{data:Object, samples:Array<Object>, idPrefix?:string, formatHelp?:Node[]}} options - Datensatz,
-   *   Beispiele, Präfix für Element-IDs, Erklärung des Dateiformats.
+   * @param {HTMLElement} container - Behälter für „Daten laden“ (wird geleert).
+   * @param {{data:Object, samples:Array<Object>, idPrefix?:string, formatHelp?:Node[],
+   *          formContainer?:HTMLElement, listContainer?:HTMLElement}} options - Datensatz, Beispiele, Präfix für
+   *   Element-IDs, Erklärung des Dateiformats, eigene Behälter für Punktmaske und Punktetabelle
+   *   (ohne Angabe landen beide in container).
    * @returns {Object} Steuerung (siehe Rückgabe am Ende der Funktion).
    */
   function create(container, options) {
@@ -111,8 +113,14 @@
       dom.el('div', { class: 'button-row' }, clearButton)
     ]);
 
-    dom.clear(container);
-    dom.appendChildren(container, [loadCard, form, listCard]);
+    const formBox = options.formContainer || container;
+    const listBox = options.listContainer || container;
+    for (const box of new Set([container, formBox, listBox])) {
+      dom.clear(box);
+    }
+    container.appendChild(loadCard);
+    formBox.appendChild(form);
+    listBox.appendChild(listCard);
 
     /**
      * Text einer Zeile der Beispielauswahl.

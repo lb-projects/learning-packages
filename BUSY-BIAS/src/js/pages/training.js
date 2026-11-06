@@ -3,7 +3,7 @@
  * @description Seite 2: Training nachvollziehen.
  *
  * Aufbau:
- *   Links das Perzeptron, darunter Ergebnis des Schritts, Steuerung und Zähler.
+ *   Links das Perzeptron, darunter Steuerung, Rechnungen des Schritts und Zähler.
  *   Rechts das Koordinatensystem mit aktuellem Punkt und Gerade, darunter Schalter für die
  *   Decision Areas, Legende und Geradengleichung.
  *   Darunter aufklappbar die Punktetabelle; bei mehrstufigen Beispielen zusätzlich Stufenkarte
@@ -55,7 +55,7 @@
     if (phase === 'output' || phase === 'update') {
       add('training-activation', ns.fmt.activationLine(r.sum, r.thetaBefore, r.y));
       add('training-expected', 'Erwartet: Label ' + r.label + ' (t = ' + r.t + ')');
-      add('training-computed', 'Berechnet: Label ' + ns.fmt.labelText(data.labelOf(r.y)) + ' (y = ' + r.y + ')');
+      add('training-computed', 'Berechnet: Label ' + ns.fmt.labelText(data.labelOf(r.y)) + ' (f(a) = ' + r.y + ')');
       add('training-verdict', r.delta === 0 ? 'Richtig klassifiziert: keine Anpassung nötig.' : 'Falsch klassifiziert: δ = ' + num(r.delta) + (phase === 'output' ? ', Gewichte und Schwellenwert müssen angepasst werden.' : ''), r.delta === 0 ? 'result-ok' : 'result-wrong');
     }
     if (phase === 'update') {
@@ -152,6 +152,7 @@
     const ringIndex = trainer.hasStarted() && !trainer.isFinished() ? trainer.index() : -1;
     const { spec, outside } = session.plotSpec({ line: true, areas: session.showAreas(), ringIndex });
     plot.render(spec);
+    dom.byId('toggle-areas').checked = session.showAreas();
     view.draw(trainer);
     renderResult();
     renderCounters();

@@ -19,7 +19,7 @@ Sind beide Labels Zahlen, feuert das Perzeptron beim größeren, sonst beim erst
 
 ## Warum manche Einheiten ungewöhnlich sind
 
-Hunde stehen in Dezimetern und 10 kg, Kreditdaten in Tsd. € und 10 Tsd. €. Das ist Absicht. Die Lernregel ändert θ je Anpassung nur um η, die Gewichte aber um η·x. Bei großen Zahlen braucht das Training deshalb sehr viel länger: Dieselben Hunde in Zentimetern und Kilogramm benötigen in Stufe 3 rund 2900 statt 23 Iterationen.
+Hunde stehen in Dezimetern und 10 kg, Kreditdaten in Tsd. € und 10 Tsd. €. Das ist Absicht. Die Lernregel ändert θ je Anpassung nur um α, die Gewichte aber um α·x. Bei großen Zahlen braucht das Training deshalb sehr viel länger: Dieselben Hunde in Zentimetern und Kilogramm benötigen in Stufe 3 rund 2900 statt 23 Iterationen.
 
 ## Einfache Datensätze
 

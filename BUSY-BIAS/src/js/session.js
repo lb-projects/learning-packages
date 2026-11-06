@@ -23,7 +23,7 @@
   const INSEPARABLE_HINT = 100;
 
   const data = ns.pointData.create({ maxLabels: 2 });
-  const config = { w: [1, 1], theta: 1, etaOn: false, eta: 0.1 };
+  const config = { w: [1, 1], theta: 1, alphaOn: false, alpha: 0.1 };
   const listeners = [];
   let trainer = null;
   let log = [];
@@ -73,7 +73,7 @@
       points: data.points().map((p) => ({ x: [p.x, p.y], t: data.target(p.label), label: p.label, group: p.group })),
       w,
       theta,
-      eta: config.etaOn ? config.eta : null,
+      alpha: config.alphaOn ? config.alpha : null,
       onRecord: addLog
     });
     if (currentStage !== null) {
@@ -219,7 +219,9 @@
   /**
    * Vollständige Angaben für das Koordinatensystem.
    *
-   * @param {{line?:boolean, areas?:boolean, ringIndex?:number, probe?:{x:number, y:number}}} options - Ebenen.
+   * @param {{line?:boolean, areas?:boolean, ringIndex?:number, probe?:{x:number, y:number},
+   *          values?:{w:number[], theta:number}}} options - Ebenen; values: Werte für Gerade und Flächen
+   *   (ohne Angabe gilt der aktuelle Stand des Trainers).
    * @returns {{spec:Object, outside:boolean}} Angaben; outside: Die Gerade verläuft außerhalb des Ausschnitts.
    */
   function plotSpec(options) {
@@ -229,9 +231,9 @@
     if (opts.probe) {
       coords.push(opts.probe);
     }
-    const view = ns.coordPlot.fitView(coords);
-    const w = trainer.weights();
-    const theta = trainer.theta();
+    const view = ns.coordPlot.fitView(coords, { includeOrigin: true });
+    const w = opts.values ? opts.values.w : trainer.weights();
+    const theta = opts.values ? opts.values.theta : trainer.theta();
     const spec = {
       view,
       xLabel: axisLabel('x₁', attrs.x),

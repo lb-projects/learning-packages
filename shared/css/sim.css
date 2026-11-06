@@ -212,9 +212,13 @@ h3 {
   stroke-width: 1;
 }
 
-.plot-grid line.plot-zero {
-  stroke: var(--muted);
-  stroke-width: 1.5;
+.plot-axis line {
+  stroke: var(--text);
+  stroke-width: 1.8;
+}
+
+.plot-axis path {
+  fill: var(--text);
 }
 
 .plot-tick-labels text {

@@ -4,6 +4,8 @@
  *
  * Es erscheinen nur die Werte, die der aktuelle Schritt schon erreicht hat:
  *   Eingänge ab „inputs“, Summe ab „sum“, Ausgabe ab „output“, geänderte Werte bei „update“.
+ *   Noch nicht belegte Eingänge bleiben leere Kreise; noch nicht berechnete Summen und Ausgaben
+ *   stehen gar nicht in der Zeichnung.
  *
  * Abhängigkeiten:
  *   net-view.js, sim-format.js, perceptron.js
@@ -15,7 +17,7 @@
 
   /** Größe der Zeichnung. */
   const WIDTH = 640;
-  const HEIGHT = 290;
+  const HEIGHT = 296;
   /** Reihenfolge der Schritte je Punkt. */
   const PHASES = ['idle', 'highlight', 'inputs', 'sum', 'output', 'update'];
 
@@ -45,13 +47,13 @@
       const changed = (i) => update && r.wBefore[i] !== r.wAfter[i];
       view.draw({
         inputs: [
-          { id: 'x1', x: 70, y: 80, name: 'x₁', value: inputsShown ? num(r.x[0]) : '–', active: inputActive },
-          { id: 'x2', x: 70, y: 240, name: 'x₂', value: inputsShown ? num(r.x[1]) : '–', active: inputActive }
+          { id: 'x1', x: 70, y: 80, name: 'x₁', value: inputsShown ? num(r.x[0]) : '', active: inputActive },
+          { id: 'x2', x: 70, y: 240, name: 'x₂', value: inputsShown ? num(r.x[1]) : '', active: inputActive }
         ],
         neurons: [{
           id: 'n', x: 340, y: 160, r: 78,
           activation: ns.perceptron.activation,
-          sum: sumShown ? 's = ' + num(r.sum) : 's = –',
+          sum: sumShown ? 'a = ' + num(r.sum) : '',
           threshold: 'θ = ' + num(theta),
           thresholdChanged: update,
           active: phase === 'sum' ? 'sum' : phase === 'output' ? 'output' : null
@@ -60,7 +62,7 @@
           { from: 'x1', to: 'n', label: 'w₁ = ' + num(w[0]), active: inputActive || phase === 'sum', changed: changed(0) },
           { from: 'x2', to: 'n', label: 'w₂ = ' + num(w[1]), active: inputActive || phase === 'sum', changed: changed(1) }
         ],
-        outputs: [{ id: 'y', from: 'n', x: 540, y: 160, text: outputShown ? 'y = ' + r.y : 'y = –', active: phase === 'output' }]
+        outputs: [{ id: 'y', from: 'n', x: 540, y: 160, text: outputShown ? 'f(a) = ' + r.y : '', active: phase === 'output' }]
       });
     }
 

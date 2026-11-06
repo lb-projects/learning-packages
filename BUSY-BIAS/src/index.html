@@ -40,6 +40,7 @@
   <script src="js/csv-parser.js" defer></script>
   <script src="js/activations.js" defer></script>
   <script src="js/point-data.js" defer></script>
+  <script src="js/number-wheel.js" defer></script>
   <script src="js/point-import.js" defer></script>
   <script src="js/data-panel.js" defer></script>
   <script src="js/coord-plot.js" defer></script>
@@ -84,6 +85,7 @@
         <div>
           <div id="input-data"></div>
           <div id="input-stage"></div>
+          <div id="input-form"></div>
           <div class="card" id="cfg-card">
             <h3>Perzeptron konfigurieren</h3>
             <div class="field-row" id="cfg-positive-row" hidden>
@@ -99,20 +101,32 @@
             </div>
             <div class="button-row">
               <button type="button" id="cfg-random" class="btn">Zufällig belegen</button>
-              <span class="hint">ganze Zahlen von −5 bis 5 für w₁, w₂ und θ</span>
             </div>
-            <div class="field-row eta-row">
-              <label class="switch"><input type="checkbox" id="cfg-eta-on"> Lernrate η verwenden</label>
-              <div class="field"><label for="cfg-eta">Lernrate η</label><input type="text" id="cfg-eta" inputmode="decimal" value="0,1" autocomplete="off" disabled></div>
+            <div class="field-row alpha-row">
+              <label class="switch"><input type="checkbox" id="cfg-alpha-on"> Lernrate α verwenden</label>
+              <div class="field"><label for="cfg-alpha">Lernrate α</label><input type="text" id="cfg-alpha" class="is-inactive" inputmode="decimal" value="0,1" autocomplete="off"></div>
             </div>
-            <p class="hint">Ohne Lernrate gilt η = 1. Jede Änderung setzt das Training zurück.</p>
+            <p class="hint">Ohne Lernrate gilt α = 1. Nach einem Klick in ein Feld ändert auch das Mausrad den Wert. Jede Änderung setzt das Training zurück.</p>
             <p id="cfg-error" class="error" role="alert"></p>
+            <div class="heaviside-def" id="cfg-heaviside">
+              <h4>Aktivierungsfunktion: Heaviside</h4>
+              <svg viewBox="0 0 280 70" role="img" aria-label="f von a ist 1, falls a größer oder gleich Theta ist, und 0, falls a kleiner als Theta ist">
+                <text x="0" y="41">f(a) =</text>
+                <path class="heaviside-brace" d="M88 5C80 5 78 9 78 17V27C78 32 75 35 70 35C75 35 78 38 78 43V53C78 61 80 65 88 65"/>
+                <text x="96" y="26">1,&#160;&#160;falls a ≥ θ</text>
+                <text x="96" y="56">0,&#160;&#160;falls a &lt; θ</text>
+              </svg>
+            </div>
           </div>
         </div>
         <div>
           <div id="input-plot" class="plot-box"></div>
           <p id="input-empty" class="hint">Noch keine Trainingspunkte.</p>
+          <label class="switch"><input type="checkbox" id="input-toggle-areas"> Decision Areas einzeichnen</label>
+          <ul id="input-area-legend" class="legend"></ul>
           <ul id="input-legend" class="legend"></ul>
+          <div id="input-equation"></div>
+          <div id="input-list"></div>
         </div>
       </div>
     </section>
@@ -126,8 +140,8 @@
       <div class="sim-layout">
         <div>
           <div id="training-perceptron" class="perceptron-box"></div>
-          <div id="training-result" class="card result-box" aria-live="polite"></div>
           <div id="training-controls" class="card"></div>
+          <div id="training-result" class="card result-box" aria-live="polite"></div>
           <div class="card">
             <dl class="counters">
               <div><dt>Iteration</dt><dd id="count-iteration">0</dd></div>
