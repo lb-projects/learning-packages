@@ -272,6 +272,6 @@ Es gilt dasselbe Konzept wie in den anderen Paketen des Repositorys:
 
 ## Qualitätssicherung
 
-Build und Tests laufen mit Entwicklungswerkzeugen außerhalb des Repositorys (wie bei den anderen Paketen):
+Build und Tests laufen mit nicht veröffentlichten Entwicklungswerkzeugen (wie bei den anderen Paketen):
 - **Build:** Manifest vollständig, keine externen Adressen, CSP unverändert streng, keine unsichtbaren Zeichen, keine gefährlichen APIs, UTF-8 ohne BOM mit LF, Kopien aus `shared/` unverändert, eingebaute Beispiele zeichengleich mit `testdata/`.
 - **Tests** (headless Chromium): Graphmodell, Import (beide Formate, CSV/XLSX/ODS, Fehlerzeilen), Algorithmen (Reihenfolgen, Distanzen, Tabellenzeilen, negative Gewichte und Zyklen), Training (Abfolgen, Klickbewertung, Schreibweise und Rechenprüfung der Tabelle, Zeichnung nach jeder Zeile, Tastaturbedienung), Bedienung aller Seiten einschließlich Abspieler und Automatik, Speicherung in Moodle (auch Weiterarbeit und Größengrenzen), Sicherheit.

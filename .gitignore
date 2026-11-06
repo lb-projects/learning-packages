@@ -4,6 +4,8 @@
 *.zip
 build/
 dist/
+
+# Entwicklungswerkzeuge (Build, Tests, Vorschau) werden nicht veröffentlicht
 dev-tools/
 
 # Betriebssystem-Dateien
