@@ -243,11 +243,11 @@ Die Bausteine des Simulators (Datensatz, Import, Eingabe, Koordinatensystem, Neu
 
 ## Paket erstellen und in Moodle einbinden
 
-Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsmanifest.xml` muss dabei direkt in der obersten Ebene des ZIP liegen, nicht in einem Unterordner `src/`. Das fertige Paket entsteht als `dist/busy-bias.zip` im Stamm des Repositorys.
+Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsmanifest.xml` muss dabei direkt in der obersten Ebene des ZIP liegen, nicht in einem Unterordner `src/`. Das fertige Paket entsteht als `dist/busy-bias-<Version>.zip` im Stamm des Repositorys. `<Version>` steht für die Version des aktuellen Release, zum Beispiel `v0.5.0`.
 
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
-2. `busy-bias.zip` hochladen.
+2. `busy-bias-<Version>.zip` hochladen.
 3. **Abschluss:** In den Einstellungen der Aktivität unter *Aktivitätsabschluss* „Teilnehmer/innen können die Aktivität manuell als abgeschlossen markieren“ einstellen. Das Paket meldet `incomplete`, damit Moodle beim erneuten Öffnen nicht den Überprüfungsmodus zeigt.
 
 4. Damit Lernende weiterarbeiten können, muss Moodle denselben Versuch fortsetzen: Einstellung **„Neuen Versuch erzwingen“ = „Nein“** (Standard).

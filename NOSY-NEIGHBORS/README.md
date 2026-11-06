@@ -109,18 +109,18 @@ NOSY-NEIGHBORS/
 └─ README.md                 diese Datei
 ```
 
-Der Ordner `src/` enthält ausschließlich Paketdateien – genau die Dateien, die im SCORM-ZIP landen. Das fertige Paket entsteht als `dist/nosy-neighbors.zip` im Stamm des Repositorys; der Ordner `dist/` wird nicht versioniert.
+Der Ordner `src/` enthält ausschließlich Paketdateien – genau die Dateien, die im SCORM-ZIP landen. Das fertige Paket entsteht als `dist/nosy-neighbors-<Version>.zip` im Stamm des Repositorys; der Ordner `dist/` wird nicht versioniert.
 
 ## Paket erstellen und in Moodle einbinden
 
 Das SCORM-Paket ist ein ZIP-Archiv mit dem **Inhalt** des Ordners `src/`. `imsmanifest.xml` muss dabei direkt in der obersten Ebene des ZIP liegen, nicht in einem Unterordner `src/`.
 
-- **Windows:** Ordner `src` öffnen, alle Dateien und Ordner markieren, dann *Senden an → ZIP-komprimierter Ordner*. Die Datei `nosy-neighbors.zip` nennen und in den Ordner `dist/` im Stamm des Repositorys legen.
-- **Andere Systeme:** im Ordner `src` z. B. `mkdir -p ../../dist && zip -r ../../dist/nosy-neighbors.zip .` ausführen.
+- **Windows:** Ordner `src` öffnen, alle Dateien und Ordner markieren, dann *Senden an → ZIP-komprimierter Ordner*. Die Datei `nosy-neighbors-<Version>.zip` nennen und in den Ordner `dist/` im Stamm des Repositorys legen.
+- **Andere Systeme:** im Ordner `src` z. B. `mkdir -p ../../dist && zip -r ../../dist/nosy-neighbors-<Version>.zip .` ausführen. `<Version>` steht für die Version des aktuellen Release, zum Beispiel `v0.5.0`.
 
 So wird das Paket in Moodle eingebunden:
 1. Kurs → *Aktivität oder Material anlegen* → **Lernpaket (SCORM)**.
-2. `nosy-neighbors.zip` hochladen.
+2. `nosy-neighbors-<Version>.zip` hochladen.
 3. **Abschluss: In den Einstellungen der Aktivität unter *Aktivitätsabschluss* „Teilnehmer/innen können die Aktivität manuell als abgeschlossen markieren“ einstellen.** Nur so lässt sich die Aktivität als abgeschlossen erkennen. Das Lernpaket meldet beim Öffnen nämlich den Status „incomplete“ und nie „completed“: Ein abgeschlossener Versuch würde Moodle beim erneuten Öffnen in den *Überprüfungsmodus* schalten. Abschlussbedingungen, die den SCORM-Status auswerten („Status erforderlich“, „Alle Lernobjekte abgeschlossen“), werden deshalb nie erfüllt.
    - Ein Status „completed“ bzw. „passed“ aus einer früheren Version des Pakets bleibt unverändert; für diese Lernenden erscheint der Überprüfungsmodus weiterhin. Abhilfe: das Paket in einer neuen Aktivität einbinden.
 4. Damit die Eintragungen der Seiten 4 und 5 in der nächsten Stunde wieder da sind, muss Moodle denselben Versuch fortsetzen: Einstellung **„Neuen Versuch erzwingen“ = „Nein“** (Standard). Sonst beginnt jeder Aufruf mit leerer Tabelle.

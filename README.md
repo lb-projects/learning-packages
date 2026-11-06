@@ -17,7 +17,7 @@ Quelltext, den mehrere Pakete nutzen, steht nur einmal in [`shared/`](shared/REA
 
 ## Pakete erstellen
 
-Die fertigen SCORM-Pakete entstehen lokal als `dist/busy-bias.zip`, `dist/edgy-edges.zip`, `dist/nosy-neighbors.zip` und `dist/sql-sandbox.zip` im Stamm des Repositorys. Der Ordner `dist/` wird nicht versioniert.
+Die fertigen SCORM-Pakete entstehen lokal als `dist/busy-bias-<Version>.zip`, `dist/edgy-edges-<Version>.zip`, `dist/nosy-neighbors-<Version>.zip` und `dist/sql-sandbox-<Version>.zip` im Stamm des Repositorys. `<Version>` steht für die Version des aktuellen Release, zum Beispiel `v0.5.0`. Der Ordner `dist/` wird nicht versioniert.
 
 ## Lizenz
 
