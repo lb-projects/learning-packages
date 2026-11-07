@@ -1,6 +1,6 @@
 /**
  * @file session.js
- * @description Gemeinsamer Stand der Seiten außer „Bilder und Objekte“: Datensatz, k, Startzentren, Skalierung, Schalter und der
+ * @description Gemeinsamer Stand der Seiten außer „Bilder“: Datensatz, k, Startzentren, Skalierung, Schalter und der
  *              Trainer von Seite 2.
  *
  * Koordinaten:
@@ -14,8 +14,8 @@
  *   Sinkt das größte mögliche k, werden überzählige Zentren verworfen.
  *
  * Version:
- *   version() steigt, sobald sich die Koordinaten ändern. Die Ellbogen- und die Silhouetten-Analyse
- *   verwerfen daran ihre Ergebnisse. Änderungen an k und an den Startzentren ändern sie nicht, denn
+ *   version() steigt, sobald sich die Koordinaten ändern. Die Seiten 4 bis 8 verwerfen daran ihre
+ *   Ergebnisse. Änderungen an k und an den Startzentren ändern sie nicht, denn
  *   diese Seiten arbeiten mit eigenem k und eigenen Zentren.
  *
  * Abhängigkeiten:
@@ -104,10 +104,14 @@
     return centers.map(toModel);
   }
 
-  /** @returns {{xmin:number, xmax:number, ymin:number, ymax:number}} Ausschnitt; schließt den Nullpunkt ein und richtet sich nach den Daten. */
-  function view() {
+  /**
+   * Ausschnitt der Zeichnungen: schließt den Nullpunkt ein und richtet sich nach den Daten.
+   * @param {number[][]} [extra] - Weitere Stellen, die sichtbar sein sollen (Koordinaten der Zeichnung).
+   * @returns {{xmin:number, xmax:number, ymin:number, ymax:number}} Ausschnitt.
+   */
+  function view(extra) {
     const base = ns.coordPlot.fitView(model().coords.map((c) => ({ x: c[0], y: c[1] })), { includeOrigin: true });
-    const list = modelCenters();
+    const list = modelCenters().concat(extra || []);
     const outside = list.some((c) => c[0] < base.xmin || c[0] > base.xmax || c[1] < base.ymin || c[1] > base.ymax);
     if (!outside) {
       return base;
@@ -151,6 +155,73 @@
   }
 
   /**
+   * Rechnet eine frei gewählte Stelle in Originaleinheiten um und rundet sie passend zur Spannweite.
+   * @param {number} x - x in den Koordinaten der Zeichnung.
+   * @param {number} y - y in den Koordinaten der Zeichnung.
+   * @returns {number[]} Originaleinheiten.
+   */
+  function freePoint(x, y) {
+    const original = toOriginal([x, y]);
+    const v = view();
+    const scaler = model().scaler;
+    const spanX = scaler && scaler.ranges ? scaler.ranges.x.max - scaler.ranges.x.min : v.xmax - v.xmin;
+    const spanY = scaler && scaler.ranges ? scaler.ranges.y.max - scaler.ranges.y.min : v.ymax - v.ymin;
+    return [roundFor(original[0], spanX), roundFor(original[1], spanY)];
+  }
+
+  /**
+   * Wendet einen Klick in eine Zeichnung auf eine Liste von Zentren an: Treffer entfernen ein Zentrum,
+   * sonst kommt eines hinzu, das nahe an einem Datenpunkt auf ihm einrastet. Seite 1 und Seite 4 teilen diese Logik.
+   *
+   * @param {number[][]} list - Zentren in Originaleinheiten.
+   * @param {number} x - x in den Koordinaten der Zeichnung.
+   * @param {number} y - y in den Koordinaten der Zeichnung.
+   * @param {function(number, number):number[]} screenOf - Umrechnung in Einheiten der Zeichnung.
+   * @param {number} limit - Größte Anzahl der Zentren.
+   * @returns {{outcome:string, centers:number[][]}} outcome: 'removed', 'added', 'snapped', 'full' oder 'empty';
+   *   centers: die neue Liste, bei 'full' und 'empty' die übergebene.
+   */
+  function placeCenter(list, x, y, screenOf, limit) {
+    if (data.count() === 0) {
+      return { outcome: 'empty', centers: list };
+    }
+    const at = screenOf(x, y);
+    const distance = (c) => {
+      const s = screenOf(c[0], c[1]);
+      return Math.hypot(s[0] - at[0], s[1] - at[1]);
+    };
+    let hit = -1;
+    let hitDistance = CENTER_TOLERANCE;
+    list.map(toModel).forEach((c, i) => {
+      const d = distance(c);
+      if (d <= hitDistance) {
+        hit = i;
+        hitDistance = d;
+      }
+    });
+    if (hit >= 0) {
+      return { outcome: 'removed', centers: list.filter((_, i) => i !== hit) };
+    }
+    if (list.length >= limit) {
+      return { outcome: 'full', centers: list };
+    }
+    let near = -1;
+    let nearDistance = SNAP_TOLERANCE;
+    model().coords.forEach((c, i) => {
+      const d = distance(c);
+      if (d <= nearDistance) {
+        near = i;
+        nearDistance = d;
+      }
+    });
+    if (near >= 0) {
+      const p = data.points()[near];
+      return { outcome: 'snapped', centers: list.concat([[p.x, p.y]]) };
+    }
+    return { outcome: 'added', centers: list.concat([freePoint(x, y)]) };
+  }
+
+  /**
    * Verarbeitet einen Klick in die Zeichnung von Seite 1.
    *
    * @param {number} x - x in den Koordinaten der Zeichnung.
@@ -159,59 +230,13 @@
    * @returns {string} 'removed', 'added', 'snapped', 'full' oder 'empty'.
    */
   function clickCenter(x, y, screenOf) {
-    if (data.count() === 0) {
-      return 'empty';
-    }
-    const at = screenOf(x, y);
-    const distance = (c) => {
-      const s = screenOf(c[0], c[1]);
-      return Math.hypot(s[0] - at[0], s[1] - at[1]);
-    };
-    const list = modelCenters();
-    let hit = -1;
-    let hitDistance = CENTER_TOLERANCE;
-    list.forEach((c, i) => {
-      const d = distance(c);
-      if (d <= hitDistance) {
-        hit = i;
-        hitDistance = d;
-      }
-    });
-    if (hit >= 0) {
-      centers = centers.filter((_, i) => i !== hit);
+    const result = placeCenter(centers, x, y, screenOf, k());
+    if (result.centers !== centers) {
+      centers = result.centers;
       settle();
       emit('centers');
-      return 'removed';
     }
-    if (centers.length >= k()) {
-      return 'full';
-    }
-    const coords = model().coords;
-    let near = -1;
-    let nearDistance = SNAP_TOLERANCE;
-    coords.forEach((c, i) => {
-      const d = distance(c);
-      if (d <= nearDistance) {
-        near = i;
-        nearDistance = d;
-      }
-    });
-    let result = 'snapped';
-    if (near >= 0) {
-      const p = data.points()[near];
-      centers = centers.concat([[p.x, p.y]]);
-    } else {
-      result = 'added';
-      const original = toOriginal([x, y]);
-      const v = view();
-      const scaler = model().scaler;
-      const spanX = scaler && scaler.ranges ? scaler.ranges.x.max - scaler.ranges.x.min : v.xmax - v.xmin;
-      const spanY = scaler && scaler.ranges ? scaler.ranges.y.max - scaler.ranges.y.min : v.ymax - v.ymin;
-      centers = centers.concat([[roundFor(original[0], spanX), roundFor(original[1], spanY)]]);
-    }
-    settle();
-    emit('centers');
-    return result;
+    return result.outcome;
   }
 
   /**
@@ -254,7 +279,7 @@
     distinct: () => model().distinct,
     scaler: () => model().scaler,
     version: () => version,
-    k, maxK, view, toOriginal, modelCenters, isReady, clickCenter, randomCenters,
+    k, maxK, view, toModel, toOriginal, freePoint, placeCenter, modelCenters, isReady, clickCenter, randomCenters,
     trainer: getTrainer,
     centers: () => centers,
     scale: () => scale,

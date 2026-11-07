@@ -5,8 +5,8 @@
   SCORM-1.2-Lernpaket: k-Means-Demonstrator. Einstiegsseite (im Manifest als SCO eingetragen).
 
   Aufbau:
-    - Kopfbereich mit Registerkarten (Tabs) für die sechs Seiten
-    - sechs <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
+    - Kopfbereich mit Registerkarten (Tabs) für die neun Seiten
+    - neun <section>-Bereiche (role="tabpanel"), von denen immer genau einer sichtbar ist
     - Fußzeile mit Verbindungsstatus (Lernplattform/Offline-Modus)
 
   Sicherheit:
@@ -20,7 +20,7 @@
     - Es gibt kein Inline-JavaScript und keine Inline-Stile.
     - Keine externen Ressourcen (keine CDNs, keine Webfonts).
     - Alle dynamischen Inhalte werden per JavaScript als Text eingefügt (siehe js/dom-utils.js).
-    - Bilder auf Seite 6 werden mit createImageBitmap dekodiert und auf Canvas gezeichnet;
+    - Bilder auf Seite 9 werden mit createImageBitmap dekodiert und auf Canvas gezeichnet;
       dafür ist keine Ausnahme in der Richtlinie nötig.
 -->
 <html lang="de">
@@ -50,6 +50,8 @@
   <script src="js/cluster-import.js" defer></script>
   <script src="js/kmeans.js" defer></script>
   <script src="js/kmeans-analysis.js" defer></script>
+  <script src="js/kmeans-compare.js" defer></script>
+  <script src="js/kmeans-apply.js" defer></script>
   <script src="js/voronoi.js" defer></script>
   <script src="js/image-kmeans.js" defer></script>
   <script src="js/object-count.js" defer></script>
@@ -62,8 +64,11 @@
   <script src="js/pages/input.js" defer></script>
   <script src="js/pages/training.js" defer></script>
   <script src="js/pages/hand.js" defer></script>
+  <script src="js/pages/challenge.js" defer></script>
   <script src="js/pages/elbow.js" defer></script>
   <script src="js/pages/silhouette.js" defer></script>
+  <script src="js/pages/groups.js" defer></script>
+  <script src="js/pages/apply.js" defer></script>
   <script src="js/pages/images.js" defer></script>
   <script src="js/app.js" defer></script>
 </head>
@@ -74,9 +79,12 @@
       <button type="button" role="tab" id="tab-input" aria-controls="page-input" aria-selected="true"><span class="tab-no">1</span> Daten und k</button>
       <button type="button" role="tab" id="tab-training" aria-controls="page-training" aria-selected="false" tabindex="-1"><span class="tab-no">2</span> Training</button>
       <button type="button" role="tab" id="tab-hand" aria-controls="page-hand" aria-selected="false" tabindex="-1"><span class="tab-no">3</span> Von Hand rechnen</button>
-      <button type="button" role="tab" id="tab-elbow" aria-controls="page-elbow" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Ellbogen-Analyse</button>
-      <button type="button" role="tab" id="tab-silhouette" aria-controls="page-silhouette" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Silhouetten-Analyse</button>
-      <button type="button" role="tab" id="tab-images" aria-controls="page-images" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Bilder und Objekte</button>
+      <button type="button" role="tab" id="tab-challenge" aria-controls="page-challenge" aria-selected="false" tabindex="-1"><span class="tab-no">4</span> Schlage k-Means</button>
+      <button type="button" role="tab" id="tab-elbow" aria-controls="page-elbow" aria-selected="false" tabindex="-1"><span class="tab-no">5</span> Ellbogen</button>
+      <button type="button" role="tab" id="tab-silhouette" aria-controls="page-silhouette" aria-selected="false" tabindex="-1"><span class="tab-no">6</span> Silhouette</button>
+      <button type="button" role="tab" id="tab-groups" aria-controls="page-groups" aria-selected="false" tabindex="-1"><span class="tab-no">7</span> Bekannte Gruppen</button>
+      <button type="button" role="tab" id="tab-apply" aria-controls="page-apply" aria-selected="false" tabindex="-1"><span class="tab-no">8</span> Anwenden</button>
+      <button type="button" role="tab" id="tab-images" aria-controls="page-images" aria-selected="false" tabindex="-1"><span class="tab-no">9</span> Bilder</button>
     </nav>
   </header>
 
@@ -235,7 +243,67 @@
     </section>
 
     <!-- ===================================================================
-         Seite 4: Ellbogen-Analyse
+         Seite 4: Schlage k-Means
+         =================================================================== -->
+    <section id="page-challenge" class="page page-wide" role="tabpanel" aria-labelledby="tab-challenge" hidden>
+      <h2>Schlage k-Means</h2>
+      <p class="intro">Setzen Sie die Zentren selbst so, dass die WCSS möglichst klein wird, und lassen Sie dann k-Means gegen Sie antreten. Diese Seite übernimmt die Daten von Seite 1 und hat ein eigenes k und eigene Zentren.</p>
+      <p id="duel-empty" class="notice" hidden>Laden oder erfassen Sie zuerst auf Seite 1 Daten.</p>
+      <p id="duel-stale" class="notice" hidden>Die Daten haben sich geändert. Ihre Zentren und Versuche wurden verworfen.</p>
+      <div class="sim-layout">
+        <div>
+          <div class="card">
+            <div class="field-row">
+              <div class="field"><label for="duel-k">Anzahl der Cluster k</label><select id="duel-k"></select></div>
+            </div>
+            <p id="duel-status" role="status"></p>
+            <dl class="counters">
+              <div><dt>Ihre WCSS</dt><dd id="duel-wcss">–</dd></div>
+            </dl>
+            <div class="button-row">
+              <button type="button" id="duel-run" class="btn btn-primary">k-Means antreten lassen</button>
+              <button type="button" id="duel-continue" class="btn">k-Means von meinen Zentren aus starten</button>
+              <button type="button" id="duel-clear" class="btn">Zentren löschen</button>
+            </div>
+            <p class="hint">Ein Klick in die Zeichnung setzt ein Zentrum. Nahe an einem Datenpunkt rastet es auf ihm ein. Ein Klick auf ein Zentrum entfernt es. Die Punkte gehören immer zum nächsten Zentrum.</p>
+            <p id="duel-message" class="error" role="alert"></p>
+          </div>
+          <div class="card result-box" id="duel-result" aria-live="polite" hidden>
+            <p class="result-title" id="duel-verdict"></p>
+            <dl class="counters">
+              <div><dt>Ihr Platz</dt><dd id="duel-rank">–</dd></div>
+              <div><dt>Bester Lauf</dt><dd id="duel-best">–</dd></div>
+              <div><dt>Mittlerer Lauf</dt><dd id="duel-mean">–</dd></div>
+              <div><dt>Schlechtester Lauf</dt><dd id="duel-worst">–</dd></div>
+            </dl>
+            <p class="hint">k-Means startet hier 20-mal mit zufälligen Zentren. Der beste dieser Läufe ist nicht zwingend das Optimum, also die kleinste überhaupt mögliche WCSS.</p>
+          </div>
+          <p id="duel-continued" class="status status-success" role="status" hidden></p>
+          <div class="card" id="duel-attempts-card" hidden>
+            <h3>Ihre Versuche</h3>
+            <div class="table-scroll table-scroll-limited">
+              <table class="data-table wrap-head">
+                <thead><tr><th scope="col" class="num">Nr.</th><th scope="col" class="num">k</th><th scope="col" class="num">Ihre WCSS</th><th scope="col" class="num">Platz</th><th scope="col" class="num">Bester Lauf</th><th scope="col" class="num">Von Ihren Zentren aus</th></tr></thead>
+                <tbody id="duel-attempts"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div id="duel-plot" class="plot-box"></div>
+          <fieldset class="radio-group switch-row" id="duel-view" hidden>
+            <legend>Die Zeichnung zeigt</legend>
+            <label class="radio"><input type="radio" name="duel-view" id="duel-view-own" checked> Ihre Zentren</label>
+            <label class="radio"><input type="radio" name="duel-view" id="duel-view-best"> den besten Lauf</label>
+            <label class="radio"><input type="radio" name="duel-view" id="duel-view-continued"> k-Means von Ihren Zentren aus</label>
+          </fieldset>
+          <label class="switch"><input type="checkbox" id="duel-areas"> Decision Areas einzeichnen</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 5: Ellbogen-Analyse
          =================================================================== -->
     <section id="page-elbow" class="page page-wide" role="tabpanel" aria-labelledby="tab-elbow" hidden>
       <h2>Ellbogen-Analyse</h2>
@@ -292,7 +360,7 @@
     </section>
 
     <!-- ===================================================================
-         Seite 5: Silhouetten-Analyse
+         Seite 6: Silhouetten-Analyse
          =================================================================== -->
     <section id="page-silhouette" class="page page-wide" role="tabpanel" aria-labelledby="tab-silhouette" hidden>
       <h2>Silhouetten-Analyse</h2>
@@ -363,7 +431,168 @@
     </section>
 
     <!-- ===================================================================
-         Seite 6: Bilder und Objekte
+         Seite 7: Bekannte Gruppen
+         =================================================================== -->
+    <section id="page-groups" class="page page-wide" role="tabpanel" aria-labelledby="tab-groups" hidden>
+      <h2>Bekannte Gruppen</h2>
+      <p class="intro">k-Means kennt die Gruppen nicht und muss sie auch nicht treffen: Das Verfahren sucht nur Punkte, die nahe beieinanderliegen. Enthalten die Daten bekannte Gruppen, zeigt diese Seite, wie gut beide Einteilungen zusammenpassen. Das ist der Unterschied zu überwachtem Lernen, bei dem die Gruppen das Ziel des Trainings sind.</p>
+      <p id="grp-empty" class="notice" hidden>Laden oder erfassen Sie zuerst auf Seite 1 Daten.</p>
+      <p id="grp-stale" class="notice" hidden>Die Daten haben sich geändert. Führen Sie den Vergleich neu durch.</p>
+      <p id="grp-none" class="notice" hidden>Dieser Datensatz enthält keine bekannten Gruppen. Wählen Sie auf Seite 1 einen anderen oder laden Sie eine Datei mit Gruppenspalte.</p>
+      <div class="card">
+        <p id="grp-available" hidden>Dieser Datensatz enthält bekannte Gruppen.</p>
+        <div class="field-row">
+          <div class="field"><label for="grp-k">Anzahl der Cluster k</label><select id="grp-k"></select></div>
+          <div class="field"><label for="grp-start">Startzentren</label><select id="grp-start"><option value="random" selected>zufällig</option><option value="plusplus">k-means++</option></select></div>
+        </div>
+        <div class="button-row"><button type="button" id="grp-run" class="btn btn-primary">Vergleich durchführen</button></div>
+        <p class="hint">Jeder Klick ist ein neuer Lauf.</p>
+      </div>
+      <div id="grp-result" hidden>
+        <p id="grp-k-note" class="notice" hidden></p>
+        <p id="grp-ignored" class="notice" hidden></p>
+        <div class="compare-pair">
+          <figure>
+            <figcaption>Cluster von k-Means</figcaption>
+            <div id="grp-plot-clusters" class="plot-box"></div>
+          </figure>
+          <figure>
+            <figcaption>Bekannte Gruppen</figcaption>
+            <div id="grp-plot-groups" class="plot-box"></div>
+          </figure>
+        </div>
+        <p class="hint">Die Gruppen tragen möglichst die Farbe des Clusters, in dem sie am häufigsten vorkommen. Punkte mit Ring gehören nicht zur häufigsten Gruppe ihres Clusters.</p>
+        <div class="card">
+          <h3>Cluster und Gruppen</h3>
+          <div class="table-scroll table-scroll-limited">
+            <table class="data-table"><thead><tr id="grp-head"></tr></thead><tbody id="grp-body"></tbody></table>
+          </div>
+          <p class="hint">Hervorgehoben ist die häufigste Gruppe jedes Clusters.</p>
+        </div>
+        <div class="card">
+          <dl class="counters">
+            <div><dt>Reinheit</dt><dd id="grp-purity">–</dd></div>
+            <div><dt>Adjusted Rand Index</dt><dd id="grp-ari">–</dd></div>
+          </dl>
+          <p class="hint">Reinheit: Anteil der Punkte, die zur häufigsten Gruppe ihres Clusters gehören. Sie steigt mit k und ist bei einem Cluster je Punkt immer 1; eine hohe Reinheit bei großem k sagt deshalb wenig.</p>
+          <p class="hint">Adjusted Rand Index: vergleicht, welche Punktpaare in beiden Einteilungen zusammengehören. 1 bedeutet dieselbe Einteilung, Werte um 0 bedeuten eine Übereinstimmung wie durch Zufall.</p>
+        </div>
+        <details class="card" id="grp-objects-details">
+          <summary>Objekte je Cluster und Gruppe</summary>
+          <div id="grp-objects"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 8: Anwenden
+         =================================================================== -->
+    <section id="page-apply" class="page page-wide" role="tabpanel" aria-labelledby="tab-apply" hidden>
+      <h2>Anwenden</h2>
+      <p class="intro">Was fängt man mit fertigen Clustern an? Berechnen Sie die Cluster und wählen Sie dann eine Anwendung. Alle drei bauen auf demselben Lauf auf.</p>
+      <p id="app-empty" class="notice" hidden>Laden oder erfassen Sie zuerst auf Seite 1 Daten.</p>
+      <p id="app-stale" class="notice" hidden>Die Daten haben sich geändert. Berechnen Sie die Cluster neu.</p>
+      <div class="card">
+        <div class="field-row">
+          <div class="field"><label for="app-k">Anzahl der Cluster k</label><select id="app-k"></select></div>
+          <div class="field"><label for="app-start">Startzentren</label><select id="app-start"><option value="random" selected>zufällig</option><option value="plusplus">k-means++</option></select></div>
+        </div>
+        <div class="button-row"><button type="button" id="app-run" class="btn btn-primary">Cluster berechnen</button></div>
+        <p id="app-info" role="status"></p>
+        <fieldset class="radio-group switch-row">
+          <legend>Anwendung</legend>
+          <label class="radio"><input type="radio" name="app-mode" id="app-mode-classify" checked> Neue Punkte einordnen</label>
+          <label class="radio"><input type="radio" name="app-mode" id="app-mode-outliers"> Ausreißer erkennen</label>
+          <label class="radio"><input type="radio" name="app-mode" id="app-mode-sites"> Standorte planen</label>
+        </fieldset>
+      </div>
+      <div class="sim-layout">
+        <div>
+          <div id="app-panel-classify">
+            <form class="card" id="app-new-form" novalidate autocomplete="off">
+              <h3>Neuen Punkt einordnen</h3>
+              <div class="field-row">
+                <div class="field"><label for="app-new-name">Bezeichner (optional)</label><input type="text" id="app-new-name" maxlength="40" autocomplete="off"></div>
+                <div class="field"><label for="app-new-x" id="app-new-x-label">x₁</label><input type="text" id="app-new-x" inputmode="decimal" autocomplete="off"></div>
+                <div class="field"><label for="app-new-y" id="app-new-y-label">x₂</label><input type="text" id="app-new-y" inputmode="decimal" autocomplete="off"></div>
+              </div>
+              <button type="submit" class="btn btn-primary">Einordnen</button>
+              <p id="app-new-error" class="error" role="alert"></p>
+              <p class="hint">Oder klicken Sie in die Zeichnung. Neue Punkte ändern weder die Daten noch die Zentren: Sie werden nur dem nächsten Zentrum zugeordnet.</p>
+              <div id="app-new-calc" aria-live="polite"></div>
+            </form>
+            <div class="card" id="app-new-card" hidden>
+              <h3>Neue Punkte</h3>
+              <p class="hint">Ein Klick auf einen Bezeichner zeigt oben seine Rechnung.</p>
+              <div class="table-scroll table-scroll-limited">
+                <table class="data-table wrap-head"><thead><tr id="app-new-head"></tr></thead><tbody id="app-new-body"></tbody></table>
+              </div>
+              <div class="button-row"><button type="button" id="app-new-clear" class="btn">Liste leeren</button></div>
+            </div>
+          </div>
+          <div id="app-panel-outliers" hidden>
+            <div class="card">
+              <h3>Ausreißer erkennen</h3>
+              <p>Ein Punkt ist auffällig, wenn sein Abstand zum Zentrum größer ist als t mal der mittlere Abstand seines Clusters.</p>
+              <div class="slider-row">
+                <label for="app-t">t = <strong id="app-t-value">2,5</strong></label>
+                <input type="range" id="app-t" min="1" max="5" step="0.1" value="2.5">
+              </div>
+              <dl class="counters">
+                <div><dt>Auffällige Punkte</dt><dd id="app-out-count">–</dd></div>
+              </dl>
+              <div id="app-out-small"></div>
+            </div>
+            <div class="card">
+              <h3>Auffällige Punkte, die größten zuerst</h3>
+              <p id="app-out-none" class="hint">Keine.</p>
+              <div class="table-scroll table-scroll-limited">
+                <table class="data-table wrap-head">
+                  <thead><tr><th scope="col">Punkt</th><th scope="col" class="num">Cluster</th><th scope="col" class="num">Abstand</th><th scope="col" class="num">Mittel des Clusters</th><th scope="col" class="num">Vielfaches</th></tr></thead>
+                  <tbody id="app-out-body"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div id="app-panel-sites" hidden>
+            <p id="app-site-scaled" class="notice" hidden>Die Skalierung ist eingeschaltet: Die Abstände sind keine Wege mehr. Schalten Sie sie auf Seite 1 aus, wenn Sie echte Wege brauchen.</p>
+            <div class="card">
+              <h3>Standorte planen</h3>
+              <p>Die Zentren sind die Standorte, die Abstände die Wege.</p>
+              <div class="table-scroll table-scroll-limited">
+                <table class="data-table wrap-head">
+                  <thead><tr><th scope="col">Standort</th><th scope="col" class="num">Punkte</th><th scope="col" class="num">Mittlerer Weg</th><th scope="col" class="num">Längster Weg</th><th scope="col">Am weitesten entfernt</th></tr></thead>
+                  <tbody id="app-site-body"></tbody>
+                </table>
+              </div>
+              <p class="hint">Abstände sind nur sinnvoll, wenn beide Achsen dieselbe Einheit haben. k-Means minimiert quadrierte Abstände, nicht den mittleren Weg: Das Ergebnis ist eine gute Näherung, nicht das Optimum.</p>
+            </div>
+            <div class="card">
+              <h3>Kosten</h3>
+              <div class="field-row">
+                <div class="field"><label for="app-cost-site">Kosten je Standort</label><input type="text" id="app-cost-site" inputmode="decimal" autocomplete="off" value="100"></div>
+                <div class="field"><label for="app-cost-unit">Kosten je Wegeinheit</label><input type="text" id="app-cost-unit" inputmode="decimal" autocomplete="off" value="1"></div>
+              </div>
+              <p id="app-cost-error" class="error" role="alert"></p>
+              <p id="app-site-total" class="result-title" role="status"></p>
+              <div class="button-row"><button type="button" id="app-curve-run" class="btn btn-primary">Für k = 1 bis 10 rechnen</button></div>
+              <p class="hint">Mehr Standorte kosten mehr, verkürzen aber die Wege. Je k gilt der beste von fünf Läufen.</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div id="app-plot" class="plot-box"></div>
+          <label class="switch"><input type="checkbox" id="app-areas"> Decision Areas einzeichnen</label>
+          <div class="card" id="app-curve-box" hidden>
+            <p id="app-curve-best" class="result-title" role="status"></p>
+            <div id="app-curve" class="curve-box"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================================================================
+         Seite 9: Bilder und Objekte
          =================================================================== -->
     <section id="page-images" class="page page-wide" role="tabpanel" aria-labelledby="tab-images" hidden>
       <h2>Bilder und Objekte</h2>
@@ -401,6 +630,18 @@
             <figcaption>Ergebnis mit den Farben der Cluster</figcaption>
             <canvas id="img-output" role="img"></canvas>
           </figure>
+        </div>
+        <div class="card" id="img-storage">
+          <h3>Speicherbedarf</h3>
+          <dl class="counters">
+            <div><dt>Original</dt><dd id="img-size-original">–</dd></div>
+            <div><dt>Mit k Farben</dt><dd id="img-size-compressed">–</dd></div>
+            <div><dt>Gespart</dt><dd id="img-size-saved">–</dd></div>
+            <div><dt>Mittlere Farbabweichung je Pixel</dt><dd id="img-size-error">–</dd></div>
+          </dl>
+          <p id="img-size-original-calc" class="hint"></p>
+          <p id="img-size-compressed-calc" class="hint"></p>
+          <p class="hint">Weniger Farben sparen Platz, die Farbabweichung zeigt den Preis dafür: Sie ist der mittlere Abstand zwischen der Farbe im Original und im Ergebnis, im Farbraum aus Rot, Grün und Blau. Gerechnet ist die verkleinerte Arbeitsgröße, ohne weitere Kompression wie bei PNG. Tatsächliche Dateien fallen deshalb anders aus.</p>
         </div>
         <div class="card">
           <h3>Flächen zählen</h3>

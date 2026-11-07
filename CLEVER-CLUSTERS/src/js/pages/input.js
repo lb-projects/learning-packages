@@ -29,6 +29,7 @@
     return [
       dom.el('p', null, ['Zwei Spalten: ', dom.el('code', null, 'Achse x;Achse y'), ' als Kopfzeile, danach je Zeile zwei Zahlen. Die Kopfzeile kann entfallen.']),
       dom.el('p', null, ['Drei Spalten: ', dom.el('code', null, 'Objekt;Achse x;Achse y'), ' als Kopfzeile, danach je Zeile ein Bezeichner und zwei Zahlen. Auch hier kann die Kopfzeile entfallen.']),
+      dom.el('p', null, ['Mit bekannten Gruppen: ', dom.el('code', null, 'Objekt;Achse x;Achse y;Gruppe'), ' oder ', dom.el('code', null, 'Achse x;Achse y;Gruppe'), '. Die Gruppe bleibt unsichtbar, bis Sie sie auf Seite 7 mit den Clustern vergleichen.']),
       dom.el('p', null, 'Trennzeichen: Semikolon, Komma oder Tabulator. Das Dezimalkomma ist beim Semikolon möglich. Höchstens 500 Punkte; Zahlen von −1000000 bis 1000000.')
     ];
   }

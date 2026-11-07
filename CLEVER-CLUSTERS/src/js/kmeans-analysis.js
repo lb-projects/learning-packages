@@ -1,6 +1,6 @@
 /**
  * @file kmeans-analysis.js
- * @description Ellbogen-Analyse und Silhouetten-Analyse, ohne Zugriff auf die Seite.
+ * @description Ellbogen-Analyse, Silhouetten-Analyse und der Wettkampf von Seite 4, ohne Zugriff auf die Seite.
  *
  * Ellbogen:
  *   Für jedes k ein Lauf mit neuen zufälligen Startzentren. Der Knick ist das k mit dem größten
@@ -197,5 +197,39 @@
     return { rows, bestK };
   }
 
-  ns.kmeansAnalysis = { pickStarts, randomRun, elbow, knee, silhouette, silhouetteOf, maxSilhouetteK, evaluate };
+  /**
+   * Vergleicht eigene Zentren mit Läufen von k-Means aus zufälligen Startzentren.
+   *
+   * Gleichstand zählt innerhalb einer kleinen Toleranz, weil gleiche Zentren durch Rundung minimal
+   * verschiedene Werte ergeben können. Der Platz zählt nur Läufe, die wirklich besser sind.
+   *
+   * @param {number[][]} points - Punkte.
+   * @param {number[][]} centers - Eigene Zentren.
+   * @param {number} runs - Anzahl der Läufe.
+   * @param {Object} [options] - Siehe {@link pickStarts}.
+   * @returns {{own:number, runs:number[], best:number, mean:number, worst:number, rank:number,
+   *            beatsAll:boolean, tied:boolean, bestRun:Object}} WCSS und Platz (1 ist der beste).
+   */
+  function contest(points, centers, runs, options) {
+    const assignment = ns.kmeans.assign(points, centers);
+    const own = ns.kmeans.wcss(points, centers, assignment);
+    const results = [];
+    for (let i = 0; i < runs; i++) {
+      results.push(randomRun(points, centers.length, options));
+    }
+    const values = results.map((r) => r.wcss);
+    const bestRun = results.reduce((a, b) => (b.wcss < a.wcss ? b : a));
+    const margin = 1e-9 * Math.max(1, Math.abs(bestRun.wcss));
+    return {
+      own, runs: values, bestRun,
+      best: bestRun.wcss,
+      mean: values.reduce((a, b) => a + b, 0) / runs,
+      worst: Math.max(...values),
+      rank: 1 + values.filter((v) => v < own - margin).length,
+      beatsAll: own < bestRun.wcss - margin,
+      tied: Math.abs(own - bestRun.wcss) <= margin
+    };
+  }
+
+  ns.kmeansAnalysis = { pickStarts, randomRun, elbow, knee, silhouette, silhouetteOf, maxSilhouetteK, evaluate, contest };
 })(window.CC = window.CC || {});

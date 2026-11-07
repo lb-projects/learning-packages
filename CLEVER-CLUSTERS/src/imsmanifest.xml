@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   SCORM-1.2-Manifest von CLEVER CLUSTERS (Choose Locations, Evaluate Vectors, Edit, Repeat: Centers Learn Until Stable, Then Everything Rests Smoothly).
-  - Ein einzelnes SCO (index.html), das alle sechs Seiten als Registerkarten enthält.
+  - Ein einzelnes SCO (index.html), das alle neun Seiten als Registerkarten enthält.
   - Jede Datei des Pakets ist als <file> aufgeführt (wird vom Build-Skript geprüft).
   - Die Namensraum-URIs sind reine Bezeichner; es werden keine Schemadateien geladen.
 -->
@@ -41,7 +41,12 @@
       <file href="js/kmeans-analysis.js"/>
       <file href="js/kmeans.js"/>
       <file href="js/object-count.js"/>
+      <file href="js/kmeans-apply.js"/>
+      <file href="js/kmeans-compare.js"/>
+      <file href="js/pages/apply.js"/>
+      <file href="js/pages/challenge.js"/>
       <file href="js/pages/elbow.js"/>
+      <file href="js/pages/groups.js"/>
       <file href="js/pages/hand.js"/>
       <file href="js/pages/images.js"/>
       <file href="js/pages/input.js"/>

@@ -1,121 +1,121 @@
-Haushalt;Wohnfläche in m²;Jahresverbrauch in 100 kWh
-Haushalt 001;71,7;23
-Haushalt 002;59,9;22,8
-Haushalt 003;120,1;81,8
-Haushalt 004;150,4;44,3
-Haushalt 005;116,2;71,9
-Haushalt 006;135,9;79,5
-Haushalt 007;136,4;76,6
-Haushalt 008;50,2;19,9
-Haushalt 009;95,8;68,2
-Haushalt 010;67,9;61,7
-Haushalt 011;135,6;78,8
-Haushalt 012;120,8;34,4
-Haushalt 013;162,2;48,7
-Haushalt 014;83;66,8
-Haushalt 015;141,6;41,6
-Haushalt 016;52,2;57,5
-Haushalt 017;90,8;74,5
-Haushalt 018;155,9;80,4
-Haushalt 019;59,4;60,5
-Haushalt 020;112;36,3
-Haushalt 021;117,2;35,1
-Haushalt 022;148,6;81,7
-Haushalt 023;92,7;25,7
-Haushalt 024;59,8;57,1
-Haushalt 025;58,3;19
-Haushalt 026;76,2;22,9
-Haushalt 027;91;69,3
-Haushalt 028;154;86
-Haushalt 029;126,9;76,5
-Haushalt 030;101,7;68,2
-Haushalt 031;71,8;69,9
-Haushalt 032;96,2;67,3
-Haushalt 033;130,8;37,6
-Haushalt 034;105,4;31,3
-Haushalt 035;128,1;76,3
-Haushalt 036;101,1;70,3
-Haushalt 037;140,5;42,1
-Haushalt 038;152,5;46,9
-Haushalt 039;87,2;28,4
-Haushalt 040;113;31,7
-Haushalt 041;79,3;26,9
-Haushalt 042;61,3;60,2
-Haushalt 043;169,4;85,7
-Haushalt 044;179,8;88,6
-Haushalt 045;151,5;82,6
-Haushalt 046;153,8;42
-Haushalt 047;156,6;83,8
-Haushalt 048;144,9;40,7
-Haushalt 049;137,2;81
-Haushalt 050;138;80,3
-Haushalt 051;152,9;47,4
-Haushalt 052;115,9;74
-Haushalt 053;103,1;30
-Haushalt 054;118,4;35,4
-Haushalt 055;72,1;62,1
-Haushalt 056;140,4;78,3
-Haushalt 057;161,5;88,6
-Haushalt 058;133,4;79,6
-Haushalt 059;65,1;60
-Haushalt 060;85,2;26
-Haushalt 061;156,6;82,3
-Haushalt 062;113,3;33,3
-Haushalt 063;162;85,5
-Haushalt 064;139;76,8
-Haushalt 065;137,3;77,2
-Haushalt 066;102,9;29,4
-Haushalt 067;103,5;32,6
-Haushalt 068;127,6;78,1
-Haushalt 069;126,4;75,4
-Haushalt 070;151,6;40,5
-Haushalt 071;82;25,5
-Haushalt 072;115;35,1
-Haushalt 073;130,4;40,2
-Haushalt 074;157,2;83,5
-Haushalt 075;129,7;80,3
-Haushalt 076;146,1;42,9
-Haushalt 077;130,1;77,1
-Haushalt 078;77,3;62
-Haushalt 079;128,4;76,5
-Haushalt 080;73,9;22,9
-Haushalt 081;102,4;66,6
-Haushalt 082;171;44,8
-Haushalt 083;57,3;61,5
-Haushalt 084;52;56,9
-Haushalt 085;134,6;79,3
-Haushalt 086;78,3;26,1
-Haushalt 087;173,3;87,1
-Haushalt 088;60;62,7
-Haushalt 089;123,2;33,6
-Haushalt 090;110,8;34,1
-Haushalt 091;166,2;85,2
-Haushalt 092;55,9;18
-Haushalt 093;148,3;39,8
-Haushalt 094;87,1;26
-Haushalt 095;164;47,7
-Haushalt 096;69,8;20,7
-Haushalt 097;165;45,6
-Haushalt 098;85,7;63,5
-Haushalt 099;92,6;66,1
-Haushalt 100;94,9;28,5
-Haushalt 101;113,2;34,7
-Haushalt 102;82,5;25,4
-Haushalt 103;58,1;20,5
-Haushalt 104;75,7;23,3
-Haushalt 105;176,2;51,1
-Haushalt 106;81;66,6
-Haushalt 107;164,3;49,4
-Haushalt 108;64,5;22,8
-Haushalt 109;84,8;25,8
-Haushalt 110;179,4;89,5
-Haushalt 111;164,3;47,1
-Haushalt 112;105,9;32,3
-Haushalt 113;145,7;42
-Haushalt 114;97,8;31
-Haushalt 115;73,8;68,4
-Haushalt 116;55,3;59,7
-Haushalt 117;108,2;72,7
-Haushalt 118;67,7;22,8
-Haushalt 119;164,8;43,9
-Haushalt 120;64,5;18,9
+Haushalt;Wohnfläche in m²;Jahresverbrauch in 100 kWh;Gruppe
+Haushalt 001;71,7;23;ohne Wärmepumpe
+Haushalt 002;59,9;22,8;ohne Wärmepumpe
+Haushalt 003;120,1;81,8;mit Wärmepumpe
+Haushalt 004;150,4;44,3;ohne Wärmepumpe
+Haushalt 005;116,2;71,9;mit Wärmepumpe
+Haushalt 006;135,9;79,5;mit Wärmepumpe
+Haushalt 007;136,4;76,6;mit Wärmepumpe
+Haushalt 008;50,2;19,9;ohne Wärmepumpe
+Haushalt 009;95,8;68,2;mit Wärmepumpe
+Haushalt 010;67,9;61,7;mit Wärmepumpe
+Haushalt 011;135,6;78,8;mit Wärmepumpe
+Haushalt 012;120,8;34,4;ohne Wärmepumpe
+Haushalt 013;162,2;48,7;ohne Wärmepumpe
+Haushalt 014;83;66,8;mit Wärmepumpe
+Haushalt 015;141,6;41,6;ohne Wärmepumpe
+Haushalt 016;52,2;57,5;mit Wärmepumpe
+Haushalt 017;90,8;74,5;mit Wärmepumpe
+Haushalt 018;155,9;80,4;mit Wärmepumpe
+Haushalt 019;59,4;60,5;mit Wärmepumpe
+Haushalt 020;112;36,3;ohne Wärmepumpe
+Haushalt 021;117,2;35,1;ohne Wärmepumpe
+Haushalt 022;148,6;81,7;mit Wärmepumpe
+Haushalt 023;92,7;25,7;ohne Wärmepumpe
+Haushalt 024;59,8;57,1;mit Wärmepumpe
+Haushalt 025;58,3;19;ohne Wärmepumpe
+Haushalt 026;76,2;22,9;ohne Wärmepumpe
+Haushalt 027;91;69,3;mit Wärmepumpe
+Haushalt 028;154;86;mit Wärmepumpe
+Haushalt 029;126,9;76,5;mit Wärmepumpe
+Haushalt 030;101,7;68,2;mit Wärmepumpe
+Haushalt 031;71,8;69,9;mit Wärmepumpe
+Haushalt 032;96,2;67,3;mit Wärmepumpe
+Haushalt 033;130,8;37,6;ohne Wärmepumpe
+Haushalt 034;105,4;31,3;ohne Wärmepumpe
+Haushalt 035;128,1;76,3;mit Wärmepumpe
+Haushalt 036;101,1;70,3;mit Wärmepumpe
+Haushalt 037;140,5;42,1;ohne Wärmepumpe
+Haushalt 038;152,5;46,9;ohne Wärmepumpe
+Haushalt 039;87,2;28,4;ohne Wärmepumpe
+Haushalt 040;113;31,7;ohne Wärmepumpe
+Haushalt 041;79,3;26,9;ohne Wärmepumpe
+Haushalt 042;61,3;60,2;mit Wärmepumpe
+Haushalt 043;169,4;85,7;mit Wärmepumpe
+Haushalt 044;179,8;88,6;mit Wärmepumpe
+Haushalt 045;151,5;82,6;mit Wärmepumpe
+Haushalt 046;153,8;42;ohne Wärmepumpe
+Haushalt 047;156,6;83,8;mit Wärmepumpe
+Haushalt 048;144,9;40,7;ohne Wärmepumpe
+Haushalt 049;137,2;81;mit Wärmepumpe
+Haushalt 050;138;80,3;mit Wärmepumpe
+Haushalt 051;152,9;47,4;ohne Wärmepumpe
+Haushalt 052;115,9;74;mit Wärmepumpe
+Haushalt 053;103,1;30;ohne Wärmepumpe
+Haushalt 054;118,4;35,4;ohne Wärmepumpe
+Haushalt 055;72,1;62,1;mit Wärmepumpe
+Haushalt 056;140,4;78,3;mit Wärmepumpe
+Haushalt 057;161,5;88,6;mit Wärmepumpe
+Haushalt 058;133,4;79,6;mit Wärmepumpe
+Haushalt 059;65,1;60;mit Wärmepumpe
+Haushalt 060;85,2;26;ohne Wärmepumpe
+Haushalt 061;156,6;82,3;mit Wärmepumpe
+Haushalt 062;113,3;33,3;ohne Wärmepumpe
+Haushalt 063;162;85,5;mit Wärmepumpe
+Haushalt 064;139;76,8;mit Wärmepumpe
+Haushalt 065;137,3;77,2;mit Wärmepumpe
+Haushalt 066;102,9;29,4;ohne Wärmepumpe
+Haushalt 067;103,5;32,6;ohne Wärmepumpe
+Haushalt 068;127,6;78,1;mit Wärmepumpe
+Haushalt 069;126,4;75,4;mit Wärmepumpe
+Haushalt 070;151,6;40,5;ohne Wärmepumpe
+Haushalt 071;82;25,5;ohne Wärmepumpe
+Haushalt 072;115;35,1;ohne Wärmepumpe
+Haushalt 073;130,4;40,2;ohne Wärmepumpe
+Haushalt 074;157,2;83,5;mit Wärmepumpe
+Haushalt 075;129,7;80,3;mit Wärmepumpe
+Haushalt 076;146,1;42,9;ohne Wärmepumpe
+Haushalt 077;130,1;77,1;mit Wärmepumpe
+Haushalt 078;77,3;62;mit Wärmepumpe
+Haushalt 079;128,4;76,5;mit Wärmepumpe
+Haushalt 080;73,9;22,9;ohne Wärmepumpe
+Haushalt 081;102,4;66,6;mit Wärmepumpe
+Haushalt 082;171;44,8;ohne Wärmepumpe
+Haushalt 083;57,3;61,5;mit Wärmepumpe
+Haushalt 084;52;56,9;mit Wärmepumpe
+Haushalt 085;134,6;79,3;mit Wärmepumpe
+Haushalt 086;78,3;26,1;ohne Wärmepumpe
+Haushalt 087;173,3;87,1;mit Wärmepumpe
+Haushalt 088;60;62,7;mit Wärmepumpe
+Haushalt 089;123,2;33,6;ohne Wärmepumpe
+Haushalt 090;110,8;34,1;ohne Wärmepumpe
+Haushalt 091;166,2;85,2;mit Wärmepumpe
+Haushalt 092;55,9;18;ohne Wärmepumpe
+Haushalt 093;148,3;39,8;ohne Wärmepumpe
+Haushalt 094;87,1;26;ohne Wärmepumpe
+Haushalt 095;164;47,7;ohne Wärmepumpe
+Haushalt 096;69,8;20,7;ohne Wärmepumpe
+Haushalt 097;165;45,6;ohne Wärmepumpe
+Haushalt 098;85,7;63,5;mit Wärmepumpe
+Haushalt 099;92,6;66,1;mit Wärmepumpe
+Haushalt 100;94,9;28,5;ohne Wärmepumpe
+Haushalt 101;113,2;34,7;ohne Wärmepumpe
+Haushalt 102;82,5;25,4;ohne Wärmepumpe
+Haushalt 103;58,1;20,5;ohne Wärmepumpe
+Haushalt 104;75,7;23,3;ohne Wärmepumpe
+Haushalt 105;176,2;51,1;ohne Wärmepumpe
+Haushalt 106;81;66,6;mit Wärmepumpe
+Haushalt 107;164,3;49,4;ohne Wärmepumpe
+Haushalt 108;64,5;22,8;ohne Wärmepumpe
+Haushalt 109;84,8;25,8;ohne Wärmepumpe
+Haushalt 110;179,4;89,5;mit Wärmepumpe
+Haushalt 111;164,3;47,1;ohne Wärmepumpe
+Haushalt 112;105,9;32,3;ohne Wärmepumpe
+Haushalt 113;145,7;42;ohne Wärmepumpe
+Haushalt 114;97,8;31;ohne Wärmepumpe
+Haushalt 115;73,8;68,4;mit Wärmepumpe
+Haushalt 116;55,3;59,7;mit Wärmepumpe
+Haushalt 117;108,2;72,7;mit Wärmepumpe
+Haushalt 118;67,7;22,8;ohne Wärmepumpe
+Haushalt 119;164,8;43,9;ohne Wärmepumpe
+Haushalt 120;64,5;18,9;ohne Wärmepumpe

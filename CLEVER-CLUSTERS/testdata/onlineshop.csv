@@ -1,91 +1,91 @@
-Kunde;Bestellungen je Jahr;Warenkorb in €
-Kunde 001;11;82,9
-Kunde 002;7;28,8
-Kunde 003;7;66,4
-Kunde 004;9;72
-Kunde 005;9;31,5
-Kunde 006;9;80,2
-Kunde 007;8;74,6
-Kunde 008;31;28,6
-Kunde 009;12;69,9
-Kunde 010;31;25,6
-Kunde 011;6;30,1
-Kunde 012;35;33,4
-Kunde 013;6;27,2
-Kunde 014;7;26
-Kunde 015;37;71,4
-Kunde 016;34;27,6
-Kunde 017;8;67,9
-Kunde 018;37;27
-Kunde 019;37;70,6
-Kunde 020;9;68,5
-Kunde 021;40;71,2
-Kunde 022;36;69,9
-Kunde 023;32;32,3
-Kunde 024;3;22,2
-Kunde 025;6;72,7
-Kunde 026;15;68,1
-Kunde 027;38;25,9
-Kunde 028;6;69,8
-Kunde 029;34;24,9
-Kunde 030;4;26
-Kunde 031;7;74,3
-Kunde 032;37;31,6
-Kunde 033;9;20,4
-Kunde 034;9;72
-Kunde 035;35;36,3
-Kunde 036;10;72,7
-Kunde 037;35;32,1
-Kunde 038;10;60
-Kunde 039;39;69,8
-Kunde 040;7;25,3
-Kunde 041;5;22,9
-Kunde 042;7;70,2
-Kunde 043;7;26,8
-Kunde 044;32;25,3
-Kunde 045;10;74
-Kunde 046;8;27,6
-Kunde 047;34;28,6
-Kunde 048;8;29,8
-Kunde 049;38;23,2
-Kunde 050;32;74,2
-Kunde 051;36;73,7
-Kunde 052;39;73
-Kunde 053;41;69,2
-Kunde 054;4;32,5
-Kunde 055;7;24,1
-Kunde 056;37;30,4
-Kunde 057;6;21,3
-Kunde 058;7;30,3
-Kunde 059;6;21,9
-Kunde 060;39;58,9
-Kunde 061;6;28,9
-Kunde 062;6;72,6
-Kunde 063;10;76,4
-Kunde 064;34;27,1
-Kunde 065;5;24,8
-Kunde 066;29;30,1
-Kunde 067;9;36,5
-Kunde 068;2;31
-Kunde 069;31;37,2
-Kunde 070;9;23,1
-Kunde 071;9;22,8
-Kunde 072;36;31,1
-Kunde 073;10;39
-Kunde 074;6;27,8
-Kunde 075;35;25,9
-Kunde 076;9;70,7
-Kunde 077;31;75,8
-Kunde 078;3;36,2
-Kunde 079;39;76,7
-Kunde 080;37;31,4
-Kunde 081;32;29,1
-Kunde 082;8;22,9
-Kunde 083;10;22,3
-Kunde 084;7;28,4
-Kunde 085;34;30,9
-Kunde 086;34;25,9
-Kunde 087;34;81,7
-Kunde 088;34;28,4
-Kunde 089;43;66,4
-Kunde 090;41;78,2
+Kunde;Bestellungen je Jahr;Warenkorb in €;Gruppe
+Kunde 001;11;82,9;Selten, großer Warenkorb
+Kunde 002;7;28,8;Selten, kleiner Warenkorb
+Kunde 003;7;66,4;Selten, großer Warenkorb
+Kunde 004;9;72;Selten, großer Warenkorb
+Kunde 005;9;31,5;Selten, kleiner Warenkorb
+Kunde 006;9;80,2;Selten, großer Warenkorb
+Kunde 007;8;74,6;Selten, großer Warenkorb
+Kunde 008;31;28,6;Häufig, kleiner Warenkorb
+Kunde 009;12;69,9;Selten, großer Warenkorb
+Kunde 010;31;25,6;Häufig, kleiner Warenkorb
+Kunde 011;6;30,1;Selten, kleiner Warenkorb
+Kunde 012;35;33,4;Häufig, kleiner Warenkorb
+Kunde 013;6;27,2;Selten, kleiner Warenkorb
+Kunde 014;7;26;Selten, kleiner Warenkorb
+Kunde 015;37;71,4;Häufig, großer Warenkorb
+Kunde 016;34;27,6;Häufig, kleiner Warenkorb
+Kunde 017;8;67,9;Selten, großer Warenkorb
+Kunde 018;37;27;Häufig, kleiner Warenkorb
+Kunde 019;37;70,6;Häufig, großer Warenkorb
+Kunde 020;9;68,5;Selten, großer Warenkorb
+Kunde 021;40;71,2;Häufig, großer Warenkorb
+Kunde 022;36;69,9;Häufig, großer Warenkorb
+Kunde 023;32;32,3;Häufig, kleiner Warenkorb
+Kunde 024;3;22,2;Selten, kleiner Warenkorb
+Kunde 025;6;72,7;Selten, großer Warenkorb
+Kunde 026;15;68,1;Selten, großer Warenkorb
+Kunde 027;38;25,9;Häufig, kleiner Warenkorb
+Kunde 028;6;69,8;Selten, großer Warenkorb
+Kunde 029;34;24,9;Häufig, kleiner Warenkorb
+Kunde 030;4;26;Selten, kleiner Warenkorb
+Kunde 031;7;74,3;Selten, großer Warenkorb
+Kunde 032;37;31,6;Häufig, kleiner Warenkorb
+Kunde 033;9;20,4;Selten, kleiner Warenkorb
+Kunde 034;9;72;Selten, großer Warenkorb
+Kunde 035;35;36,3;Häufig, kleiner Warenkorb
+Kunde 036;10;72,7;Selten, großer Warenkorb
+Kunde 037;35;32,1;Häufig, kleiner Warenkorb
+Kunde 038;10;60;Selten, großer Warenkorb
+Kunde 039;39;69,8;Häufig, großer Warenkorb
+Kunde 040;7;25,3;Selten, kleiner Warenkorb
+Kunde 041;5;22,9;Selten, kleiner Warenkorb
+Kunde 042;7;70,2;Selten, großer Warenkorb
+Kunde 043;7;26,8;Selten, kleiner Warenkorb
+Kunde 044;32;25,3;Häufig, kleiner Warenkorb
+Kunde 045;10;74;Selten, großer Warenkorb
+Kunde 046;8;27,6;Selten, kleiner Warenkorb
+Kunde 047;34;28,6;Häufig, kleiner Warenkorb
+Kunde 048;8;29,8;Selten, kleiner Warenkorb
+Kunde 049;38;23,2;Häufig, kleiner Warenkorb
+Kunde 050;32;74,2;Häufig, großer Warenkorb
+Kunde 051;36;73,7;Häufig, großer Warenkorb
+Kunde 052;39;73;Häufig, großer Warenkorb
+Kunde 053;41;69,2;Häufig, großer Warenkorb
+Kunde 054;4;32,5;Selten, kleiner Warenkorb
+Kunde 055;7;24,1;Selten, kleiner Warenkorb
+Kunde 056;37;30,4;Häufig, kleiner Warenkorb
+Kunde 057;6;21,3;Selten, kleiner Warenkorb
+Kunde 058;7;30,3;Selten, kleiner Warenkorb
+Kunde 059;6;21,9;Selten, kleiner Warenkorb
+Kunde 060;39;58,9;Häufig, großer Warenkorb
+Kunde 061;6;28,9;Selten, kleiner Warenkorb
+Kunde 062;6;72,6;Selten, großer Warenkorb
+Kunde 063;10;76,4;Selten, großer Warenkorb
+Kunde 064;34;27,1;Häufig, kleiner Warenkorb
+Kunde 065;5;24,8;Selten, kleiner Warenkorb
+Kunde 066;29;30,1;Häufig, kleiner Warenkorb
+Kunde 067;9;36,5;Selten, kleiner Warenkorb
+Kunde 068;2;31;Selten, kleiner Warenkorb
+Kunde 069;31;37,2;Häufig, kleiner Warenkorb
+Kunde 070;9;23,1;Selten, kleiner Warenkorb
+Kunde 071;9;22,8;Selten, kleiner Warenkorb
+Kunde 072;36;31,1;Häufig, kleiner Warenkorb
+Kunde 073;10;39;Selten, kleiner Warenkorb
+Kunde 074;6;27,8;Selten, kleiner Warenkorb
+Kunde 075;35;25,9;Häufig, kleiner Warenkorb
+Kunde 076;9;70,7;Selten, großer Warenkorb
+Kunde 077;31;75,8;Häufig, großer Warenkorb
+Kunde 078;3;36,2;Selten, kleiner Warenkorb
+Kunde 079;39;76,7;Häufig, großer Warenkorb
+Kunde 080;37;31,4;Häufig, kleiner Warenkorb
+Kunde 081;32;29,1;Häufig, kleiner Warenkorb
+Kunde 082;8;22,9;Selten, kleiner Warenkorb
+Kunde 083;10;22,3;Selten, kleiner Warenkorb
+Kunde 084;7;28,4;Selten, kleiner Warenkorb
+Kunde 085;34;30,9;Häufig, kleiner Warenkorb
+Kunde 086;34;25,9;Häufig, kleiner Warenkorb
+Kunde 087;34;81,7;Häufig, großer Warenkorb
+Kunde 088;34;28,4;Häufig, kleiner Warenkorb
+Kunde 089;43;66,4;Häufig, großer Warenkorb
+Kunde 090;41;78,2;Häufig, großer Warenkorb

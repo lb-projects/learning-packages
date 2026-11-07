@@ -1,45 +1,45 @@
-Lebensmittel;Fett in g je 100 g;Zucker in g je 100 g
-Kartoffelchips;33;1
-Zartbitterschokolade;32;48
-Croissant;21;11
-Salami;33;1
-Erdnüsse;49;4
-Mandeln;50;4,4
-Sahnetorte;20;25
-Butter;83;0,6
-Brokkoli;0,4;1,7
-Trockenpflaumen;0,5;38
-Honig;0;80
-Gummibärchen;0;46
-Lakritz;0,2;50
-Paprika;0,3;4
-Nougatcreme;31;57
-Bonbons;0,2;70
-Tomate;0,2;2,6
-Würfelzucker;0;100
-Müsliriegel;15;30
-Olivenöl;100;0
-Sahne;30;3
-Speck;45;0,5
-Gurke;0,1;1,7
-Marmelade;0,1;60
-Orange;0,2;8
-Apfel;0,2;10
-Kartoffel;0,1;0,8
-Banane;0,2;12
-Birne;0,3;10
-Vollkornbrot;1,5;2,5
-Butterkeks;13;25
-Reis gekocht;0,3;0,1
-Eiscreme;11;21
-Nudeln gekocht;0,9;0,6
-Erdbeere;0,4;5,5
-Möhre;0,2;4,7
-Vollmilchschokolade;30;56
-Donut;25;14
-Walnüsse;65;2,6
-Haferflocken;6,5;1
-Mayonnaise;75;1
-Rosinen;0,5;59
-Gouda;30;0
-Weintraube;0,2;16
+Lebensmittel;Fett in g je 100 g;Zucker in g je 100 g;Gruppe
+Kartoffelchips;33;1;Fettes
+Zartbitterschokolade;32;48;Fettes und Süßes
+Croissant;21;11;Fettes und Süßes
+Salami;33;1;Fettes
+Erdnüsse;49;4;Fettes
+Mandeln;50;4,4;Fettes
+Sahnetorte;20;25;Fettes und Süßes
+Butter;83;0,6;Fettes
+Brokkoli;0,4;1,7;Obst, Gemüse und Beilagen
+Trockenpflaumen;0,5;38;Süßes
+Honig;0;80;Süßes
+Gummibärchen;0;46;Süßes
+Lakritz;0,2;50;Süßes
+Paprika;0,3;4;Obst, Gemüse und Beilagen
+Nougatcreme;31;57;Fettes und Süßes
+Bonbons;0,2;70;Süßes
+Tomate;0,2;2,6;Obst, Gemüse und Beilagen
+Würfelzucker;0;100;Süßes
+Müsliriegel;15;30;Fettes und Süßes
+Olivenöl;100;0;Fettes
+Sahne;30;3;Fettes
+Speck;45;0,5;Fettes
+Gurke;0,1;1,7;Obst, Gemüse und Beilagen
+Marmelade;0,1;60;Süßes
+Orange;0,2;8;Obst, Gemüse und Beilagen
+Apfel;0,2;10;Obst, Gemüse und Beilagen
+Kartoffel;0,1;0,8;Obst, Gemüse und Beilagen
+Banane;0,2;12;Obst, Gemüse und Beilagen
+Birne;0,3;10;Obst, Gemüse und Beilagen
+Vollkornbrot;1,5;2,5;Obst, Gemüse und Beilagen
+Butterkeks;13;25;Fettes und Süßes
+Reis gekocht;0,3;0,1;Obst, Gemüse und Beilagen
+Eiscreme;11;21;Fettes und Süßes
+Nudeln gekocht;0,9;0,6;Obst, Gemüse und Beilagen
+Erdbeere;0,4;5,5;Obst, Gemüse und Beilagen
+Möhre;0,2;4,7;Obst, Gemüse und Beilagen
+Vollmilchschokolade;30;56;Fettes und Süßes
+Donut;25;14;Fettes und Süßes
+Walnüsse;65;2,6;Fettes
+Haferflocken;6,5;1;Obst, Gemüse und Beilagen
+Mayonnaise;75;1;Fettes
+Rosinen;0,5;59;Süßes
+Gouda;30;0;Fettes
+Weintraube;0,2;16;Obst, Gemüse und Beilagen

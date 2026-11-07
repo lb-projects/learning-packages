@@ -1,6 +1,6 @@
 /**
  * @file sample-scenes.js
- * @description Zeichnet die Beispielbilder von Seite 6 auf eine Canvas, mit festem Startwert.
+ * @description Zeichnet die Beispielbilder von Seite 9 auf eine Canvas, mit festem Startwert.
  *
  * Die Bilder sind eigene Zeichnungen und kommen ohne Bilddateien aus. Titel und Meldungen sind
  * neutral und verraten weder Schwierigkeit noch Anzahl; die Auflösung steht nur in der README.

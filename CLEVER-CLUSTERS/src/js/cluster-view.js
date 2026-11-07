@@ -30,6 +30,28 @@
   const clusterClass = (c) => 'cl-' + (c % 100);
 
   /**
+   * Form eines Clusters.
+   * @param {number} c - Nummer ab 0.
+   * @returns {string} Form.
+   */
+  const shapeOf = (c) => SHAPES[c % SHAPES.length];
+
+  /**
+   * Füllt die Auswahl eines eigenen k (Seiten 4, 7 und 8).
+   * @param {HTMLSelectElement} select - Auswahl (wird geleert).
+   * @param {number} max - Größtes k; 0 ohne Daten.
+   * @param {number} chosen - Gewünschtes k.
+   */
+  function renderKSelect(select, max, chosen) {
+    dom.clear(select);
+    for (let k = 1; k <= Math.max(max, 1); k++) {
+      select.appendChild(dom.el('option', { value: String(k) }, String(k)));
+    }
+    select.disabled = max === 0;
+    select.value = String(Math.min(chosen, Math.max(max, 1)));
+  }
+
+  /**
    * Beschreibt einen Punkt für den Tooltip.
    * @param {string} name - Anzeigename.
    * @param {number[]} coord - Koordinaten.
@@ -53,7 +75,7 @@
       const cluster = assignment && assignment[i] !== null ? assignment[i] : undefined;
       return {
         x: c[0], y: c[1],
-        shape: cluster === undefined ? 'circle' : SHAPES[cluster % SHAPES.length],
+        shape: cluster === undefined ? 'circle' : shapeOf(cluster),
         cls: cluster === undefined ? 'pt-neutral' : 'pt-cluster ' + clusterClass(cluster),
         title: pointTitle(names[i], c, cluster)
       };
@@ -233,5 +255,5 @@
     });
   }
 
-  ns.clusterView = { clusterClass, pointMarks, centerMarks, areaRegions, trailLines, trailMarks, distanceLines, renderCenterTable, renderObjects, integerTicks, renderCurve };
+  ns.clusterView = { clusterClass, shapeOf, renderKSelect, pointMarks, centerMarks, areaRegions, trailLines, trailMarks, distanceLines, renderCenterTable, renderObjects, integerTicks, renderCurve };
 })(window.CC = window.CC || {});

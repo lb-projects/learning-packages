@@ -1,9 +1,9 @@
 /**
  * @file pages/images.js
- * @description Seite 6: k-Means auf den Farben eines Bildes und Zählen zusammenhängender Flächen.
+ * @description Seite 9: k-Means auf den Farben eines Bildes, Speicherbedarf und Zählen zusammenhängender Flächen.
  *
  * Die Seite ist von allen anderen Seiten völlig unabhängig. Links steht das Original, rechts das
- * Ergebnis in den k Clusterfarben, darunter die Farbfelder und das Zählen. Ergebnisse bleiben je
+ * Ergebnis in den k Clusterfarben, darunter der Speicherbedarf, die Farbfelder und das Zählen. Ergebnisse bleiben je
  * Bild und k erhalten, damit das Bild beim Bewegen des Reglers nicht springt.
  *
  * Abhängigkeiten:
@@ -18,7 +18,7 @@
   'use strict';
 
   const dom = ns.dom;
-  const { plural } = ns.simFormat;
+  const { num, plural } = ns.simFormat;
   /** Höchstgröße einer Datei in Bytes (10 MB). */
   const MAX_FILE_BYTES = 10 * 1024 * 1024;
   /** Größte erlaubte Seitenlänge und Pixelzahl des Originals. */
@@ -147,6 +147,29 @@
     });
   }
 
+  /**
+   * Formatiert eine Bitzahl als Kilobyte.
+   * @param {number} bits - Bits.
+   * @returns {string} z. B. „12,5 KB“.
+   */
+  const kilobytes = (bits) => num(Math.round((bits / 8 / 1024) * 10) / 10) + ' KB';
+
+  /**
+   * Zeichnet die Karte „Speicherbedarf“.
+   * @param {Object} result - Ergebnis für das aktuelle k.
+   */
+  function renderStorage(result) {
+    const { width, height, data } = current.image;
+    const count = result.colors.length;
+    const s = ns.imageKmeans.storage(width, height, count);
+    dom.byId('img-size-original').textContent = kilobytes(s.originalBits);
+    dom.byId('img-size-compressed').textContent = kilobytes(s.compressedBits);
+    dom.byId('img-size-saved').textContent = num(Math.round(s.saved * 1000) / 10) + ' %';
+    dom.byId('img-size-error').textContent = num(Math.round(ns.imageKmeans.colorError(data, result.labels, result.colors) * 10) / 10);
+    dom.byId('img-size-original-calc').textContent = 'Original: ' + width + ' × ' + height + ' Pixel × 24 Bit = ' + num(s.originalBits) + ' Bit';
+    dom.byId('img-size-compressed-calc').textContent = 'Mit ' + plural(count, 'Farbe', 'Farben') + ': ' + width + ' × ' + height + ' Pixel × ' + s.bitsPerPixel + ' Bit + ' + count + ' × 24 Bit Farbtabelle = ' + num(s.compressedBits) + ' Bit';
+  }
+
   /** Zeichnet die Farbfelder. */
   function renderPalette(result) {
     const box = dom.byId('img-palette');
@@ -199,6 +222,7 @@
       drawBoxes(ctx, counted.boxes);
     }
     renderPalette(result);
+    renderStorage(result);
     const slider = dom.byId('img-min-area');
     slider.max = String(Math.max(10, Math.round(image.width * image.height * 0.02)));
     slider.value = String(minArea);

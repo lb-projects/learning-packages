@@ -1,6 +1,6 @@
 /**
  * @file pages/silhouette.js
- * @description Seite 5: Silhouetten-Analyse.
+ * @description Seite 6: Silhouetten-Analyse.
  *
  * Die Seite übernimmt nur die Daten (mit Skalierung) von Seite 1, hat ein eigenes k und ist vom
  * Training und von der Ellbogen-Analyse unabhängig. Jeder Klick auf „Silhouetten-Analyse durchführen“

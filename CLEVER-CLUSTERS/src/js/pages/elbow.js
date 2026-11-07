@@ -1,6 +1,6 @@
 /**
  * @file pages/elbow.js
- * @description Seite 4: Ellbogen-Analyse.
+ * @description Seite 5: Ellbogen-Analyse.
  *
  * Die Seite übernimmt nur die Daten (mit Skalierung) von Seite 1 und ist vom Training und von der
  * Silhouetten-Analyse unabhängig. Jeder Klick auf „Ellbogen-Analyse durchführen“ rechnet für jedes k einen Lauf mit neuen

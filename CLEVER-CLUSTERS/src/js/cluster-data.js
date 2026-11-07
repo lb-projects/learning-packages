@@ -1,10 +1,11 @@
 /**
  * @file cluster-data.js
- * @description Datensatz von CLEVER CLUSTERS: Punkte mit optionalem Objektbezeichner und Achsennamen.
+ * @description Datensatz von CLEVER CLUSTERS: Punkte mit optionalem Objektbezeichner, optionaler Gruppe und Achsennamen.
  *
  * Zweck:
- *   Ein Punkt hat die Form {id, x, y, name}; name ist null, wenn die Daten keinen Bezeichner nennen.
- *   Anders als point-data.js kennt der Datensatz keine Labels, weil k-Means ohne sie arbeitet.
+ *   Ein Punkt hat die Form {id, x, y, name, group}; name und group sind null, wenn die Daten sie nicht nennen.
+ *   k-Means arbeitet ohne die Gruppe. Sie bleibt unsichtbar, bis Seite 7 sie nach „Vergleich durchführen“ zeigt:
+ *   Keine andere Seite darf sie anzeigen, damit die Daten ihr Geheimnis nicht verraten.
  *
  * Abhängigkeiten:
  *   text-utils.js, point-data.js (parseNumber, sanitizeAttribute)
@@ -74,11 +75,11 @@
 
     /**
      * Wandelt geprüfte Rohpunkte in Datensatzpunkte um.
-     * @param {Array<{x:number, y:number, name:(string|null)}>} raw - Punkte.
+     * @param {Array<{x:number, y:number, name:(string|null), group:(string|null|undefined)}>} raw - Punkte.
      * @returns {Array<Object>} Punkte.
      */
     function build(raw) {
-      return raw.map((p) => Object.freeze({ id: nextId++, x: p.x, y: p.y, name: p.name || null }));
+      return raw.map((p) => Object.freeze({ id: nextId++, x: p.x, y: p.y, name: p.name || null, group: p.group || null }));
     }
 
     /**
@@ -163,6 +164,8 @@
        */
       displayName: (index) => points[index].name || 'Punkt ' + (index + 1),
       hasNames: () => points.some((p) => p.name),
+      /** @returns {boolean} true, wenn mindestens ein Punkt eine bekannte Gruppe hat. */
+      hasGroups: () => points.some((p) => p.group),
       onChange: (fn) => listeners.push(fn)
     };
   }

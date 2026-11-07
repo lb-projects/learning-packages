@@ -3,7 +3,7 @@
  * @description Einstiegspunkt: Seitennavigation, Verteilung von Änderungen und SCORM-Abschluss.
  *
  * Navigation:
- *   Die sechs Seiten sind jederzeit frei anwählbar. Beim Wechsel bleibt jeder Stand erhalten; eine
+ *   Die neun Seiten sind jederzeit frei anwählbar. Beim Wechsel bleibt jeder Stand erhalten; eine
  *   laufende Automatik hält an.
  *
  * SCORM (Datensparsamkeit):
@@ -25,14 +25,17 @@
   /** Status, die ein Versuch schon haben kann; sie bleiben unverändert. */
   const FINAL_STATES = new Set(['completed', 'passed', 'failed']);
 
-  /** Reihenfolge und Titel der Seiten. */
+  /** Reihenfolge und kurze Titel der Seiten; die Überschriften auf den Seiten sind ausführlicher. */
   const PAGES = [
     { id: 'input', title: 'Daten und k' },
     { id: 'training', title: 'Training' },
     { id: 'hand', title: 'Von Hand rechnen' },
-    { id: 'elbow', title: 'Ellbogen-Analyse' },
-    { id: 'silhouette', title: 'Silhouetten-Analyse' },
-    { id: 'images', title: 'Bilder und Objekte' }
+    { id: 'challenge', title: 'Schlage k-Means' },
+    { id: 'elbow', title: 'Ellbogen' },
+    { id: 'silhouette', title: 'Silhouette' },
+    { id: 'groups', title: 'Bekannte Gruppen' },
+    { id: 'apply', title: 'Anwenden' },
+    { id: 'images', title: 'Bilder' }
   ];
 
   let tabs = null;

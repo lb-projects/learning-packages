@@ -1,6 +1,6 @@
 /**
  * @file image-kmeans.js
- * @description k-Means auf den Farben eines Bildes, ohne Zugriff auf die Seite.
+ * @description k-Means auf den Farben eines Bildes und die Rechnung zur Kompression, ohne Zugriff auf die Seite.
  *
  * Ablauf:
  *   1. Stichprobe von höchstens MAX_SAMPLE Pixeln.
@@ -12,6 +12,11 @@
  *
  * Die Cluster sind nach Flächenanteil absteigend sortiert. Hat das Bild weniger verschiedene
  * Farben als k, gibt es entsprechend weniger Cluster.
+ *
+ * Kompression:
+ *   Ohne Farbtabelle braucht jedes Pixel 24 Bit. Mit k Farben genügt je Pixel die Nummer seiner Farbe mit
+ *   ⌈log₂ k⌉ Bit, dazu kommt einmal die Farbtabelle mit k · 24 Bit. Das ist die reine Rechnung, ohne weitere
+ *   Kompression wie in einer PNG-Datei.
  *
  * Abhängigkeiten:
  *   Keine.
@@ -190,5 +195,44 @@
     }
   }
 
-  ns.imageKmeans = { cluster, recolor };
+  /**
+   * Rechnet den Speicherbedarf aus.
+   *
+   * @param {number} width - Breite in Pixeln.
+   * @param {number} height - Höhe in Pixeln.
+   * @param {number} k - Anzahl der Farben.
+   * @returns {{originalBits:number, bitsPerPixel:number, tableBits:number, compressedBits:number, saved:number}}
+   *   Bits des Originals, Bits je Pixel, Bits der Farbtabelle, Bits insgesamt und der gesparte Anteil (negativ, wenn
+   *   die Fassung mit Farbtabelle größer ist).
+   */
+  function storage(width, height, k) {
+    const pixels = width * height;
+    const bitsPerPixel = Math.ceil(Math.log2(k));
+    const originalBits = pixels * 24;
+    const tableBits = k * 24;
+    const compressedBits = pixels * bitsPerPixel + tableBits;
+    return { originalBits, bitsPerPixel, tableBits, compressedBits, saved: 1 - compressedBits / originalBits };
+  }
+
+  /**
+   * Mittlere Farbabweichung je Pixel zwischen Original und Ergebnis.
+   *
+   * @param {Uint8ClampedArray} rgba - Pixel des Originals.
+   * @param {Uint8Array} labels - Cluster je Pixel.
+   * @param {number[][]} colors - Farben der Cluster.
+   * @returns {number} Mittlerer euklidischer Abstand im Farbraum aus Rot, Grün und Blau, von 0 bis etwa 441.
+   */
+  function colorError(rgba, labels, colors) {
+    let sum = 0;
+    for (let p = 0; p < labels.length; p++) {
+      const c = colors[labels[p]];
+      const dr = rgba[p * 4] - c[0];
+      const dg = rgba[p * 4 + 1] - c[1];
+      const db = rgba[p * 4 + 2] - c[2];
+      sum += Math.sqrt(dr * dr + dg * dg + db * db);
+    }
+    return labels.length > 0 ? sum / labels.length : 0;
+  }
+
+  ns.imageKmeans = { cluster, recolor, storage, colorError };
 })(window.CC = window.CC || {});

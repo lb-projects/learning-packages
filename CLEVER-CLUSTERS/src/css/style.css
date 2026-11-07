@@ -29,7 +29,7 @@ h1, h2, h3 {
   border-bottom: none;
   background: var(--bg);
   color: var(--text);
-  padding: 0.45rem 0.75rem;
+  padding: 0.45rem 0.55rem;
   border-radius: 6px 6px 0 0;
   font: inherit;
   font-size: 0.92rem;
@@ -207,6 +207,68 @@ details.card > summary {
 .plot-region.sil-selected {
   stroke: var(--text);
   stroke-width: 2.5;
+}
+
+/* ---------- Schlage k-Means, Bekannte Gruppen, Anwenden ---------- */
+
+/* Lange Spaltenköpfe in der schmalen Spalte umbrechen, damit die Tabelle nicht rechts abgeschnitten wird. */
+.wrap-head thead th {
+  white-space: normal;
+  vertical-align: bottom;
+}
+
+.compare-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .compare-pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+.compare-pair figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.compare-pair figcaption {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.data-table td.is-majority {
+  font-weight: 700;
+  background: var(--info-bg);
+}
+
+.group-members {
+  list-style: none;
+  margin: 0.2rem 0 0 1.2rem;
+  padding: 0;
+}
+
+.plot-marker.pt-new {
+  fill: var(--cl);
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.plot-line.new-line {
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-dasharray: 4 3;
+}
+
+.plot-line.route-longest {
+  stroke: var(--cl);
+  stroke-width: 3.5;
+}
+
+#app-plot.is-passive .coord-plot.is-clickable {
+  cursor: default;
 }
 
 /* ---------- Von Hand rechnen, nach BUSY BIAS ---------- */

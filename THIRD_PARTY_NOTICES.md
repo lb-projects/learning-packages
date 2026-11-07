@@ -165,13 +165,27 @@ Grün und Hellrot für die Decision Areas sind eine inhaltliche Vorgabe des Pake
 
 ### Code
 
-CLEVER CLUSTERS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Die Verfahren sind allgemein bekannt und in eigener Umsetzung enthalten: k-Means nach S. P. Lloyd (1957, veröffentlicht 1982), k-means++ nach D. Arthur und S. Vassilvitskii (2007), Silhouette nach P. J. Rousseeuw (1987).
+CLEVER CLUSTERS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Die Verfahren sind allgemein bekannt und in eigener Umsetzung enthalten: k-Means nach S. P. Lloyd (1957, veröffentlicht 1982), k-means++ nach D. Arthur und S. Vassilvitskii (2007), Silhouette nach P. J. Rousseeuw (1987), Adjusted Rand Index nach L. Hubert und P. Arabie (1985).
 
-### Daten: Beispieldatensätze und Beispielbilder
+### Daten: Iris-Datensatz (Beispiel „Schwertlilien“)
 
-- **Betrifft:** `CLEVER-CLUSTERS/testdata/*.csv`, die inhaltsgleichen eingebauten Beispiele `CLEVER-CLUSTERS/src/js/samples.js` und die Beispielbilder in `CLEVER-CLUSTERS/src/js/sample-scenes.js`.
+- **Betrifft:** `CLEVER-CLUSTERS/testdata/schwertlilien.csv` und das inhaltsgleiche eingebaute Beispiel in `CLEVER-CLUSTERS/src/js/samples.js`.
+- **Inhalt:** 54 von 150 Datensätzen mit den Merkmalen Blütenblattlänge und Blütenblattbreite; es sind die Trainings- und Testdaten des Szenarios in NOSY NEIGHBORS zusammen.
+- **Quelle:**
+  - Messungen von Edgar Anderson (1935).
+  - Veröffentlicht von R. A. Fisher: *The use of multiple measurements in taxonomic problems*, Annals of Eugenics 7 (1936), S. 179–188.
+- **Bezugsquelle:** Fisher, R. A. (1936). *Iris* [Datensatz]. UCI Machine Learning Repository, doi:10.24432/C56C76, lizenziert unter **CC BY 4.0** (creativecommons.org/licenses/by/4.0/).
+- **Änderungen:**
+  - Nur zwei der vier Merkmale.
+  - Teilmenge der Datensätze, gemischt und neu nummeriert.
+  - Deutsche Spaltenbezeichnungen, Dezimalkomma, Semikolon als Trennzeichen.
+- **Namensnennung im Paket:** Die Meldung nach dem Laden des Beispiels nennt Quelle und Lizenz.
+
+### Daten: übrige Beispieldatensätze und Beispielbilder
+
+- **Betrifft:** die übrigen Dateien `CLEVER-CLUSTERS/testdata/*.csv`, die inhaltsgleichen eingebauten Beispiele in `CLEVER-CLUSTERS/src/js/samples.js` und die Beispielbilder in `CLEVER-CLUSTERS/src/js/sample-scenes.js`.
 - **Herkunft:** für dieses Projekt erstellt, MIT-Lizenz.
-- Die Werte sind selbst erzeugt, ohne Übernahme aus einer Datenbank; es sind keine Messdaten. Die Lebensmittel sind gerundete, selbst zusammengestellte Richtwerte und nicht für Ernährungsangaben gedacht.
+- Die Werte sind selbst erzeugt, ohne Übernahme aus einer Datenbank; es sind keine Messdaten. Die Lebensmittel sind gerundete, selbst zusammengestellte Richtwerte und nicht für Ernährungsangaben gedacht. Hunderassen, Fahrzeugarten und Sportarten werden nur als allgemeine Bezeichnungen verwendet; Fahrzeugmarken kommen nicht vor.
 - Die Beispielbilder sind eigene Zeichnungen, die der Code beim Laden erzeugt. Das Paket enthält keine Bilddateien.
 
 ### Gestaltung
