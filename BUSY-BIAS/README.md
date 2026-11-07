@@ -274,3 +274,10 @@ So wird das Paket in Moodle eingebunden:
 ## Qualitätssicherung
 
 Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklungswerkzeugen gebaut und getestet. Die automatischen Tests laufen in Chromium und prüfen unter anderem einen von Hand gerechneten AND-Lauf, jede Stufe gegen die dokumentierten Zahlen, jeden Baustein ohne Perzeptron, die von Hand gerechnete Tabelle und Konfusionsmatrix, das Wiederherstellen des Stands und die Bedienung aller Seiten.
+
+## Lizenz
+
+- **Projekt:** MIT-Lizenz. Der Lizenztext liegt als `src/LICENSE.txt` im Paket und ist identisch mit der `LICENSE` im Stamm des Repositorys.
+- **Daten:** alle Beispieldaten sind fiktiv (MIT-Lizenz).
+- **Generative KI:** Teile dieses Projekts wurden mithilfe generativer KI erstellt, siehe [Hinweis zur Erstellung](../README.md#hinweis-zur-erstellung).
+- **Weitere Hinweise:** Marken (Moodle™, SCORM® u. a.) stehen in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) im Stamm des Repositorys.

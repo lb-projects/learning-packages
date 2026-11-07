@@ -328,4 +328,5 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 
 - **Projekt:** MIT-Lizenz. Der Lizenztext liegt als `src/LICENSE.txt` im Paket und ist identisch mit der `LICENSE` im Stamm des Repositorys.
 - **Daten:** alle Beispieldaten sind fiktiv (MIT-Lizenz).
-- **Weitere Hinweise:** Marken (Moodle™, SCORM®, MySQL®, UML® u. a.) stehen in `THIRD_PARTY_NOTICES.md` im Stamm des Repositorys.
+- **Generative KI:** Teile dieses Projekts wurden mithilfe generativer KI erstellt, siehe [Hinweis zur Erstellung](../README.md#hinweis-zur-erstellung).
+- **Weitere Hinweise:** Marken (Moodle™, SCORM®, MySQL®, UML® u. a.) stehen in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) im Stamm des Repositorys.

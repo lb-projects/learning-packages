@@ -285,3 +285,10 @@ Es wird **nichts gespeichert**, auch nicht der Stand der Tabelle auf Seite 3. Na
 ## Qualitätssicherung
 
 Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklungswerkzeugen gebaut und getestet. Die automatischen Tests laufen in Chromium und prüfen unter anderem von Hand gerechnete Beispiele für WCSS und Silhouette, die Decision Areas gegen die Zuordnung, alle CSV-Formen, den in dieser Datei beschriebenen Effekt der Beispiele, die von Hand gerechneten Tabellen und Zufallsaufgaben, das Zählen auf kleinen Masken, den PNG-Upload und die Bedienung aller Seiten. Von Hand nachgerechnet sind auch Reinheit und Adjusted Rand Index, die Ausreißer-Regel, Wege und Kosten sowie der Speicherbedarf. Ein eigener Test prüft für alle Beispiele auf allen Seiten, dass die Gruppennamen vor dem Vergleich auf Seite 7 nirgends im Dokument stehen.
+
+## Lizenz
+
+- **Projekt:** MIT-Lizenz. Der Lizenztext liegt als `src/LICENSE.txt` im Paket und ist identisch mit der `LICENSE` im Stamm des Repositorys.
+- **Daten:** Das Beispiel „Schwertlilien“ enthält Daten aus dem Iris-Datensatz unter CC BY 4.0. Die übrigen Beispieldaten sind fiktiv (MIT-Lizenz).
+- **Generative KI:** Teile dieses Projekts wurden mithilfe generativer KI erstellt, siehe [Hinweis zur Erstellung](../README.md#hinweis-zur-erstellung).
+- **Weitere Hinweise:** Datenquellen und Marken (Moodle™, SCORM® u. a.) stehen in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) im Stamm des Repositorys.

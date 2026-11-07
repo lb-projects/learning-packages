@@ -275,3 +275,11 @@ Es gilt dasselbe Konzept wie in den anderen Paketen des Repositorys:
 Build und Tests laufen mit nicht veröffentlichten Entwicklungswerkzeugen (wie bei den anderen Paketen):
 - **Build:** Manifest vollständig, keine externen Adressen, CSP unverändert streng, keine unsichtbaren Zeichen, keine gefährlichen APIs, UTF-8 ohne BOM mit LF, Kopien aus `shared/` unverändert, eingebaute Beispiele zeichengleich mit `testdata/`.
 - **Tests** (headless Chromium): Graphmodell, Import (beide Formate, CSV/XLSX/ODS, Fehlerzeilen), Algorithmen (Reihenfolgen, Distanzen, Tabellenzeilen, negative Gewichte und Zyklen), Training (Abfolgen, Klickbewertung, Schreibweise und Rechenprüfung der Tabelle, Zeichnung nach jeder Zeile, Tastaturbedienung), Bedienung aller Seiten einschließlich Abspieler und Automatik, Speicherung in Moodle (auch Weiterarbeit und Größengrenzen), Sicherheit.
+
+## Lizenz
+
+- **Projekt:** MIT-Lizenz. Der Lizenztext liegt als `src/LICENSE.txt` im Paket und ist identisch mit der `LICENSE` im Stamm des Repositorys.
+- **`src/js/inflate.js`:** enthält zusätzlich eine veränderte Übertragung von `puff.c` (Mark Adler) unter der zlib-Lizenz. Der Lizenzhinweis steht im Dateikopf.
+- **Daten:** Die Beispielgraphen stehen unter der MIT-Lizenz. Das Städtenetz verwendet geschätzte, vereinfachte Entfernungen.
+- **Generative KI:** Teile dieses Projekts wurden mithilfe generativer KI erstellt, siehe [Hinweis zur Erstellung](../README.md#hinweis-zur-erstellung).
+- **Weitere Hinweise:** Datenquellen und Marken (Moodle™, SCORM® u. a.) stehen in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md) im Stamm des Repositorys.
