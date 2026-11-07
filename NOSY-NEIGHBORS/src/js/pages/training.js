@@ -29,7 +29,7 @@
   const common = ns.common;
 
   /**
-   * Beispieldaten: Breite und Höhe von Früchten in cm (frei erfunden, zur Übung).
+   * Beispieldaten: Breite und Höhe von Früchten in cm (fiktiv, zur Übung).
    * Einige Punkte liegen bewusst im Grenzbereich zwischen den Klassen, damit
    * die Wahl von k einen sichtbaren Unterschied macht.
    */

@@ -4,7 +4,7 @@
 -- Übungsdatei für die SQL Sandbox (Seite 6 „Redundanzen“).
 -- Absichtlich enthalten: Zur PLZ 12347 sind zwei verschiedene Schreibweisen des Orts
 -- gespeichert – so sieht eine bereits eingetretene Änderungsanomalie aus.
--- Alle Namen und Werte sind frei erfunden. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen und Werte sind fiktiv. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS mitglied;
 

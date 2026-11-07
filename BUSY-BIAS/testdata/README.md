@@ -2,7 +2,7 @@
 
 Dieser Ordner enthält die CSV-Dateien für den Unterricht und für Tests. Alle Dateien sind außerdem als Beispiele fest eingebaut; der Build prüft, dass Datei und eingebauter Text übereinstimmen. Sie lassen sich auf **Seite 1 „Daten und Perzeptron“** auch von Hand hochladen.
 
-Die Werte sind selbst erzeugt und an typische Größenordnungen angelehnt. Es sind **keine Messdaten**. Ähnlichkeiten mit realen Personen, Kundinnen und Kunden oder Fahrzeugen wären zufällig. Die Einteilungen (z. B. Kleinhund/Großhund, Pkw/Lkw) sind für den Unterricht vereinfacht. Lizenz: MIT (siehe `LICENSE` im Stamm des Repositorys).
+Die Werte sind fiktiv und an typische Größenordnungen angelehnt. Es sind **keine Messdaten**. Ähnlichkeiten mit realen Personen, Kundinnen und Kunden oder Fahrzeugen sind nicht beabsichtigt. Die Einteilungen (z. B. Kleinhund/Großhund, Pkw/Lkw) sind für den Unterricht vereinfacht. Lizenz: MIT (siehe `LICENSE` im Stamm des Repositorys).
 
 ## Format
 

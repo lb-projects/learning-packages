@@ -5,7 +5,7 @@
 -- Der Schlüssel (id) ist AUTO_INCREMENT und alle übrigen Spalten dürfen leer sein: Die
 -- Einfügeanomalie zeigt hier einen unvollständigen Datensatz statt einer Fehlermeldung.
 -- Dr. Lorenz kommt nur einmal vor, die Kasse „Bergland“ nur zweimal.
--- Alle Namen, Praxen und Kassen sind frei erfunden. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen, Praxen und Kassen sind fiktiv. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS termin;
 

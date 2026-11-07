@@ -24,10 +24,11 @@ Die fertigen SCORM-Pakete entstehen lokal als `dist/busy-bias-<Version>.zip`, `d
 
 - Der Quelltext steht unter der [MIT-Lizenz](LICENSE).
 - Eine Datei des gemeinsamen Datei-Imports (`inflate.js`, in EDGY EDGES und NOSY NEIGHBORS) enthält zusätzlich Code unter der zlib-Lizenz.
-- EDGY EDGES enthält außer dem gemeinsamen Datei-Import keinen Code und keine Daten von Dritten.
-- BUSY BIAS enthält keinen Code und keine Daten von Dritten.
-- CLEVER CLUSTERS enthält keinen Code und keine Bilder von Dritten. Das Beispiel „Schwertlilien“ verwendet Daten aus dem Iris-Datensatz (CC BY 4.0), siehe [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+- Das Beispiel „Schwertlilien“ von CLEVER CLUSTERS verwendet Daten aus dem Iris-Datensatz (CC BY 4.0), siehe [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 - Zwei Datendateien von NOSY NEIGHBORS (Szenario Schwertlilien, Training und Test) enthalten Daten unter CC BY 4.0.
-- Die SQL Sandbox enthält keinen Code und keine Daten von Dritten.
 
 Die Einzelheiten sowie Hinweise zu Marken stehen in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+## Hinweis zur Erstellung
+
+Teile dieses Projekts wurden mithilfe generativer KI erstellt. Der Code wurde nach bestem Wissen geprüft, es kann jedoch keine Gewähr dafür übernommen werden, dass der generierte Code frei von Rechten Dritter ist. Das Projekt wird einschließlich der KI-generierten Daten und Bilder unter den Bedingungen der MIT-Lizenz „wie besehen“ bereitgestellt; für die oben genannten Bestandteile unter zlib-Lizenz und CC BY 4.0 gelten zusätzlich diese Lizenzen.

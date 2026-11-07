@@ -5,7 +5,7 @@
 -- „bestellung_flach“ verletzt die 2. und die 3. Normalform gleichzeitig; mehrere Verstöße
 -- lassen sich auf der Seite nacheinander auswählen. „lieferant“ hat keinen Schlüssel und
 -- enthält einen doppelten Datensatz: 2. und 3. Normalform sind nicht beurteilbar.
--- Alle Namen und Werte sind frei erfunden. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen und Werte sind fiktiv. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS bestellung_flach;
 DROP TABLE IF EXISTS lieferant;

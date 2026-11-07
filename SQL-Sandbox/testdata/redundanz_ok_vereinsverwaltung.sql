@@ -5,7 +5,7 @@
 -- Alle Tabellen sind in der 3. Normalform: Wohnort und Abteilungsleitung stehen nur je einmal.
 -- Zum Vergleich mit „redundanz_3nf_verein.sql“. Auf der Seite erscheinen mit den passenden
 -- Abhängigkeiten keine Verstöße und keine Anomalien.
--- Alle Namen und Werte sind frei erfunden. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen und Werte sind fiktiv. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS mitgliedschaft;
 DROP TABLE IF EXISTS mitglied;

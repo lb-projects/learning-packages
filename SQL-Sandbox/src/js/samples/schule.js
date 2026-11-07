@@ -3,7 +3,7 @@
  * @description Beispieldatenbank „Schule“ für die SQL Sandbox.
  *
  * Der SQL-Text ist identisch mit testdata/schule.sql (der Build prüft das).
- * Alle Daten sind frei erfunden. Lizenz: MIT (siehe LICENSE.txt).
+ * Alle Daten sind fiktiv. Lizenz: MIT (siehe LICENSE.txt).
  */
 (function (ns) {
   'use strict';
@@ -17,8 +17,8 @@
 -- Beschreibung: Schulen, Lehrkräfte, Klassen, Schülerinnen und Schüler, Fächer und Noten.
 --
 -- Beispieldatenbank für die SQL Sandbox.
--- Alle Namen, Adressen und Werte sind frei erfunden; Ähnlichkeiten mit realen
--- Personen oder Schulen wären zufällig. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen, Adressen und Werte sind fiktiv; Ähnlichkeiten mit realen
+-- Personen oder Schulen sind nicht beabsichtigt. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS note;
 DROP TABLE IF EXISTS schueler;

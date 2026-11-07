@@ -4,7 +4,7 @@
 -- Übungsdatei für die SQL Sandbox (Seite 6 „Redundanzen“).
 -- Besonderheiten für die Anomalien: Mitarbeiter 4 und Projekt 12 kommen nur einmal vor
 -- (Löschanomalie), die übrigen mehrfach (Änderungsanomalie).
--- Alle Namen, Firmen und Werte sind frei erfunden. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen, Firmen und Werte sind fiktiv. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS projektmitarbeit;
 

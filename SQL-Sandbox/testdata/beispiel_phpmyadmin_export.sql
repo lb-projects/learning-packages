@@ -2,7 +2,7 @@
 -- Zeigt, dass typische Export-Bestandteile verstanden werden:
 -- Backticks, ENGINE/CHARSET-Angaben, SET-/Transaktionsbefehle, Sonderkommentare, CHECK-Bedingungen
 -- sowie Schlüssel und AUTO_INCREMENT über ALTER TABLE am Dateiende.
--- Thema: Kursangebot einer erfundenen Musikschule. Alle Daten sind frei erfunden.
+-- Thema: Kursangebot einer fiktiven Musikschule. Alle Daten sind fiktiv.
 -- Lizenz: MIT (siehe LICENSE).
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";

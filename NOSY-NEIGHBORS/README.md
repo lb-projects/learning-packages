@@ -204,7 +204,7 @@ In `testdata/` liegen zu jedem Szenario zwei CSV-Dateien (Kopfzeile, Semikolon, 
 
 **Szenario zur Normalisierung (12):** Die Bildschirmzeit liegt zwischen 45 und 595 Minuten, der Schlaf zwischen 5 und 10 Stunden. Das Befinden hängt vor allem vom Schlaf ab. Ohne Normalisierung bestimmt fast nur die Bildschirmzeit den Abstand: Leave One Out erreicht höchstens etwa 68 %. Mit Normalisierung (Seite 8) sind es etwa 98 %.
 
-Die Daten sind frei erfunden, mit einer Ausnahme: `szenario_1_schwertlilien.csv` und `szenario_1_schwertlilien_test.csv` enthalten zwei getrennte Teilmengen des Iris-Datensatzes (Anderson 1935, Fisher 1936; UCI Machine Learning Repository, CC BY 4.0). Bei der Weitergabe dieser Dateien bitte die Quelle nennen und auf die Lizenz verweisen (Einzelheiten in `THIRD_PARTY_NOTICES.md`).
+Die Daten sind fiktiv, mit einer Ausnahme: `szenario_1_schwertlilien.csv` und `szenario_1_schwertlilien_test.csv` enthalten zwei getrennte Teilmengen des Iris-Datensatzes (Anderson 1935, Fisher 1936; UCI Machine Learning Repository, CC BY 4.0). Bei der Weitergabe dieser Dateien bitte die Quelle nennen und auf die Lizenz verweisen (Einzelheiten in `THIRD_PARTY_NOTICES.md`).
 
 ### Regressionsdateien (Seite 9)
 
@@ -219,7 +219,7 @@ Zu jedem Thema liegt in `testdata/` eine CSV-Datei (Kopfzeile, Semikolon, Dezima
 | `regression_5_stromverbrauch.csv` | Stromverbrauch | Uhrzeit (h) | Verbrauch eines Haushalts (kW) | zwei Spitzen (morgens, abends); eignet sich gut, um den Einfluss von k zu zeigen |
 | `regression_6_taxifahrt.csv` | Taxifahrt | Fahrstrecke (km) | Fahrpreis (Euro) | nur 12 Punkte mit deutlichem Abstand: Nachbarn, Streifen und Rechenweg lassen sich gut nachvollziehen; zum Einstieg geeignet |
 
-Die Daten sind frei erfunden (zufällig um einen vorgegebenen Verlauf gestreut bzw. bei der Taxifahrt von Hand gewählt) und stehen unter der MIT-Lizenz.
+Die Daten sind fiktiv und stehen unter der MIT-Lizenz.
 
 ## Ausprobieren und Browser
 

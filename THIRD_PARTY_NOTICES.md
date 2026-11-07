@@ -14,9 +14,13 @@ Das Repository enthält fünf Pakete. Die Hinweise sind danach gegliedert, für 
 
 ## Allgemein (alle Pakete)
 
+### Generative KI
+
+Teile dieses Projekts wurden mithilfe generativer KI erstellt, darunter Code, Daten und Bilder. Der Code wurde nach bestem Wissen geprüft, es kann jedoch keine Gewähr dafür übernommen werden, dass der generierte Code frei von Rechten Dritter ist. Das Projekt wird einschließlich der KI-generierten Daten und Bilder unter den Bedingungen der MIT-Lizenz „wie besehen“ bereitgestellt; für die unten genannten Bestandteile unter zlib-Lizenz und CC BY 4.0 gelten zusätzlich diese Lizenzen.
+
 ### Code
 
-Das Projekt enthält **keinen Code von Dritten**, keine Bibliotheken, keine Schriftarten und keine Bilder. Einzige Ausnahme ist eine Datei des gemeinsamen Datei-Imports (`inflate.js`), die in NOSY NEIGHBORS und in EDGY EDGES enthalten ist (siehe [NOSY NEIGHBORS](#nosy-neighbors)).
+Das Projekt bindet keine Bibliotheken ein und enthält keine Schriftarten. Eine Datei des gemeinsamen Datei-Imports (`inflate.js`), die in NOSY NEIGHBORS und in EDGY EDGES liegt, enthält Code unter der zlib-Lizenz (siehe [NOSY NEIGHBORS](#nosy-neighbors)).
 
 ### Gestaltung
 
@@ -24,7 +28,7 @@ Das Projekt enthält **keinen Code von Dritten**, keine Bibliotheken, keine Schr
 
 ### Standards
 
-Das Projekt implementiert offene Formate und Schnittstellen mit eigenem Code. Weder Spezifikationstexte noch Schemadateien (XSD) sind enthalten.
+Das Projekt implementiert offene Formate und Schnittstellen. Weder Spezifikationstexte noch Schemadateien (XSD) sind enthalten.
 
 | Bereich | Standard |
 |---|---|
@@ -59,8 +63,6 @@ Dieses Projekt steht in keiner Verbindung zu den Inhabern der genannten Marken u
 - **Lizenz:** zlib-Lizenz, Copyright (C) 2002-2013 Mark Adler. Die zlib-Lizenz ist mit der MIT-Lizenz vereinbar.
 - **Kennzeichnung:** Der vollständige Lizenzhinweis und die Kennzeichnung als veränderte Fassung stehen im Kopf der Datei. Sie dürfen nicht entfernt werden.
 
-Darüber hinaus enthält NOSY NEIGHBORS keinen Code von Dritten.
-
 ### Daten: Iris-Datensatz (Szenario „Schwertlilien“)
 
 - **Betrifft:**
@@ -80,7 +82,7 @@ Darüber hinaus enthält NOSY NEIGHBORS keinen Code von Dritten.
 
 ### Daten: übrige Daten
 
-Alle übrigen Daten von NOSY NEIGHBORS wurden für dieses Projekt frei erfunden und stehen unter der MIT-Lizenz:
+Alle übrigen Daten von NOSY NEIGHBORS sind fiktiv und stehen unter der MIT-Lizenz:
 - die eingebauten Beispieldaten in NOSY NEIGHBORS (Früchte);
 - die Szenarien Wetter, Spam, Lernerfolg und Musik sowie die Szenarien mit Ausreißern und mit unausgewogenen Klassen, jeweils Trainings- und Testdaten (`szenario_2_…` bis `szenario_12_…`, auch `*_test.csv`, darunter das Szenario zur Normalisierung);
 - die Regressionsdateien Eisverkauf, Bremsweg, Lernzeit, Gebrauchtwagen, Stromverbrauch und Taxifahrt (`regression_1_…` bis `regression_6_…`).
@@ -100,7 +102,7 @@ Es handelt sich nicht um Messungen realer Personen.
 
 ### Code
 
-Die SQL Sandbox enthält keinen Code von Dritten: Lexer, Parser und Ausführung der SQL-Befehle sind eigener Code. Weder SQLite/sql.js noch eine andere Datenbank-Bibliothek ist enthalten. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen in eigener Umsetzung.
+Die SQL Sandbox enthält weder SQLite/sql.js noch eine andere Datenbank-Bibliothek. Verwendete Verfahren wie der rekursive Abstieg beim Parsen, der Platzhalter-Abgleich für `LIKE` und der Editierabstand für Vorschläge („Meinten Sie …?“) sind allgemein bekannte Algorithmen.
 
 ### Daten: Beispieldatenbanken
 
@@ -108,28 +110,26 @@ Die SQL Sandbox enthält keinen Code von Dritten: Lexer, Parser und Ausführung 
   - `SQL-Sandbox/testdata/*.sql`
   - die inhaltsgleichen eingebauten Beispieldatenbanken `SQL-Sandbox/src/js/samples/*.js`
 - **Inhalt:** Schule, Bibliothek, Online-Shop, Sportverein, die absichtlich nicht normalisierte Kursbuchung, sieben Übungsdateien zu den Normalformen (Kontaktliste, Ausleihe, Vereinsmitglieder, Projektmitarbeit, Arztpraxis, Bestellungen, normalisierte Vereinsverwaltung), ein Beispiel im Stil eines Datenbank-Exports (Musikschule) und eine absichtlich fehlerhafte Übungsdatei.
-- **Herkunft:** frei erfunden für dieses Projekt, MIT-Lizenz:
+- **Herkunft:** fiktiv, MIT-Lizenz:
   - Namen sind frei kombinierte, gängige Vor- und Nachnamen.
-  - Orte sind erfunden („Musterstadt“, „Beispielhausen“, „Waldmusterdorf“), ebenso Adressen, Schul-, Vereins- und Mannschaftsnamen.
-  - Buchtitel, Autorinnen und Autoren sind frei erfunden und nicht an bestehende Werke angelehnt. Gerade kurze, allgemeine Titel kann es auch als reale Werke geben; solche Übereinstimmungen wären zufällig. Statt ISBN-Nummern gibt es eine erfundene Signatur.
+  - Orte sind fiktiv („Musterstadt“, „Beispielhausen“, „Waldmusterdorf“), ebenso Adressen, Schul-, Vereins- und Mannschaftsnamen.
+  - Buchtitel, Autorinnen und Autoren sind fiktiv. Gerade kurze, allgemeine Titel kann es auch als reale Werke geben; solche Übereinstimmungen sind nicht beabsichtigt. Statt ISBN-Nummern gibt es eine fiktive Signatur.
   - Artikelbezeichnungen sind allgemeine Gattungsbezeichnungen. Marken- und Produktnamen kommen nicht vor.
-- Es handelt sich nicht um Daten realer Personen, Schulen, Firmen, Werke oder Vereine. Ähnlichkeiten wären zufällig.
-- Die Beispieldatei im Export-Stil ist selbst geschrieben:
-  - Sie bildet nur den üblichen Aufbau solcher Exporte und deren funktionale SQL-Befehle nach (z. B. `SET SQL_MODE = …`, `START TRANSACTION`, `/*!40101 SET NAMES … */`).
-  - Kommentare und Daten sind eigene Formulierungen. Texte oder Übersetzungen aus phpMyAdmin werden nicht übernommen.
+- Es handelt sich nicht um Daten realer Personen, Schulen, Firmen, Werke oder Vereine. Ähnlichkeiten sind nicht beabsichtigt.
+- Die Beispieldatei im Export-Stil bildet den üblichen Aufbau solcher Exporte und deren funktionale SQL-Befehle nach (z. B. `SET SQL_MODE = …`, `START TRANSACTION`, `/*!40101 SET NAMES … */`).
 
 ### Standards
 
 | Bereich | Standard |
 |---|---|
-| SQL | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (eigene Umsetzung, keine Spezifikationstexte enthalten) |
-| UML-Klassendiagramm | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); eigene Umsetzung, keine Spezifikationstexte enthalten |
+| SQL | ISO/IEC 9075 als Bezug; Verhalten in Teilen an MySQL/MariaDB angelehnt (keine Spezifikationstexte enthalten) |
+| UML-Klassendiagramm | Notation in Anlehnung an OMG UML (Klassen, Assoziationen, Multiplizitäten, Assoziationsklassen); Ebenenlayout nach dem bekannten Verfahren von Sugiyama u. a. (1981); keine Spezifikationstexte enthalten |
 
 ## EDGY EDGES
 
 ### Code
 
-EDGY EDGES enthält außer dem gemeinsamen Datei-Import (`inflate.js`, siehe [NOSY NEIGHBORS](#nosy-neighbors)) keinen Code von Dritten. Die Algorithmen sind allgemein bekannte Verfahren in eigener Umsetzung:
+EDGY EDGES verwendet den gemeinsamen Datei-Import (`inflate.js`, siehe [NOSY NEIGHBORS](#nosy-neighbors)). Die Algorithmen sind allgemein bekannte Verfahren:
 - Breitensuche und Tiefensuche;
 - Dijkstra-Algorithmus (E. W. Dijkstra, 1959);
 - Bellman-Ford-Algorithmus (R. Bellman, 1958; L. R. Ford, 1956) mit der üblichen Erkennung negativer Zyklen;
@@ -138,8 +138,8 @@ EDGY EDGES enthält außer dem gemeinsamen Datei-Import (`inflate.js`, siehe [NO
 ### Daten: Beispielgraphen
 
 - **Betrifft:** `EDGY-EDGES/testdata/beispiel-*.csv` und die inhaltsgleichen eingebauten Beispiele `EDGY-EDGES/src/js/samples.js`.
-- **Herkunft:** für dieses Projekt erstellt, MIT-Lizenz. Die Graphen mit Buchstaben als Knotennamen sind frei erfunden.
-- Das Städtenetz verwendet die Namen bayerischer Städte und gerundete Näherungswerte für Straßenentfernungen in km. Es handelt sich um selbst geschätzte, vereinfachte Werte ohne Übernahme aus einer Datenbank oder einem Kartendienst; sie sind nicht für Planungszwecke gedacht.
+- **Lizenz:** MIT-Lizenz. Die Graphen mit Buchstaben als Knotennamen sind fiktiv.
+- Das Städtenetz verwendet die Namen bayerischer Städte und gerundete Näherungswerte für Straßenentfernungen in km. Es handelt sich um geschätzte, vereinfachte Werte; sie sind nicht für Planungszwecke gedacht.
 
 ### Standards
 
@@ -149,13 +149,13 @@ Für den Datei-Import gelten dieselben Standards wie in NOSY NEIGHBORS (DEFLATE,
 
 ### Code
 
-BUSY BIAS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Das Perzeptron und seine Lernregel sind allgemein bekannte Verfahren in eigener Umsetzung (F. Rosenblatt, 1958).
+BUSY BIAS verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Das Perzeptron und seine Lernregel sind allgemein bekannte Verfahren (F. Rosenblatt, 1958).
 
 ### Daten: Beispieldatensätze
 
 - **Betrifft:** `BUSY-BIAS/testdata/*.csv` und die inhaltsgleichen eingebauten Beispiele `BUSY-BIAS/src/js/samples.js`.
-- **Herkunft:** für dieses Projekt erstellt, MIT-Lizenz.
-- Die Werte sind selbst erzeugt und an typische Größenordnungen angelehnt, ohne Übernahme aus einer Datenbank. Es sind keine Messdaten. Hunderassen und Fahrzeugarten werden nur als allgemeine Bezeichnungen verwendet; Fahrzeugmarken kommen nicht vor.
+- **Herkunft:** fiktiv, MIT-Lizenz.
+- Die Werte sind an typische Größenordnungen angelehnt. Es sind keine Messdaten. Hunderassen und Fahrzeugarten werden nur als allgemeine Bezeichnungen verwendet; Fahrzeugmarken kommen nicht vor.
 
 ### Gestaltung
 
@@ -165,7 +165,7 @@ Grün und Hellrot für die Decision Areas sind eine inhaltliche Vorgabe des Pake
 
 ### Code
 
-CLEVER CLUSTERS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Die Verfahren sind allgemein bekannt und in eigener Umsetzung enthalten: k-Means nach S. P. Lloyd (1957, veröffentlicht 1982), k-means++ nach D. Arthur und S. Vassilvitskii (2007), Silhouette nach P. J. Rousseeuw (1987), Adjusted Rand Index nach L. Hubert und P. Arabie (1985).
+CLEVER CLUSTERS verwendet nur `csv-parser.js` aus dem gemeinsamen Datei-Import, nicht `inflate.js`. Die Verfahren sind allgemein bekannt: k-Means nach S. P. Lloyd (1957, veröffentlicht 1982), k-means++ nach D. Arthur und S. Vassilvitskii (2007), Silhouette nach P. J. Rousseeuw (1987), Adjusted Rand Index nach L. Hubert und P. Arabie (1985).
 
 ### Daten: Iris-Datensatz (Beispiel „Schwertlilien“)
 
@@ -184,10 +184,10 @@ CLEVER CLUSTERS enthält keinen Code von Dritten. Das Paket verwendet nur `csv-p
 ### Daten: übrige Beispieldatensätze und Beispielbilder
 
 - **Betrifft:** die übrigen Dateien `CLEVER-CLUSTERS/testdata/*.csv`, die inhaltsgleichen eingebauten Beispiele in `CLEVER-CLUSTERS/src/js/samples.js` und die Beispielbilder in `CLEVER-CLUSTERS/src/js/sample-scenes.js`.
-- **Herkunft:** für dieses Projekt erstellt, MIT-Lizenz.
-- Die Werte sind selbst erzeugt, ohne Übernahme aus einer Datenbank; es sind keine Messdaten. Die Lebensmittel sind gerundete, selbst zusammengestellte Richtwerte und nicht für Ernährungsangaben gedacht. Hunderassen, Fahrzeugarten und Sportarten werden nur als allgemeine Bezeichnungen verwendet; Fahrzeugmarken kommen nicht vor.
-- Die Beispielbilder sind eigene Zeichnungen, die der Code beim Laden erzeugt. Das Paket enthält keine Bilddateien.
+- **Herkunft:** fiktiv, MIT-Lizenz.
+- Es sind keine Messdaten. Die Lebensmittel sind gerundete Richtwerte und nicht für Ernährungsangaben gedacht. Hunderassen, Fahrzeugarten und Sportarten werden nur als allgemeine Bezeichnungen verwendet; Fahrzeugmarken kommen nicht vor.
+- Die Beispielbilder sind Zeichnungen, die der Code beim Laden erzeugt. Das Paket enthält keine Bilddateien.
 
 ### Gestaltung
 
-Die Farben der Cluster sind eine eigene Zusammenstellung. Damit die Cluster auch ohne Farbwahrnehmung und bei vielen Clustern erkennbar sind, tragen die Zentren ihre Nummer, und die Punkte unterscheiden sich zusätzlich in der Form (Kreis, Quadrat und Raute).
+Damit die Cluster auch ohne Farbwahrnehmung und bei vielen Clustern erkennbar sind, tragen die Zentren ihre Nummer, und die Punkte unterscheiden sich zusätzlich in der Form (Kreis, Quadrat und Raute).

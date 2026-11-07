@@ -3,7 +3,7 @@
  * @description Beispieldatenbank „Bibliothek“ für die SQL Sandbox.
  *
  * Der SQL-Text ist identisch mit testdata/bibliothek.sql (der Build prüft das).
- * Alle Daten sind frei erfunden. Lizenz: MIT (siehe LICENSE.txt).
+ * Alle Daten sind fiktiv. Lizenz: MIT (siehe LICENSE.txt).
  */
 (function (ns) {
   'use strict';
@@ -17,8 +17,8 @@
 -- Beschreibung: Autorinnen und Autoren, Bücher, Leserinnen und Leser sowie Ausleihen (auch noch nicht zurückgegebene).
 --
 -- Beispieldatenbank für die SQL Sandbox.
--- Alle Namen, Buchtitel und Werte sind frei erfunden; Ähnlichkeiten mit realen
--- Personen oder Werken wären zufällig. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen, Buchtitel und Werte sind fiktiv; Ähnlichkeiten mit realen
+-- Personen oder Werken sind nicht beabsichtigt. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS ausleihe;
 DROP TABLE IF EXISTS buch;

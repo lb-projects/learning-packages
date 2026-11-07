@@ -162,7 +162,7 @@ Jedes Pixel ist ein Punkt im Farbraum aus Rot, Grün und Blau. k-Means gruppiert
 | Eine riesige Fläche | Der Hintergrund besteht aus mehreren Clustern: Lernende müssen weitere Farbfelder als Hintergrund markieren |
 | Die Zahl stimmt | Das kann auch Zufall sein. Die Rahmen zeigen, ob wirklich die Objekte gezählt wurden |
 
-Die Beispielbilder sind eigene Zeichnungen, die das Paket beim Laden erzeugt. Ihre Titel verraten weder Schwierigkeit noch Anzahl. Die Tabelle nennt den Median der gezählten Flächen über fünf Läufe mit den Voreinstellungen, ohne Korrektur durch Lernende; einzelne Läufe weichen ab.
+Die Beispielbilder sind Zeichnungen, die das Paket beim Laden erzeugt. Ihre Titel verraten weder Schwierigkeit noch Anzahl. Die Tabelle nennt den Median der gezählten Flächen über fünf Läufe mit den Voreinstellungen, ohne Korrektur durch Lernende; einzelne Läufe weichen ab.
 
 | Titel | Tiere | Gezählte Flächen | Situation (nur für Lehrkräfte) |
 |---|---:|---|---|
@@ -226,7 +226,7 @@ Butter;83;0,6;Fettes
 
 **Bekannte Gruppen** haben alle Beispiele außer Kundenadressen und Punkte A, B und C. Sie heißen sprechend, zum Beispiel „Insel“ oder „mit Wärmepumpe“, und erscheinen erst auf Seite 7 nach dem Klick. Besonders aufschlussreich sind die Beispiele, bei denen k-Means die Gruppen verfehlt: Häuser in einem Tal, Haushalte und Befragung ohne Skalierung.
 
-Die Werte sind selbst erzeugt, die Lebensmittel sind gerundete Richtwerte. Eine Ausnahme sind die Schwertlilien: 54 Blüten aus dem Iris-Datensatz (Messungen von Edgar Anderson 1935, veröffentlicht von R. A. Fisher 1936, CC BY 4.0, siehe [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)). Die Meldung nach dem Laden nennt Quelle und Lizenz. Die Effekte prüft ein automatischer Test; die Vorschläge von Knick und Silhouette stehen in [testdata/README.md](testdata/README.md).
+Die Werte sind fiktiv, die Lebensmittel sind gerundete Richtwerte. Eine Ausnahme sind die Schwertlilien: 54 Blüten aus dem Iris-Datensatz (Messungen von Edgar Anderson 1935, veröffentlicht von R. A. Fisher 1936, CC BY 4.0, siehe [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)). Die Meldung nach dem Laden nennt Quelle und Lizenz. Die Effekte prüft ein automatischer Test; die Vorschläge von Knick und Silhouette stehen in [testdata/README.md](testdata/README.md).
 
 ## Aufbau
 

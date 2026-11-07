@@ -2,8 +2,8 @@
 -- Beschreibung: Kategorien, Artikel mit Preisen, Kundinnen und Kunden, Bestellungen und Bestellpositionen.
 --
 -- Beispieldatenbank für die SQL Sandbox.
--- Alle Namen, Artikel und Werte sind frei erfunden; Ähnlichkeiten mit realen
--- Personen, Firmen oder Produkten wären zufällig. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen, Artikel und Werte sind fiktiv; Ähnlichkeiten mit realen
+-- Personen, Firmen oder Produkten sind nicht beabsichtigt. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS bestellposition;
 DROP TABLE IF EXISTS bestellung;

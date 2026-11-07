@@ -4,7 +4,7 @@ Diese Datei richtet sich an **Lehrkräfte**. Sie nennt, was an den Beispielen be
 
 Alle Dateien sind außerdem als Beispiele fest eingebaut; der Build prüft, dass Datei und eingebauter Text übereinstimmen. Sie lassen sich auf **Seite 1** auch von Hand hochladen.
 
-Die Werte sind selbst erzeugt, es sind **keine Messdaten**. Die Lebensmittel sind gerundete Richtwerte ohne Übernahme aus einer Datenbank. Ähnlichkeiten mit realen Personen oder Orten wären zufällig. Lizenz: MIT (siehe `LICENSE` im Stamm des Repositorys).
+Die Werte sind fiktiv, es sind **keine Messdaten**. Die Lebensmittel sind gerundete Richtwerte. Ähnlichkeiten mit realen Personen oder Orten sind nicht beabsichtigt. Lizenz: MIT (siehe `LICENSE` im Stamm des Repositorys).
 
 **Ausnahme:** `schwertlilien.csv` enthält echte Messdaten: 54 von 150 Blüten des Iris-Datensatzes mit Blütenblattlänge und -breite. Messungen von Edgar Anderson (1935), veröffentlicht von R. A. Fisher (1936), bezogen über das UCI Machine Learning Repository (doi:10.24432/C56C76), lizenziert unter **CC BY 4.0**. Die Datei übernimmt beide Teilmengen aus NOSY NEIGHBORS, gemischt und neu nummeriert. Einzelheiten stehen in `THIRD_PARTY_NOTICES.md` im Stamm des Repositorys.
 

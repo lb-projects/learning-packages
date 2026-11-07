@@ -3,7 +3,7 @@
 **SQL Sandbox** steht für **S**imple **A**nd **N**ice **D**atabase **B**ox for **O**nline e**X**ercises.
 
 Die SQL Sandbox ist eine interaktive Lernumgebung zum Abfragen relationaler Datenbanken mit **SQL**.
-Das Paket läuft vollständig im Browser. Die SQL-Engine (Lexer, Parser, Ausführung) ist eigener Code: Es werden keine externen Ressourcen geladen und keine externen Bibliotheken verwendet (auch kein SQLite/sql.js).
+Das Paket läuft vollständig im Browser und bringt seine SQL-Engine (Lexer, Parser, Ausführung) selbst mit: Es werden keine externen Ressourcen geladen und keine externen Bibliotheken verwendet (auch kein SQLite/sql.js).
 
 ## Inhalt für den Unterricht
 
@@ -150,7 +150,7 @@ Viele Schulen arbeiten mit MySQL/MariaDB und phpMyAdmin. Die SQL Sandbox verhäl
 
 ## Beispieldatenbanken und Dateien für den Unterricht
 
-Alle Daten sind **frei erfunden** (Namen, Orte wie „Musterstadt“, Buchtitel, Artikel, Vereine). Ähnlichkeiten mit realen Personen, Schulen, Firmen, Werken oder Vereinen wären zufällig. Die Daten stehen unter der MIT-Lizenz.
+Alle Daten sind **fiktiv** (Namen, Orte wie „Musterstadt“, Buchtitel, Artikel, Vereine). Ähnlichkeiten mit realen Personen, Schulen, Firmen, Werken oder Vereinen sind nicht beabsichtigt. Die Daten stehen unter der MIT-Lizenz.
 
 Eine ausführliche Beschreibung aller Dateien – bei den Übungsdateien für die Seite „Redundanzen“ mit den beabsichtigten funktionalen Abhängigkeiten, den Absichten hinter den Daten und den erwarteten Ergebnissen – steht in [`testdata/README.md`](testdata/README.md).
 
@@ -327,6 +327,5 @@ Vor jeder Veröffentlichung wird das Paket mit nicht veröffentlichten Entwicklu
 ## Lizenz
 
 - **Projekt:** MIT-Lizenz. Der Lizenztext liegt als `src/LICENSE.txt` im Paket und ist identisch mit der `LICENSE` im Stamm des Repositorys.
-- **Code von Dritten:** keiner. Lexer, Parser, `LIKE`-Abgleich, Editierabstand und das Ebenenlayout des Klassendiagramms (angelehnt an das Verfahren von Sugiyama) sind Standardverfahren in eigener Umsetzung.
-- **Daten:** alle Beispieldaten sind frei erfunden (MIT-Lizenz).
+- **Daten:** alle Beispieldaten sind fiktiv (MIT-Lizenz).
 - **Weitere Hinweise:** Marken (Moodle™, SCORM®, MySQL®, UML® u. a.) stehen in `THIRD_PARTY_NOTICES.md` im Stamm des Repositorys.

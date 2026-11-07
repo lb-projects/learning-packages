@@ -2,8 +2,8 @@
 -- Beschreibung: Ausleihen einer Schulbibliothek in einer einzigen Tabelle mit zusammengesetztem Schlüssel.
 --
 -- Übungsdatei für die SQL Sandbox (Seite 6 „Redundanzen“).
--- Alle Namen, Titel und Werte sind frei erfunden; Ähnlichkeiten mit realen
--- Personen oder Werken wären zufällig. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen, Titel und Werte sind fiktiv; Ähnlichkeiten mit realen
+-- Personen oder Werken sind nicht beabsichtigt. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS ausleihe;
 

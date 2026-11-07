@@ -2,7 +2,7 @@
 
 Dieser Ordner enthält SQL-Dateien für den Unterricht und für Tests. Sie lassen sich auf **Seite 1 „Datenbank laden“** hochladen (Format siehe `../README.md`, Abschnitt „Dateiformat für den Upload“). Die ersten fünf Dateien sind außerdem als Beispieldatenbanken fest eingebaut; der Build prüft, dass Datei und eingebauter Text übereinstimmen.
 
-Alle Namen, Orte, Firmen, Titel und Werte sind **frei erfunden** (Orte wie „Musterstadt“). Ähnlichkeiten mit realen Personen oder Einrichtungen wären zufällig. Lizenz: MIT (siehe `LICENSE` im Stamm des Repositorys).
+Alle Namen, Orte, Firmen, Titel und Werte sind **fiktiv** (Orte wie „Musterstadt“). Ähnlichkeiten mit realen Personen oder Einrichtungen sind nicht beabsichtigt. Lizenz: MIT (siehe `LICENSE` im Stamm des Repositorys).
 
 ## Überblick
 

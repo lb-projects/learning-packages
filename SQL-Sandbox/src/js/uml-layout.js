@@ -2,7 +2,7 @@
  * @file uml-layout.js
  * @description Ebenenlayout mit rechtwinkliger Linienführung für das Klassendiagramm (ohne DOM).
  *
- * Ablauf (angelehnt an das bekannte Verfahren von Sugiyama, eigene Umsetzung):
+ * Ablauf (angelehnt an das bekannte Verfahren von Sugiyama):
  *   1. Zyklen brechen, Ebenen bestimmen: referenzierte Klassen oben, abhängige darunter.
  *      Assoziationsklassen liegen unter beiden Enden ihrer n:m-Beziehung.
  *   2. Linien über mehrere Ebenen erhalten Hilfsknoten (Durchgänge).

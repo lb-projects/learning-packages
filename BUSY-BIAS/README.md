@@ -155,7 +155,7 @@ Große Zahlen verlangsamen das Training stark, weil die Lernregel θ je Anpassun
 
 ## Beispiele
 
-Die Beispielauswahl auf Seite 1 enthält acht einfache Datensätze mit 4 bis 50 Punkten, darunter zwei ohne Trenngerade (XOR, Kundenabwanderung), und drei mehrstufige Beispiele. Alle Dateien, Attribute, Labels und die zu erwartenden Zahlen stehen in [testdata/README.md](testdata/README.md). Die Werte sind selbst erzeugt und an typische Größenordnungen angelehnt; es sind keine Messdaten.
+Die Beispielauswahl auf Seite 1 enthält acht einfache Datensätze mit 4 bis 50 Punkten, darunter zwei ohne Trenngerade (XOR, Kundenabwanderung), und drei mehrstufige Beispiele. Alle Dateien, Attribute, Labels und die zu erwartenden Zahlen stehen in [testdata/README.md](testdata/README.md). Die Werte sind fiktiv und an typische Größenordnungen angelehnt; es sind keine Messdaten.
 
 ## Mehrstufige Beispiele
 
@@ -198,7 +198,7 @@ Attribute: Länge in m, Leermasse in t. Das Perzeptron feuert bei „Lkw“.
 
 ### Kreditentscheidung 2
 
-Attribute: Einkommen in Tsd. €, Entfernung zur Innenstadt in 10 km. Das Perzeptron feuert bei „genehmigt“. Das Beispiel zeigt, wie ein Modell eine Verzerrung aus seinen Trainingsdaten übernimmt. In der Auswahl trägt es bewusst keinen Hinweis darauf, damit die Lernenden es selbst entdecken können. Es ist **frei erfunden und vereinfacht** und bildet keine reale Kreditvergabe ab. Die Entfernung steht stellvertretend für den Wohnort; es kommen keine geschützten Merkmale, keine realen Orte und keine realen Gruppen vor.
+Attribute: Einkommen in Tsd. €, Entfernung zur Innenstadt in 10 km. Das Perzeptron feuert bei „genehmigt“. Das Beispiel zeigt, wie ein Modell eine Verzerrung aus seinen Trainingsdaten übernimmt. In der Auswahl trägt es bewusst keinen Hinweis darauf, damit die Lernenden es selbst entdecken können. Es ist **fiktiv und vereinfacht** und bildet keine reale Kreditvergabe ab. Die Entfernung steht stellvertretend für den Wohnort; es kommen keine geschützten Merkmale, keine realen Orte und keine realen Gruppen vor.
 
 | Stufe | Neue Punkte | Was zu beobachten ist | Frage an die Lernenden |
 |---:|---|---|---|

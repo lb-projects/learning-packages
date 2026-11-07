@@ -4,8 +4,8 @@
 -- Beispieldatenbank für die SQL Sandbox (Seite 6 „Redundanzen“).
 -- Die Tabellen „belegung“ und „kontakt“ verletzen bewusst Normalformen;
 -- „raum“ ist normalisiert und dient zum Vergleich.
--- Alle Namen und Werte sind frei erfunden; Ähnlichkeiten mit realen
--- Personen oder Schulen wären zufällig. Lizenz: MIT (siehe LICENSE).
+-- Alle Namen und Werte sind fiktiv; Ähnlichkeiten mit realen
+-- Personen oder Schulen sind nicht beabsichtigt. Lizenz: MIT (siehe LICENSE).
 
 DROP TABLE IF EXISTS belegung;
 DROP TABLE IF EXISTS kontakt;
